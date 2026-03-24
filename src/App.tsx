@@ -597,6 +597,7 @@ export default function App() {
   const [flash, setFlash] = useState(false);
   const [monsterShake, setMonsterShake] = useState(false); 
   const [scoreViewDiff, setScoreViewDiff] = useState<Difficulty>('Eiken5');
+  const [showHelp, setShowHelp] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -1086,12 +1087,30 @@ export default function App() {
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: 'Eiken5', screen: 'level-select' }))} className="w-full" size="lg" variant="primary">英検 5級 (Grade 5)</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: 'Eiken4', screen: 'level-select' }))} className="w-full" size="lg" variant="secondary">英検 4級 (Grade 4)</GameButton>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'monster-book' }))} variant="outline" className="px-2"><BookOpen size={20} /> 図鑑</GameButton>
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'rank-list' }))} variant="outline" className="px-2 text-yellow-300 border-yellow-700/50 hover:border-yellow-400"><Crown size={20} /> 称号</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'score-view' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Records</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'question-list' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Word List</GameButton>
+                        <GameButton onClick={() => setShowHelp(true)} variant="outline" className="px-2 border-slate-600 text-slate-300"><AlertCircle size={16} /> ヘルプ</GameButton>
                     </div>
+                    {showHelp && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/60" onClick={() => setShowHelp(false)}></div>
+                        <div className="relative w-full max-w-xl rounded-xl border-2 border-slate-500 bg-slate-900 p-6 shadow-2xl">
+                          <h3 className="mb-4 text-2xl font-black text-blue-300">遊び方 (How to Play)</h3>
+                          <div className="space-y-2 text-slate-200">
+                            <p>1. 難易度とレベルを選んでバトルを開始します。</p>
+                            <p>2. 表示された英語を正しく入力するとモンスターにダメージを与えます。</p>
+                            <p>3. ミスが増えるとスコアが伸びにくくなるので、正確さを意識してください。</p>
+                            <p>4. 苦手特訓や図鑑を使って、単語と記録を確認できます。</p>
+                          </div>
+                          <div className="mt-6 flex justify-end">
+                            <GameButton onClick={() => setShowHelp(false)} variant="outline" size="sm">閉じる</GameButton>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                 </div>
             </div>
         </div>
