@@ -1073,8 +1073,8 @@ export default function App() {
             <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
             <div className="relative z-10 flex flex-col items-center md:max-w-5xl w-full">
                 <div className="mb-6 animate-pulse"><Sword size={80} className="text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.8)]" /></div>
-                <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-blue-300 to-blue-600 mb-2 drop-shadow-sm filter">English Typing</h1>
-                <h2 className="text-4xl md:text-5xl font-black text-yellow-400 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wider">FANTASY</h2>
+                <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-blue-300 to-blue-600 mb-2 drop-shadow-sm filter">English Typing</h1>
+                <h2 className="text-5xl md:text-6xl font-black text-yellow-400 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wider">FANTASY</h2>
                 <div className="mb-8 flex flex-col md:flex-row gap-4 w-full justify-center">
                      <div className="flex items-center gap-2 bg-gradient-to-r from-red-900 to-slate-900 border border-yellow-500/50 px-6 py-3 rounded-full text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.3)] backdrop-blur-sm"><Trophy size={20} className="text-yellow-400" /><span className="font-bold text-lg tracking-wide">撃破数: <span className="text-white text-xl mx-1">{totalDefeated}</span> / {totalMonsters}</span></div>
                      <div className="flex items-center gap-2 bg-slate-800/80 px-6 py-3 rounded-full text-blue-300 shadow-md border border-slate-600"><Keyboard size={20} className="text-blue-400" /><span className="font-bold text-sm">最高入力: <span className="text-white font-mono text-xl mx-1">{maxKeystrokes}</span></span></div>
