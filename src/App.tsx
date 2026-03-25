@@ -593,7 +593,7 @@ export default function App() {
   const [maxKeystrokes, setMaxKeystrokes] = useState<number>(0);
   const [weakQuestions, setWeakQuestions] = useState<Question[]>([]); 
   const [bookLevel, setBookLevel] = useState<Level>(1);
-  const [shake, setShake] = useState(false);
+  const [, setShake] = useState(false);
   const [flash, setFlash] = useState(false);
   const [monsterShake, setMonsterShake] = useState(false); 
   const [scoreViewDiff, setScoreViewDiff] = useState<Difficulty>('Eiken5');
