@@ -1269,7 +1269,7 @@ export default function App() {
                             return <span key={index} className={className}>{(!isTyped && !isHint && !isAlwaysVisible && isCurrent) ? '_' : (char === ' ' ? '\u00A0' : char)}</span>;
                         })}
                     </div>
-                    <input ref={inputRef} type="text" value={gameState.userInput} onChange={handleInput} className="w-full h-full opacity-0 absolute inset-0 cursor-default z-20" autoComplete="off" autoFocus />
+                    <input ref={inputRef} type="text" value={gameState.userInput} onChange={handleInput} className="w-full h-full opacity-0 absolute inset-0 cursor-default z-20" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoFocus />
                  </div>
             </div>
              <div className="mt-2 text-center"><span className="text-slate-500 text-[10px] uppercase tracking-widest border border-slate-700 px-2 py-0.5 rounded bg-slate-900">Type the spell to attack</span></div>
