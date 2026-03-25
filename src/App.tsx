@@ -622,7 +622,11 @@ export default function App() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
         if (gameState.screen === 'battle') {
-            if (e.code === 'ControlRight') {
+            const isRightAltKey =
+                e.code === 'AltRight' ||
+                (e.key === 'Alt' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
+
+            if (isRightAltKey && !e.repeat) {
                 e.preventDefault();
                 speakCurrentQuestion();
             }
@@ -1256,7 +1260,7 @@ export default function App() {
                  <div className="relative py-3 bg-black/40 rounded-xl border border-slate-700 shadow-inner">
                     <div className="absolute top-1/2 left-3 -translate-y-1/2 z-20">
                          {/* Button type='button' ensures it doesn't trigger form submits and behavior */}
-                         <button type="button" onClick={() => speakCurrentQuestion()} className="text-slate-500 hover:text-blue-400 transition-colors p-2 -ml-2"><Volume2 size={24} /></button>
+                         <button type="button" onClick={() => speakCurrentQuestion()} title="音声を再生 (Right Alt / Right Option)" aria-label="音声を再生" className="relative z-30 text-slate-500 hover:text-blue-400 transition-colors p-2 -ml-2"><Volume2 size={24} /></button>
                     </div>
                     <div className="text-3xl md:text-5xl font-mono text-center pointer-events-none select-none tracking-wide text-slate-600 relative z-10 min-h-[1.5em] flex items-center justify-center">
                         {gameState.currentQuestion.text.split('').map((char, index) => {
