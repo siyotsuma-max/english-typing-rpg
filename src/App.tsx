@@ -1281,6 +1281,8 @@ export default function App() {
 
   if (gameState.screen === 'result') {
     const isWin = gameState.battleResult === 'win';
+    const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
+    const defeatedMonster = gameState.currentMonsterList[actualMonsterId];
     // Determine if next monster is available based on totalMonstersInStage
     // Guide/Easy have 3, Normal 5, Hard 7.
     // If current index < total - 1, we can go next.
@@ -1304,6 +1306,15 @@ export default function App() {
                   <div className="mb-2 animate-bounce"><Trophy size={60} className="text-yellow-400 mx-auto drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]" /></div>
                   <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600 mb-1">CLEAR!</h2>
                   <p className="text-slate-400 text-sm">モンスターをやっつけた！</p>
+                  {defeatedMonster && (
+                    <div className="mt-4 rounded-xl border border-yellow-500/40 bg-gradient-to-b from-yellow-900/30 to-slate-900/40 p-4">
+                      <div className="flex flex-col items-center gap-2">
+                        <MonsterAvatar type={defeatedMonster.type} color={defeatedMonster.color} emotion="win" size={110} />
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-yellow-300">Defeated Monster</p>
+                        <p className="text-xl font-black text-white">{defeatedMonster.name}</p>
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                  <>
