@@ -211,6 +211,7 @@ const BOSS_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping006.mp3`,
 ];
 const EFFECT_SOUND_BASE_PATH = `${import.meta.env.BASE_URL}effect sound/`;
+const DESIGN_ASSET_BASE_PATH = `${import.meta.env.BASE_URL}designs/`;
 const DEFEAT_EFFECT_TRACKS = [
   `${EFFECT_SOUND_BASE_PATH}effectsound-defeat01.mp3`,
   `${EFFECT_SOUND_BASE_PATH}effectsound-defeat02.mp3`,
@@ -223,6 +224,7 @@ const BOSS_DEFEAT_EFFECT_TRACKS = [
 const EFFECT_SOUND_VOLUME = 0.45;
 
 const SETTINGS_BGM_PREVIEW_TRACK = NORMAL_BATTLE_TRACKS[0];
+const MAIN_CHARACTER_BACKGROUND_IMAGE = `${DESIGN_ASSET_BASE_PATH}Main-Character01-bg.webp`;
 const SETTINGS_SPEECH_PREVIEW_TEXT = 'The brave hero learns English every day.';
 const SPEECH_VOICE_COPY: Record<SpeechVoiceMode, { label: string; description: string }> = {
   random: {
@@ -807,7 +809,6 @@ const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: 
     </svg>
   );
 };
-
 
 const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
   1: {
@@ -2038,11 +2039,42 @@ export default function App() {
     return (
       <ScreenContainer>
         <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=2544&auto=format&fit=crop')] bg-cover bg-center">
-            <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+            <div className="absolute inset-0 bg-slate-900/68 backdrop-blur-[1px]"></div>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute inset-y-0 left-1/2 hidden w-[64vw] min-w-[520px] max-w-[1080px] -translate-x-1/2 items-center justify-center md:flex">
+                <img
+                  src={MAIN_CHARACTER_BACKGROUND_IMAGE}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-auto max-h-[110vh] w-full scale-[1.08] object-contain object-center opacity-50 saturate-[1.08] contrast-[1.04] blur-[0.3px] drop-shadow-[0_22px_60px_rgba(96,165,250,0.34)] [mask-image:radial-gradient(circle_at_center,black_56%,transparent_92%)]"
+                />
+              </div>
+              <div className="absolute inset-y-0 left-0 hidden w-[56%] bg-gradient-to-r from-slate-900/86 via-slate-900/54 to-transparent md:block"></div>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_28%,rgba(96,165,250,0.16),transparent_34%),radial-gradient(circle_at_82%_24%,rgba(251,191,36,0.10),transparent_22%)]"></div>
+            </div>
             <div className="relative z-10 flex flex-col items-center md:max-w-5xl w-full">
-                <div className="mb-6 animate-pulse"><Sword size={80} className="text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.8)]" /></div>
-                <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-blue-300 to-blue-600 mb-2 drop-shadow-sm filter">English Typing</h1>
-                <h2 className="text-5xl md:text-6xl font-black text-yellow-400 mb-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] tracking-wider">FANTASY</h2>
+                <div className="mb-5 flex w-full max-w-4xl flex-col items-center gap-4 md:items-start">
+                    <div className="px-1 py-2 text-center md:max-w-[62%] md:text-left">
+                      <div className="mb-2 inline-flex rounded-full border border-yellow-400/30 bg-yellow-500/10 px-4 py-1 text-xs font-black uppercase tracking-[0.28em] text-yellow-200">
+                        HERO
+                      </div>
+                      <h1
+                        className="mb-1 text-5xl font-black tracking-[0.05em] text-transparent bg-clip-text bg-gradient-to-b from-white via-sky-200 to-cyan-300 [text-shadow:0_2px_0_rgba(255,255,255,0.18),0_0_18px_rgba(125,211,252,0.34),0_10px_26px_rgba(15,23,42,0.78)] md:text-8xl"
+                        style={{ fontFamily: "'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif" }}
+                      >
+                        English Typing
+                      </h1>
+                      <h2
+                        className="text-4xl font-black tracking-[0.22em] text-yellow-200 [text-shadow:0_2px_0_rgba(255,251,235,0.18),0_0_16px_rgba(253,224,71,0.28),0_8px_24px_rgba(0,0,0,0.88)] md:text-6xl"
+                        style={{ fontFamily: "'Palatino Linotype', 'Book Antiqua', 'Times New Roman', serif" }}
+                      >
+                        FANTASY
+                      </h2>
+                      <p className="mt-3 text-sm md:text-base font-semibold text-slate-200/90">
+                        タイピングで英語を覚えて、主人公といっしょにモンスターを倒そう。
+                      </p>
+                    </div>
+                </div>
                 <div className="mb-8 flex flex-col md:flex-row gap-4 w-full justify-center">
                      <div className="flex items-center gap-2 bg-gradient-to-r from-red-900 to-slate-900 border border-yellow-500/50 px-6 py-3 rounded-full text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.3)] backdrop-blur-sm"><Trophy size={20} className="text-yellow-400" /><span className="font-bold text-lg tracking-wide">撃破数: <span className="text-white text-xl mx-1">{totalDefeated}</span> / {totalMonsters}</span></div>
                      <div className="flex items-center gap-2 bg-slate-800/80 px-6 py-3 rounded-full text-blue-300 shadow-md border border-slate-600"><Keyboard size={20} className="text-blue-400" /><span className="font-bold text-sm">最高入力: <span className="text-white font-mono text-xl mx-1">{maxKeystrokes}</span></span></div>
