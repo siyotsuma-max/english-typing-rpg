@@ -179,8 +179,8 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_female', label: '英語 女性', description: 'イギリス英語の女性音声' },
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
-const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel'];
-const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
+const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel', 'aria', 'jenny', 'joanna', 'salli', 'ivy', 'ruth', 'amy'];
+const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'nathan', 'joey', 'roger', 'steffan', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
 const US_VOICE_HINTS = ['en-us', 'us', 'american', 'united states'];
 const UK_VOICE_HINTS = ['en-gb', 'uk', 'british', 'england', 'great britain', 'united kingdom'];
 
@@ -362,7 +362,7 @@ const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMo
   return {
     mode: resolvedMode,
     lang,
-    voice: localeCandidates[0] ?? null,
+    voice: localeCandidates[0] ?? candidates[0] ?? null,
   };
 };
 
