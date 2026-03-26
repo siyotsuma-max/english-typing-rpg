@@ -46,6 +46,7 @@ type ResolvedSpeechConfig = {
   mode: Exclude<SpeechVoiceMode, 'random'>;
   lang: 'en-US' | 'en-GB';
   voice: SpeechSynthesisVoice | null;
+  resolution: 'locale-gender' | 'gender-fallback' | 'locale-fallback' | 'unresolved';
 };
 
 interface GameState {
@@ -350,17 +351,60 @@ const getStrictLocaleVoice = (voices: SpeechSynthesisVoice[], mode: Exclude<Spee
   return fallbackCandidates[0] ?? null;
 };
 
+const getGenderFallbackVoice = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
+  const isFemaleMode = mode.endsWith('female');
+  const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  const englishVoices = voices.filter(isEnglishVoice);
+  const tiers = [
+    (voice: SpeechSynthesisVoice) => matchesVoiceHint(voice, preferredHints) && !matchesVoiceHint(voice, oppositeHints),
+    (voice: SpeechSynthesisVoice) => matchesVoiceHint(voice, preferredHints),
+    (voice: SpeechSynthesisVoice) => !matchesVoiceHint(voice, oppositeHints),
+  ];
+
+  for (const tier of tiers) {
+    const candidates = englishVoices
+      .filter(tier)
+      .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
+      .sort((a, b) => b.score - a.score)
+      .map(entry => entry.voice);
+
+    if (candidates.length > 0) {
+      return candidates[0];
+    }
+  }
+
+  return null;
+};
+
 const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): ResolvedSpeechConfig => {
   const resolvedMode: Exclude<SpeechVoiceMode, 'random'> = mode === 'random'
     ? ['us_female', 'us_male', 'uk_female', 'uk_male'][Math.floor(Math.random() * 4)] as Exclude<SpeechVoiceMode, 'random'>
     : mode;
 
   const lang = getSpeechLocale(resolvedMode);
+  const localeVoice = getStrictLocaleVoice(voices, resolvedMode);
+  const hasLocaleGenderMatch = localeVoice
+    ? matchesVoiceHint(localeVoice, resolvedMode.endsWith('female') ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS)
+      && !matchesVoiceHint(localeVoice, resolvedMode.endsWith('female') ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS)
+    : false;
+  const genderFallbackVoice = hasLocaleGenderMatch ? null : getGenderFallbackVoice(voices, resolvedMode);
+  const resolvedVoice = localeVoice && hasLocaleGenderMatch
+    ? localeVoice
+    : genderFallbackVoice ?? localeVoice;
+  const resolution: ResolvedSpeechConfig['resolution'] = localeVoice && hasLocaleGenderMatch
+    ? 'locale-gender'
+    : genderFallbackVoice
+      ? 'gender-fallback'
+      : localeVoice
+        ? 'locale-fallback'
+        : 'unresolved';
 
   return {
     mode: resolvedMode,
     lang,
-    voice: getStrictLocaleVoice(voices, resolvedMode),
+    voice: resolvedVoice,
+    resolution,
   };
 };
 
@@ -1697,6 +1741,7 @@ export default function App() {
                 <div className="font-bold text-cyan-300">Voice Debug</div>
                 <div className="mt-2">Selected Mode: <span className="font-mono text-white">{selectedSpeechConfig.mode}</span></div>
                 <div>Requested Lang: <span className="font-mono text-white">{selectedSpeechConfig.lang}</span></div>
+                <div>Resolution: <span className="font-mono text-white">{selectedSpeechConfig.resolution}</span></div>
                 <div>
                   Active Voice:
                   <span className="ml-2 font-mono text-white">
