@@ -162,8 +162,8 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_female', label: '英語 女性', description: 'イギリス英語の女性音声' },
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
-const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia'];
-const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark'];
+const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel'];
+const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark'];
 
 const NORMAL_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
@@ -219,30 +219,43 @@ const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
   return hints.some(hint => normalized.includes(hint));
 };
 
-const excludeVoiceHints = (voices: SpeechSynthesisVoice[], hints: string[]) => {
-  const filteredVoices = voices.filter(voice => !matchesVoiceHint(voice, hints));
-  return filteredVoices.length > 0 ? filteredVoices : voices;
+const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
+  const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
+  const isFemaleMode = mode.endsWith('female');
+  const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  const lang = voice.lang.toLowerCase();
+
+  if (!lang.startsWith('en')) return -1_000;
+
+  let score = 0;
+  if (lang.startsWith(locale)) {
+    score += 100;
+  } else {
+    score += 40;
+  }
+
+  if (matchesVoiceHint(voice, preferredHints)) {
+    score += 50;
+  }
+
+  if (matchesVoiceHint(voice, oppositeHints)) {
+    score -= 80;
+  }
+
+  if (voice.default) {
+    score += 3;
+  }
+
+  return score;
 };
 
 const getVoicesForSpeechMode = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
-  const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
-  const isFemaleMode = mode.endsWith('female');
-  const genderHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
-  const localeVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith(locale));
-  const hintedVoices = localeVoices.filter(voice => matchesVoiceHint(voice, genderHints));
-  if (hintedVoices.length > 0) return hintedVoices;
-  if (!isFemaleMode && localeVoices.length > 0) {
-    return excludeVoiceHints(localeVoices, FEMALE_VOICE_HINTS);
-  }
-  if (localeVoices.length > 0) return localeVoices;
-
-  const englishVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith('en'));
-  const hintedEnglishVoices = englishVoices.filter(voice => matchesVoiceHint(voice, genderHints));
-  if (hintedEnglishVoices.length > 0) return hintedEnglishVoices;
-  if (!isFemaleMode && englishVoices.length > 0) {
-    return excludeVoiceHints(englishVoices, FEMALE_VOICE_HINTS);
-  }
-  return englishVoices;
+  return [...voices]
+    .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
+    .filter(entry => entry.score > -1_000)
+    .sort((a, b) => b.score - a.score)
+    .map(entry => entry.voice);
 };
 
 const resolveSpeechVoice = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): SpeechSynthesisVoice | null => {
@@ -252,11 +265,11 @@ const resolveSpeechVoice = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMod
     const randomTargets: Exclude<SpeechVoiceMode, 'random'>[] = ['us_female', 'us_male', 'uk_female', 'uk_male'];
     const randomMode = randomTargets[Math.floor(Math.random() * randomTargets.length)];
     const candidates = getVoicesForSpeechMode(voices, randomMode);
-    return candidates[Math.floor(Math.random() * candidates.length)] ?? voices[0];
+    return candidates[0] ?? voices[0];
   }
 
   const candidates = getVoicesForSpeechMode(voices, mode);
-  return candidates[Math.floor(Math.random() * candidates.length)] ?? voices[0];
+  return candidates[0] ?? voices[0];
 };
 
 const speakText = (text: string, options?: { voiceURI?: string; rate?: number }) => {
