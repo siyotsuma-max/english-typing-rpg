@@ -148,18 +148,2082 @@
       {
         "text": "dream",
         "translation": "夢"
+      },
+      {
+        "text": "brush",
+        "translation": "ブラシ"
+      },
+      {
+        "text": "video",
+        "translation": "ビデオ"
+      },
+      {
+        "text": "suitcase",
+        "translation": "スーツケース"
+      },
+      {
+        "text": "key",
+        "translation": "鍵"
+      },
+      {
+        "text": "pet",
+        "translation": "ペット"
+      },
+      {
+        "text": "now",
+        "translation": "今"
+      },
+      {
+        "text": "lunchtime",
+        "translation": "昼食の時間"
+      },
+      {
+        "text": "test",
+        "translation": "テスト"
+      },
+      {
+        "text": "class",
+        "translation": "授業"
+      },
+      {
+        "text": "lesson",
+        "translation": "レッスン"
+      },
+      {
+        "text": "speech",
+        "translation": "スピーチ"
+      },
+      {
+        "text": "report",
+        "translation": "レポート"
+      },
+      {
+        "text": "cafeteria",
+        "translation": "食堂"
+      },
+      {
+        "text": "club",
+        "translation": "クラブ"
+      },
+      {
+        "text": "college",
+        "translation": "大学"
+      },
+      {
+        "text": "university",
+        "translation": "大学"
+      },
+      {
+        "text": "course",
+        "translation": "講座"
+      },
+      {
+        "text": "contest",
+        "translation": "コンテスト"
+      },
+      {
+        "text": "group",
+        "translation": "グループ"
+      },
+      {
+        "text": "member",
+        "translation": "メンバー"
+      },
+      {
+        "text": "store",
+        "translation": "店"
+      },
+      {
+        "text": "road",
+        "translation": "道路"
+      },
+      {
+        "text": "place",
+        "translation": "場所"
+      },
+      {
+        "text": "company",
+        "translation": "会社"
+      },
+      {
+        "text": "shopping",
+        "translation": "買い物"
+      },
+      {
+        "text": "movie",
+        "translation": "映画"
+      },
+      {
+        "text": "program",
+        "translation": "番組"
+      },
+      {
+        "text": "trip",
+        "translation": "旅行"
+      },
+      {
+        "text": "fishing",
+        "translation": "釣り"
+      },
+      {
+        "text": "hobby",
+        "translation": "趣味"
+      },
+      {
+        "text": "fever",
+        "translation": "熱"
+      },
+      {
+        "text": "actor",
+        "translation": "俳優"
+      },
+      {
+        "text": "volunteer",
+        "translation": "ボランティア"
+      },
+      {
+        "text": "husband",
+        "translation": "夫"
+      },
+      {
+        "text": "cheese",
+        "translation": "チーズ"
+      },
+      {
+        "text": "soup",
+        "translation": "スープ"
+      },
+      {
+        "text": "toast",
+        "translation": "トースト"
+      },
+      {
+        "text": "pancake",
+        "translation": "パンケーキ"
+      },
+      {
+        "text": "popcorn",
+        "translation": "ポップコーン"
+      },
+      {
+        "text": "menu",
+        "translation": "メニュー"
+      },
+      {
+        "text": "practice",
+        "translation": "練習"
+      },
+      {
+        "text": "sound",
+        "translation": "音"
+      },
+      {
+        "text": "musical",
+        "translation": "ミュージカル"
+      },
+      {
+        "text": "Spain",
+        "translation": "スペイン"
+      },
+      {
+        "text": "England",
+        "translation": "イングランド"
+      },
+      {
+        "text": "Africa",
+        "translation": "アフリカ"
+      },
+      {
+        "text": "India",
+        "translation": "インド"
+      },
+      {
+        "text": "jogging",
+        "translation": "ジョギング"
+      },
+      {
+        "text": "e-mail",
+        "translation": "電子メール"
+      },
+      {
+        "text": "information",
+        "translation": "情報"
+      },
+      {
+        "text": "thing",
+        "translation": "もの"
+      },
+      {
+        "text": "word",
+        "translation": "単語"
+      },
+      {
+        "text": "event",
+        "translation": "行事"
+      },
+      {
+        "text": "culture",
+        "translation": "文化"
+      },
+      {
+        "text": "center",
+        "translation": "中心"
+      },
+      {
+        "text": "meeting",
+        "translation": "会議"
+      },
+      {
+        "text": "sale",
+        "translation": "セール"
+      },
+      {
+        "text": "money",
+        "translation": "お金"
+      },
+      {
+        "text": "line",
+        "translation": "列"
+      },
+      {
+        "text": "end",
+        "translation": "終わり"
+      },
+      {
+        "text": "front",
+        "translation": "前"
+      },
+      {
+        "text": "way",
+        "translation": "方法"
+      },
+      {
+        "text": "race",
+        "translation": "競争"
+      },
+      {
+        "text": "plan",
+        "translation": "計画"
+      },
+      {
+        "text": "example",
+        "translation": "例"
+      },
+      {
+        "text": "poster",
+        "translation": "ポスター"
+      },
+      {
+        "text": "robot",
+        "translation": "ロボット"
+      },
+      {
+        "text": "go",
+        "translation": "行く"
+      },
+      {
+        "text": "like",
+        "translation": "好きである"
+      },
+      {
+        "text": "buy",
+        "translation": "買う"
+      },
+      {
+        "text": "get",
+        "translation": "手に入れる"
+      },
+      {
+        "text": "visit",
+        "translation": "訪れる"
+      },
+      {
+        "text": "come",
+        "translation": "来る"
+      },
+      {
+        "text": "see",
+        "translation": "見る"
+      },
+      {
+        "text": "take",
+        "translation": "取る"
+      },
+      {
+        "text": "make",
+        "translation": "作る"
+      },
+      {
+        "text": "look",
+        "translation": "見る"
+      },
+      {
+        "text": "meet",
+        "translation": "会う"
+      },
+      {
+        "text": "talk",
+        "translation": "話す"
+      },
+      {
+        "text": "say",
+        "translation": "言う"
+      },
+      {
+        "text": "tell",
+        "translation": "伝える"
+      },
+      {
+        "text": "speak",
+        "translation": "話す"
+      },
+      {
+        "text": "listen",
+        "translation": "聞く"
+      },
+      {
+        "text": "hear",
+        "translation": "聞こえる"
+      },
+      {
+        "text": "ask",
+        "translation": "尋ねる"
+      },
+      {
+        "text": "answer",
+        "translation": "答える"
+      },
+      {
+        "text": "stay",
+        "translation": "滞在する"
+      },
+      {
+        "text": "live",
+        "translation": "住む"
+      },
+      {
+        "text": "wake",
+        "translation": "目を覚ます"
+      },
+      {
+        "text": "work",
+        "translation": "働く"
+      },
+      {
+        "text": "eat",
+        "translation": "食べる"
+      },
+      {
+        "text": "drink",
+        "translation": "飲む"
+      },
+      {
+        "text": "give",
+        "translation": "与える"
+      },
+      {
+        "text": "bring",
+        "translation": "持ってくる"
+      },
+      {
+        "text": "love",
+        "translation": "愛する"
+      },
+      {
+        "text": "find",
+        "translation": "見つける"
+      },
+      {
+        "text": "need",
+        "translation": "必要とする"
+      },
+      {
+        "text": "feel",
+        "translation": "感じる"
+      },
+      {
+        "text": "enjoy",
+        "translation": "楽しむ"
+      },
+      {
+        "text": "finish",
+        "translation": "終える"
+      },
+      {
+        "text": "lose",
+        "translation": "失う"
+      },
+      {
+        "text": "write",
+        "translation": "書く"
+      },
+      {
+        "text": "forget",
+        "translation": "忘れる"
+      },
+      {
+        "text": "swim",
+        "translation": "泳ぐ"
+      },
+      {
+        "text": "read",
+        "translation": "読む"
+      },
+      {
+        "text": "paint",
+        "translation": "絵を描く"
+      },
+      {
+        "text": "cut",
+        "translation": "切る"
+      },
+      {
+        "text": "run",
+        "translation": "走る"
+      },
+      {
+        "text": "call",
+        "translation": "電話する"
+      },
+      {
+        "text": "drive",
+        "translation": "運転する"
+      },
+      {
+        "text": "ride",
+        "translation": "乗る"
+      },
+      {
+        "text": "join",
+        "translation": "参加する"
+      },
+      {
+        "text": "invite",
+        "translation": "招待する"
+      },
+      {
+        "text": "know",
+        "translation": "知っている"
+      },
+      {
+        "text": "show",
+        "translation": "見せる"
+      },
+      {
+        "text": "wash",
+        "translation": "洗う"
+      },
+      {
+        "text": "teach",
+        "translation": "教える"
+      },
+      {
+        "text": "think",
+        "translation": "考える"
+      },
+      {
+        "text": "hope",
+        "translation": "望む"
+      },
+      {
+        "text": "worry",
+        "translation": "心配する"
+      },
+      {
+        "text": "try",
+        "translation": "試す"
+      },
+      {
+        "text": "hurry",
+        "translation": "急ぐ"
+      },
+      {
+        "text": "arrive",
+        "translation": "着く"
+      },
+      {
+        "text": "wear",
+        "translation": "身につけている"
+      },
+      {
+        "text": "change",
+        "translation": "変える"
+      },
+      {
+        "text": "become",
+        "translation": "になる"
+      },
+      {
+        "text": "catch",
+        "translation": "つかまえる"
+      },
+      {
+        "text": "put",
+        "translation": "置く"
+      },
+      {
+        "text": "order",
+        "translation": "注文する"
+      },
+      {
+        "text": "sell",
+        "translation": "売る"
+      },
+      {
+        "text": "stop",
+        "translation": "止まる"
+      },
+      {
+        "text": "sing",
+        "translation": "歌う"
+      },
+      {
+        "text": "break",
+        "translation": "壊す"
+      },
+      {
+        "text": "turn",
+        "translation": "曲がる"
+      },
+      {
+        "text": "last",
+        "translation": "最後の"
+      },
+      {
+        "text": "late",
+        "translation": "遅い"
+      },
+      {
+        "text": "early",
+        "translation": "早い"
+      },
+      {
+        "text": "next",
+        "translation": "次の"
+      },
+      {
+        "text": "half",
+        "translation": "半分"
+      },
+      {
+        "text": "open",
+        "translation": "開いた"
+      },
+      {
+        "text": "dark",
+        "translation": "暗い"
+      },
+      {
+        "text": "useful",
+        "translation": "役に立つ"
+      },
+      {
+        "text": "expensive",
+        "translation": "高価な"
+      },
+      {
+        "text": "own",
+        "translation": "自分の"
+      },
+      {
+        "text": "dear",
+        "translation": "親愛なる"
+      },
+      {
+        "text": "soon",
+        "translation": "すぐに"
+      },
+      {
+        "text": "tonight",
+        "translation": "今夜"
+      },
+      {
+        "text": "once",
+        "translation": "一度"
+      },
+      {
+        "text": "still",
+        "translation": "まだ"
+      },
+      {
+        "text": "when",
+        "translation": "いつ"
+      },
+      {
+        "text": "maybe",
+        "translation": "たぶん"
+      },
+      {
+        "text": "later",
+        "translation": "あとで"
+      },
+      {
+        "text": "easily",
+        "translation": "簡単に"
+      },
+      {
+        "text": "off",
+        "translation": "離れて"
+      },
+      {
+        "text": "at",
+        "translation": "で"
+      },
+      {
+        "text": "in",
+        "translation": "の中に"
+      },
+      {
+        "text": "for",
+        "translation": "のために"
+      },
+      {
+        "text": "on",
+        "translation": "の上に"
+      },
+      {
+        "text": "of",
+        "translation": "の"
+      },
+      {
+        "text": "with",
+        "translation": "と一緒に"
+      },
+      {
+        "text": "after",
+        "translation": "のあとで"
+      },
+      {
+        "text": "by",
+        "translation": "のそばに"
+      },
+      {
+        "text": "under",
+        "translation": "の下に"
+      },
+      {
+        "text": "over",
+        "translation": "の上に"
+      },
+      {
+        "text": "around",
+        "translation": "のまわりに"
+      },
+      {
+        "text": "beside",
+        "translation": "のとなりに"
+      },
+      {
+        "text": "between",
+        "translation": "の間に"
+      },
+      {
+        "text": "until",
+        "translation": "まで"
+      },
+      {
+        "text": "and",
+        "translation": "そして"
+      },
+      {
+        "text": "but",
+        "translation": "しかし"
+      },
+      {
+        "text": "because",
+        "translation": "なぜなら"
+      },
+      {
+        "text": "if",
+        "translation": "もし"
+      },
+      {
+        "text": "or",
+        "translation": "または"
+      },
+      {
+        "text": "will",
+        "translation": "だろう"
+      },
+      {
+        "text": "may",
+        "translation": "かもしれない"
+      },
+      {
+        "text": "should",
+        "translation": "すべきだ"
+      },
+      {
+        "text": "could",
+        "translation": "できた"
+      },
+      {
+        "text": "would",
+        "translation": "だろう"
+      },
+      {
+        "text": "must",
+        "translation": "しなければならない"
+      },
+      {
+        "text": "something",
+        "translation": "何か"
+      },
+      {
+        "text": "anything",
+        "translation": "何でも"
+      },
+      {
+        "text": "everyone",
+        "translation": "みんな"
+      },
+      {
+        "text": "better",
+        "translation": "よりよい"
+      },
+      {
+        "text": "best",
+        "translation": "最もよい"
+      },
+      {
+        "text": "more",
+        "translation": "もっと多くの"
+      },
+      {
+        "text": "than",
+        "translation": "より"
+      },
+      {
+        "text": "shower",
+        "translation": "シャワー"
+      },
+      {
+        "text": "bath",
+        "translation": "風呂"
+      },
+      {
+        "text": "towel",
+        "translation": "タオル"
+      },
+      {
+        "text": "photo",
+        "translation": "写真"
+      },
+      {
+        "text": "comic",
+        "translation": "漫画"
+      },
+      {
+        "text": "wallet",
+        "translation": "財布"
+      },
+      {
+        "text": "toy",
+        "translation": "おもちゃ"
+      },
+      {
+        "text": "doghouse",
+        "translation": "犬小屋"
+      },
+      {
+        "text": "paper",
+        "translation": "紙"
+      },
+      {
+        "text": "question",
+        "translation": "質問"
+      },
+      {
+        "text": "blackboard",
+        "translation": "黒板"
+      },
+      {
+        "text": "grade",
+        "translation": "学年"
+      },
+      {
+        "text": "drama",
+        "translation": "ドラマ"
+      },
+      {
+        "text": "airplane",
+        "translation": "飛行機"
+      },
+      {
+        "text": "hall",
+        "translation": "ホール"
+      },
+      {
+        "text": "farm",
+        "translation": "農場"
+      },
+      {
+        "text": "corner",
+        "translation": "角"
+      },
+      {
+        "text": "hometown",
+        "translation": "故郷"
+      },
+      {
+        "text": "homestay",
+        "translation": "ホームステイ"
+      },
+      {
+        "text": "tent",
+        "translation": "テント"
+      },
+      {
+        "text": "painting",
+        "translation": "絵画"
+      },
+      {
+        "text": "comedy",
+        "translation": "喜劇"
+      },
+      {
+        "text": "gift",
+        "translation": "贈り物"
+      },
+      {
+        "text": "stomachache",
+        "translation": "腹痛"
+      },
+      {
+        "text": "headache",
+        "translation": "頭痛"
+      },
+      {
+        "text": "wife",
+        "translation": "妻"
+      },
+      {
+        "text": "cousin",
+        "translation": "いとこ"
+      },
+      {
+        "text": "wedding",
+        "translation": "結婚式"
+      },
+      {
+        "text": "dessert",
+        "translation": "デザート"
+      },
+      {
+        "text": "candy",
+        "translation": "キャンディー"
+      },
+      {
+        "text": "doughnut",
+        "translation": "ドーナツ"
+      },
+      {
+        "text": "cookie",
+        "translation": "クッキー"
+      },
+      {
+        "text": "pie",
+        "translation": "パイ"
+      },
+      {
+        "text": "spaghetti",
+        "translation": "スパゲッティ"
+      },
+      {
+        "text": "pasta",
+        "translation": "パスタ"
+      },
+      {
+        "text": "noodle",
+        "translation": "麺"
+      },
+      {
+        "text": "beef",
+        "translation": "牛肉"
+      },
+      {
+        "text": "steak",
+        "translation": "ステーキ"
+      },
+      {
+        "text": "sausage",
+        "translation": "ソーセージ"
+      },
+      {
+        "text": "cherry",
+        "translation": "さくらんぼ"
+      },
+      {
+        "text": "strawberry",
+        "translation": "いちご"
+      },
+      {
+        "text": "pineapple",
+        "translation": "パイナップル"
+      },
+      {
+        "text": "pumpkin",
+        "translation": "かぼちゃ"
+      },
+      {
+        "text": "onion",
+        "translation": "たまねぎ"
+      },
+      {
+        "text": "season",
+        "translation": "季節"
+      },
+      {
+        "text": "autumn",
+        "translation": "秋"
+      },
+      {
+        "text": "turtle",
+        "translation": "カメ"
+      },
+      {
+        "text": "lake",
+        "translation": "湖"
+      },
+      {
+        "text": "musician",
+        "translation": "音楽家"
+      },
+      {
+        "text": "band",
+        "translation": "バンド"
+      },
+      {
+        "text": "drum",
+        "translation": "ドラム"
+      },
+      {
+        "text": "trumpet",
+        "translation": "トランペット"
+      },
+      {
+        "text": "clothes",
+        "translation": "服"
+      },
+      {
+        "text": "tie",
+        "translation": "ネクタイ"
+      },
+      {
+        "text": "glasses",
+        "translation": "眼鏡"
+      },
+      {
+        "text": "gray",
+        "translation": "灰色の"
+      },
+      {
+        "text": "dollar",
+        "translation": "ドル"
+      },
+      {
+        "text": "yen",
+        "translation": "円"
+      },
+      {
+        "text": "Italy",
+        "translation": "イタリア"
+      },
+      {
+        "text": "Korea",
+        "translation": "韓国"
+      },
+      {
+        "text": "Mexico",
+        "translation": "メキシコ"
+      },
+      {
+        "text": "London",
+        "translation": "ロンドン"
+      },
+      {
+        "text": "Hawaii",
+        "translation": "ハワイ"
+      },
+      {
+        "text": "golf",
+        "translation": "ゴルフ"
+      },
+      {
+        "text": "football",
+        "translation": "フットボール"
+      },
+      {
+        "text": "bowling",
+        "translation": "ボウリング"
+      },
+      {
+        "text": "match",
+        "translation": "試合"
+      },
+      {
+        "text": "ice-skating",
+        "translation": "スケート"
+      },
+      {
+        "text": "surfing",
+        "translation": "サーフィン"
+      },
+      {
+        "text": "wrestling",
+        "translation": "レスリング"
+      },
+      {
+        "text": "idea",
+        "translation": "考え"
+      },
+      {
+        "text": "news",
+        "translation": "ニュース"
+      },
+      {
+        "text": "problem",
+        "translation": "問題"
+      },
+      {
+        "text": "Internet",
+        "translation": "インターネット"
+      },
+      {
+        "text": "website",
+        "translation": "ウェブサイト"
+      },
+      {
+        "text": "mail",
+        "translation": "郵便"
+      },
+      {
+        "text": "message",
+        "translation": "伝言"
+      },
+      {
+        "text": "language",
+        "translation": "言語"
+      },
+      {
+        "text": "stamp",
+        "translation": "切手"
+      },
+      {
+        "text": "life",
+        "translation": "生活"
+      },
+      {
+        "text": "list",
+        "translation": "一覧"
+      },
+      {
+        "text": "prize",
+        "translation": "賞"
+      },
+      {
+        "text": "haircut",
+        "translation": "散髪"
+      },
+      {
+        "text": "size",
+        "translation": "大きさ"
+      },
+      {
+        "text": "part",
+        "translation": "部分"
+      },
+      {
+        "text": "seat",
+        "translation": "席"
+      },
+      {
+        "text": "machine",
+        "translation": "機械"
+      },
+      {
+        "text": "leave",
+        "translation": "去る"
+      },
+      {
+        "text": "sleep",
+        "translation": "眠る"
+      },
+      {
+        "text": "begin",
+        "translation": "始める"
+      },
+      {
+        "text": "send",
+        "translation": "送る"
+      },
+      {
+        "text": "learn",
+        "translation": "学ぶ"
+      },
+      {
+        "text": "dance",
+        "translation": "踊る"
+      },
+      {
+        "text": "move",
+        "translation": "動く"
+      },
+      {
+        "text": "sit",
+        "translation": "座る"
+      },
+      {
+        "text": "win",
+        "translation": "勝つ"
+      },
+      {
+        "text": "carry",
+        "translation": "運ぶ"
+      },
+      {
+        "text": "draw",
+        "translation": "描く"
+      },
+      {
+        "text": "surprise",
+        "translation": "驚かせる"
+      },
+      {
+        "text": "happen",
+        "translation": "起こる"
+      },
+      {
+        "text": "smile",
+        "translation": "ほほえむ"
+      },
+      {
+        "text": "relax",
+        "translation": "くつろぐ"
+      },
+      {
+        "text": "check",
+        "translation": "確かめる"
+      },
+      {
+        "text": "remember",
+        "translation": "覚えている"
+      },
+      {
+        "text": "understand",
+        "translation": "理解する"
+      },
+      {
+        "text": "enter",
+        "translation": "入る"
+      },
+      {
+        "text": "share",
+        "translation": "分け合う"
+      },
+      {
+        "text": "miss",
+        "translation": "逃す"
+      },
+      {
+        "text": "medium",
+        "translation": "中くらいの"
+      },
+      {
+        "text": "healthy",
+        "translation": "健康な"
+      },
+      {
+        "text": "excited",
+        "translation": "わくわくした"
+      },
+      {
+        "text": "boring",
+        "translation": "退屈な"
+      },
+      {
+        "text": "close",
+        "translation": "近い"
+      },
+      {
+        "text": "full",
+        "translation": "いっぱいの"
+      },
+      {
+        "text": "junior",
+        "translation": "年下の"
+      },
+      {
+        "text": "quick",
+        "translation": "すばやい"
+      },
+      {
+        "text": "professional",
+        "translation": "プロの"
+      },
+      {
+        "text": "twice",
+        "translation": "二回"
+      },
+      {
+        "text": "o’clock",
+        "translation": "時ちょうど"
+      },
+      {
+        "text": "someday",
+        "translation": "いつか"
+      },
+      {
+        "text": "already",
+        "translation": "すでに"
+      },
+      {
+        "text": "slowly",
+        "translation": "ゆっくりと"
+      },
+      {
+        "text": "ago",
+        "translation": "前に"
+      },
+      {
+        "text": "outside",
+        "translation": "外で"
+      },
+      {
+        "text": "before",
+        "translation": "の前に"
+      },
+      {
+        "text": "during",
+        "translation": "の間に"
+      },
+      {
+        "text": "shall",
+        "translation": "しましょうか"
+      },
+      {
+        "text": "mine",
+        "translation": "私のもの"
+      },
+      {
+        "text": "everything",
+        "translation": "すべて"
+      },
+      {
+        "text": "most",
+        "translation": "ほとんどの"
+      },
+      {
+        "text": "a.m.",
+        "translation": "午前"
+      },
+      {
+        "text": "p.m.",
+        "translation": "午後"
       }
     ],
     "2": [
       {
-        "text": "sample phrase",
-        "translation": "サンプル熟語"
+        "text": "want to",
+        "translation": "したい"
+      },
+      {
+        "text": "like doing",
+        "translation": "するのが好き"
+      },
+      {
+        "text": "want to be",
+        "translation": "になりたい"
+      },
+      {
+        "text": "need to",
+        "translation": "する必要がある"
+      },
+      {
+        "text": "go home",
+        "translation": "家に帰る"
+      },
+      {
+        "text": "get home",
+        "translation": "家に着く"
+      },
+      {
+        "text": "come home",
+        "translation": "家に帰ってくる"
+      },
+      {
+        "text": "do my homework",
+        "translation": "宿題をする"
+      },
+      {
+        "text": "take someone to school",
+        "translation": "だれかを学校へ連れていく"
+      },
+      {
+        "text": "look for something",
+        "translation": "何かを探す"
+      },
+      {
+        "text": "leave home for school",
+        "translation": "家を出て学校へ向かう"
+      },
+      {
+        "text": "have a good time",
+        "translation": "楽しく過ごす"
+      },
+      {
+        "text": "wait for the bus",
+        "translation": "バスを待つ"
+      },
+      {
+        "text": "stay at a hotel",
+        "translation": "ホテルに泊まる"
+      },
+      {
+        "text": "stay with my aunt",
+        "translation": "おばの家に泊まる"
+      },
+      {
+        "text": "get up",
+        "translation": "起きる"
+      },
+      {
+        "text": "wake up",
+        "translation": "目を覚ます"
+      },
+      {
+        "text": "take a trip",
+        "translation": "旅行をする"
+      },
+      {
+        "text": "go on a trip",
+        "translation": "旅行に行く"
+      },
+      {
+        "text": "speak to my teacher",
+        "translation": "先生に話しかける"
+      },
+      {
+        "text": "talk to my friend",
+        "translation": "友達に話す"
+      },
+      {
+        "text": "talk with my mother",
+        "translation": "母と話す"
+      },
+      {
+        "text": "listen to music",
+        "translation": "音楽を聞く"
+      },
+      {
+        "text": "hear about the news",
+        "translation": "そのニュースについて耳にする"
+      },
+      {
+        "text": "go shopping",
+        "translation": "買い物に行く"
+      },
+      {
+        "text": "finish reading",
+        "translation": "読み終える"
+      },
+      {
+        "text": "enjoy playing tennis",
+        "translation": "テニスをするのを楽しむ"
+      },
+      {
+        "text": "go back to school",
+        "translation": "学校へ戻る"
+      },
+      {
+        "text": "come back to Japan",
+        "translation": "日本へ戻ってくる"
+      },
+      {
+        "text": "get back",
+        "translation": "戻る"
+      },
+      {
+        "text": "come back from school",
+        "translation": "学校から帰ってくる"
+      },
+      {
+        "text": "arrive at the station",
+        "translation": "駅に着く"
+      },
+      {
+        "text": "arrive in Tokyo",
+        "translation": "東京に着く"
+      },
+      {
+        "text": "get to school",
+        "translation": "学校に着く"
+      },
+      {
+        "text": "start studying",
+        "translation": "勉強し始める"
+      },
+      {
+        "text": "stop talking",
+        "translation": "話すのをやめる"
+      },
+      {
+        "text": "take a picture",
+        "translation": "写真を撮る"
+      },
+      {
+        "text": "walk to school",
+        "translation": "歩いて学校へ行く"
+      },
+      {
+        "text": "ask my teacher for help",
+        "translation": "先生に助けを求める"
+      },
+      {
+        "text": "help my mother with dinner",
+        "translation": "夕食のしたくで母を手伝う"
+      },
+      {
+        "text": "ask for help",
+        "translation": "助けを求める"
+      },
+      {
+        "text": "have a cold",
+        "translation": "かぜをひいている"
+      },
+      {
+        "text": "take a bath",
+        "translation": "風呂に入る"
+      },
+      {
+        "text": "take a shower",
+        "translation": "シャワーを浴びる"
+      },
+      {
+        "text": "take a walk",
+        "translation": "散歩する"
+      },
+      {
+        "text": "go out",
+        "translation": "外出する"
+      },
+      {
+        "text": "say goodbye to my friend",
+        "translation": "友達にさよならを言う"
+      },
+      {
+        "text": "stay at home",
+        "translation": "家にいる"
+      },
+      {
+        "text": "think of my future",
+        "translation": "自分の将来について考える"
+      },
+      {
+        "text": "become friends with him",
+        "translation": "彼と友達になる"
+      },
+      {
+        "text": "catch a cold",
+        "translation": "かぜをひく"
+      },
+      {
+        "text": "get off the bus",
+        "translation": "バスを降りる"
+      },
+      {
+        "text": "give up",
+        "translation": "あきらめる"
+      },
+      {
+        "text": "have no idea",
+        "translation": "まったくわからない"
+      },
+      {
+        "text": "go around the park",
+        "translation": "公園を回る"
+      },
+      {
+        "text": "look around",
+        "translation": "見回す"
+      },
+      {
+        "text": "move to Tokyo",
+        "translation": "東京へ引っ越す"
+      },
+      {
+        "text": "write to my friend",
+        "translation": "友達に手紙を書く"
+      },
+      {
+        "text": "write back",
+        "translation": "返事を書く"
+      },
+      {
+        "text": "slow down",
+        "translation": "ゆっくり進む"
+      },
+      {
+        "text": "worry about my test",
+        "translation": "テストのことを心配する"
+      },
+      {
+        "text": "look like my father",
+        "translation": "父に似ている"
+      },
+      {
+        "text": "believe in yourself",
+        "translation": "自分を信じる"
+      },
+      {
+        "text": "play catch",
+        "translation": "キャッチボールをする"
+      },
+      {
+        "text": "feel better",
+        "translation": "気分がよくなる"
+      },
+      {
+        "text": "a lot of people",
+        "translation": "たくさんの人"
+      },
+      {
+        "text": "be late for school",
+        "translation": "学校に遅れる"
+      },
+      {
+        "text": "be careful",
+        "translation": "気をつける"
+      },
+      {
+        "text": "be interested in science",
+        "translation": "科学に興味がある"
+      },
+      {
+        "text": "kind of",
+        "translation": "一種の"
+      },
+      {
+        "text": "a glass of water",
+        "translation": "一杯の水"
+      },
+      {
+        "text": "a cup of tea",
+        "translation": "一杯のお茶"
+      },
+      {
+        "text": "in the morning",
+        "translation": "朝に"
+      },
+      {
+        "text": "in the afternoon",
+        "translation": "午後に"
+      },
+      {
+        "text": "in the future",
+        "translation": "将来"
+      },
+      {
+        "text": "how long",
+        "translation": "どのくらい長く"
+      },
+      {
+        "text": "all day long",
+        "translation": "一日中"
+      },
+      {
+        "text": "for a long time",
+        "translation": "長い間"
+      },
+      {
+        "text": "last week",
+        "translation": "先週"
+      },
+      {
+        "text": "after work",
+        "translation": "仕事のあとで"
+      },
+      {
+        "text": "for example",
+        "translation": "たとえば"
+      },
+      {
+        "text": "as tall as my father",
+        "translation": "父と同じくらい背が高い"
+      },
+      {
+        "text": "a lot",
+        "translation": "たくさん"
+      },
+      {
+        "text": "from Tokyo to Osaka",
+        "translation": "東京から大阪まで"
+      },
+      {
+        "text": "ten years old",
+        "translation": "10歳"
+      },
+      {
+        "text": "in front of the station",
+        "translation": "駅の前に"
+      },
+      {
+        "text": "next to the school",
+        "translation": "学校のとなりに"
+      },
+      {
+        "text": "out of the box",
+        "translation": "箱の外へ"
+      },
+      {
+        "text": "both dogs and cats",
+        "translation": "犬も猫も両方"
+      },
+      {
+        "text": "one day",
+        "translation": "ある日"
+      },
+      {
+        "text": "on the first day",
+        "translation": "最初の日に"
+      },
+      {
+        "text": "on vacation",
+        "translation": "休暇中で"
+      },
+      {
+        "text": "on foot",
+        "translation": "歩いて"
+      },
+      {
+        "text": "around the corner",
+        "translation": "すぐ近くに"
+      },
+      {
+        "text": "by the way",
+        "translation": "ところで"
+      },
+      {
+        "text": "more and more",
+        "translation": "ますます"
+      },
+      {
+        "text": "for free",
+        "translation": "無料で"
+      },
+      {
+        "text": "right now",
+        "translation": "今すぐ"
+      },
+      {
+        "text": "all over the world",
+        "translation": "世界中で"
+      },
+      {
+        "text": "have to study",
+        "translation": "勉強しなければならない"
       }
     ],
     "3": [
       {
-        "text": "This is a sample.",
-        "translation": "これはサンプルです。"
+        "text": "Nice to meet you.",
+        "translation": "はじめまして。"
+      },
+      {
+        "text": "How are you?",
+        "translation": "お元気ですか。"
+      },
+      {
+        "text": "I'm fine, thanks.",
+        "translation": "元気です、ありがとう。"
+      },
+      {
+        "text": "Have a good day.",
+        "translation": "よい一日を。"
+      },
+      {
+        "text": "Have fun.",
+        "translation": "楽しんでね。"
+      },
+      {
+        "text": "See you later.",
+        "translation": "またあとで。"
+      },
+      {
+        "text": "See you tomorrow.",
+        "translation": "また明日。"
+      },
+      {
+        "text": "Take care.",
+        "translation": "気をつけて。"
+      },
+      {
+        "text": "I'm home.",
+        "translation": "ただいま。"
+      },
+      {
+        "text": "Good night.",
+        "translation": "おやすみなさい。"
+      },
+      {
+        "text": "May I help you?",
+        "translation": "お手伝いしましょうか。"
+      },
+      {
+        "text": "How much is this shirt?",
+        "translation": "このシャツはいくらですか。"
+      },
+      {
+        "text": "I'm looking for a present.",
+        "translation": "贈り物を探しています。"
+      },
+      {
+        "text": "I want to buy some flowers.",
+        "translation": "花をいくつか買いたいです。"
+      },
+      {
+        "text": "These are on sale.",
+        "translation": "これらはセール中です。"
+      },
+      {
+        "text": "It's two thousand yen.",
+        "translation": "2000円です。"
+      },
+      {
+        "text": "I'll take it.",
+        "translation": "それをください。"
+      },
+      {
+        "text": "Anything else?",
+        "translation": "ほかに何かありますか。"
+      },
+      {
+        "text": "That's all, thanks.",
+        "translation": "それで全部です、ありがとう。"
+      },
+      {
+        "text": "Here you are.",
+        "translation": "はい、どうぞ。"
+      },
+      {
+        "text": "Excuse me.",
+        "translation": "すみません。"
+      },
+      {
+        "text": "Can I have some more water?",
+        "translation": "水をもう少しいただけますか。"
+      },
+      {
+        "text": "Would you like something to drink?",
+        "translation": "何か飲み物はいかがですか。"
+      },
+      {
+        "text": "Would you like tea or coffee?",
+        "translation": "紅茶とコーヒーのどちらがよいですか。"
+      },
+      {
+        "text": "I'll have grape juice.",
+        "translation": "ぶどうジュースをください。"
+      },
+      {
+        "text": "I'd like a hot dog.",
+        "translation": "ホットドッグをください。"
+      },
+      {
+        "text": "It looks good.",
+        "translation": "おいしそうです。"
+      },
+      {
+        "text": "No, thank you. I'm full.",
+        "translation": "いいえ、結構です。おなかがいっぱいです。"
+      },
+      {
+        "text": "Attention, please.",
+        "translation": "ご注意ください。"
+      },
+      {
+        "text": "It's warm today.",
+        "translation": "今日は暖かいです。"
+      },
+      {
+        "text": "It's going to rain soon.",
+        "translation": "もうすぐ雨が降りそうです。"
+      },
+      {
+        "text": "Is it raining outside?",
+        "translation": "外では雨が降っていますか。"
+      },
+      {
+        "text": "It's raining now.",
+        "translation": "今、雨が降っています。"
+      },
+      {
+        "text": "How was the weather in New York?",
+        "translation": "ニューヨークの天気はどうでしたか。"
+      },
+      {
+        "text": "It snowed a lot last night.",
+        "translation": "昨夜はたくさん雪が降りました。"
+      },
+      {
+        "text": "Where is the post office?",
+        "translation": "郵便局はどこですか。"
+      },
+      {
+        "text": "Which bus goes to the airport?",
+        "translation": "どのバスが空港へ行きますか。"
+      },
+      {
+        "text": "How can I get to the museum?",
+        "translation": "どうやって博物館へ行けますか。"
+      },
+      {
+        "text": "I'll show you the way.",
+        "translation": "道を案内します。"
+      },
+      {
+        "text": "It takes about fifteen minutes.",
+        "translation": "だいたい15分かかります。"
+      },
+      {
+        "text": "What happened?",
+        "translation": "どうしたのですか。"
+      },
+      {
+        "text": "What's wrong?",
+        "translation": "どうしたのですか。"
+      },
+      {
+        "text": "I can't find my car key.",
+        "translation": "車の鍵が見つかりません。"
+      },
+      {
+        "text": "I lost my train ticket.",
+        "translation": "電車の切符をなくしました。"
+      },
+      {
+        "text": "How do you feel now?",
+        "translation": "今の気分はどうですか。"
+      },
+      {
+        "text": "I feel much better, thanks.",
+        "translation": "ずっとよくなりました、ありがとう。"
+      },
+      {
+        "text": "Not very good.",
+        "translation": "あまりよくありません。"
+      },
+      {
+        "text": "I have a cold.",
+        "translation": "かぜをひいています。"
+      },
+      {
+        "text": "I have to go now.",
+        "translation": "もう行かなければなりません。"
+      },
+      {
+        "text": "How long will you stay in New York?",
+        "translation": "ニューヨークにはどのくらい滞在する予定ですか。"
+      },
+      {
+        "text": "How often do you practice?",
+        "translation": "どのくらいの頻度で練習しますか。"
+      },
+      {
+        "text": "Once a week.",
+        "translation": "週に一回です。"
+      },
+      {
+        "text": "We'll be late for school!",
+        "translation": "学校に遅れてしまいます。"
+      },
+      {
+        "text": "What time will the movie start?",
+        "translation": "映画は何時に始まりますか。"
+      },
+      {
+        "text": "Just a minute, please.",
+        "translation": "ちょっと待ってください。"
+      },
+      {
+        "text": "I'll call back later.",
+        "translation": "あとでかけ直します。"
+      },
+      {
+        "text": "Good luck.",
+        "translation": "がんばって。"
+      },
+      {
+        "text": "I hope so.",
+        "translation": "そうだといいですね。"
+      },
+      {
+        "text": "I think so, too.",
+        "translation": "私もそう思います。"
+      },
+      {
+        "text": "I'm sorry, but I don't know.",
+        "translation": "すみませんが、わかりません。"
+      },
+      {
+        "text": "I'm not sure.",
+        "translation": "よくわかりません。"
+      },
+      {
+        "text": "I'd like to see a movie.",
+        "translation": "映画を見たいです。"
+      },
+      {
+        "text": "It was fun!",
+        "translation": "楽しかったです。"
+      },
+      {
+        "text": "That's wonderful.",
+        "translation": "それはすばらしいですね。"
+      },
+      {
+        "text": "No problem.",
+        "translation": "問題ありません。"
+      },
+      {
+        "text": "Sure.",
+        "translation": "もちろんです。"
+      },
+      {
+        "text": "Thank you.",
+        "translation": "ありがとうございます。"
+      },
+      {
+        "text": "Thanks a lot.",
+        "translation": "本当にありがとうございます。"
+      },
+      {
+        "text": "You're welcome.",
+        "translation": "どういたしまして。"
+      },
+      {
+        "text": "Not at all.",
+        "translation": "どういたしまして。"
+      },
+      {
+        "text": "Thank you for your help.",
+        "translation": "手伝ってくれてありがとう。"
+      },
+      {
+        "text": "Thank you for coming to our school festival.",
+        "translation": "学校祭に来てくれてありがとう。"
+      },
+      {
+        "text": "That's great.",
+        "translation": "それはすごいですね。"
+      },
+      {
+        "text": "Sounds good.",
+        "translation": "よさそうですね。"
+      },
+      {
+        "text": "That's a good idea!",
+        "translation": "それはいい考えですね。"
+      },
+      {
+        "text": "That's OK.",
+        "translation": "それで大丈夫です。"
+      },
+      {
+        "text": "No, not really.",
+        "translation": "いいえ、そうでもありません。"
+      },
+      {
+        "text": "That's too bad.",
+        "translation": "それは残念ですね。"
+      },
+      {
+        "text": "Did you enjoy the baseball game yesterday?",
+        "translation": "昨日の野球の試合は楽しめましたか。"
+      },
+      {
+        "text": "Did you sleep well?",
+        "translation": "よく眠れましたか。"
+      },
+      {
+        "text": "How was your trip to China?",
+        "translation": "中国への旅行はどうでしたか。"
+      },
+      {
+        "text": "What do you think of her idea?",
+        "translation": "彼女の考えをどう思いますか。"
+      },
+      {
+        "text": "What kind of music do you like?",
+        "translation": "どんな音楽が好きですか。"
+      },
+      {
+        "text": "What movie do you like the best?",
+        "translation": "どの映画が一番好きですか。"
+      },
+      {
+        "text": "Where can I buy a ticket?",
+        "translation": "どこで切符を買えますか。"
+      },
+      {
+        "text": "Could you show me your textbook?",
+        "translation": "あなたの教科書を見せてくれますか。"
+      },
+      {
+        "text": "Do you need anything from the supermarket?",
+        "translation": "スーパーで何か必要なものはありますか。"
+      },
+      {
+        "text": "Do you want to come with us?",
+        "translation": "私たちと一緒に来ますか。"
+      },
+      {
+        "text": "Would you like to see a movie tonight?",
+        "translation": "今夜映画を見ませんか。"
+      },
+      {
+        "text": "How about sending a Christmas card to her?",
+        "translation": "彼女にクリスマスカードを送るのはどうですか。"
+      },
+      {
+        "text": "Let's go and see a movie.",
+        "translation": "映画を見に行きましょう。"
+      },
+      {
+        "text": "Let's have lunch.",
+        "translation": "昼食にしましょう。"
+      },
+      {
+        "text": "Shall I open the window?",
+        "translation": "窓を開けましょうか。"
+      },
+      {
+        "text": "Shall we go for dinner tomorrow?",
+        "translation": "明日夕食に行きませんか。"
+      },
+      {
+        "text": "Why not?",
+        "translation": "いいですね。"
+      },
+      {
+        "text": "Clean your room now.",
+        "translation": "今すぐ部屋を片づけなさい。"
+      },
+      {
+        "text": "Come to my house next Sunday.",
+        "translation": "次の日曜日に私の家に来てください。"
+      },
+      {
+        "text": "Don't forget to wash your hands.",
+        "translation": "手を洗うのを忘れないでください。"
+      },
+      {
+        "text": "Hurry up, or we'll be late.",
+        "translation": "急ぎなさい、さもないと遅れます。"
+      },
+      {
+        "text": "Please write back soon.",
+        "translation": "どうかすぐに返事を書いてください。"
       }
     ]
   }
