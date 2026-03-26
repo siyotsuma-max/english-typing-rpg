@@ -1,0 +1,2978 @@
+{
+  "category": "eiken",
+  "series": "grade5",
+  "difficultyKey": "Eiken5",
+  "displayName": "??5?",
+  "levels": {
+    "1": [
+      {
+        "text": "banana",
+        "translation": "バナナ"
+      },
+      {
+        "text": "piano",
+        "translation": "ピアノ"
+      },
+      {
+        "text": "camera",
+        "translation": "カメラ"
+      },
+      {
+        "text": "computer",
+        "translation": "コンピューター"
+      },
+      {
+        "text": "bus",
+        "translation": "バス"
+      },
+      {
+        "text": "taxi",
+        "translation": "タクシー"
+      },
+      {
+        "text": "hotel",
+        "translation": "ホテル"
+      },
+      {
+        "text": "restaurant",
+        "translation": "レストラン"
+      },
+      {
+        "text": "sandwich",
+        "translation": "サンドイッチ"
+      },
+      {
+        "text": "hamburger",
+        "translation": "ハンバーガー"
+      },
+      {
+        "text": "pizza",
+        "translation": "ピザ"
+      },
+      {
+        "text": "curry",
+        "translation": "カレー"
+      },
+      {
+        "text": "juice",
+        "translation": "ジュース"
+      },
+      {
+        "text": "coffee",
+        "translation": "コーヒー"
+      },
+      {
+        "text": "milk",
+        "translation": "牛乳"
+      },
+      {
+        "text": "cake",
+        "translation": "ケーキ"
+      },
+      {
+        "text": "chocolate",
+        "translation": "チョコレート"
+      },
+      {
+        "text": "orange",
+        "translation": "オレンジ"
+      },
+      {
+        "text": "apple",
+        "translation": "りんご"
+      },
+      {
+        "text": "tomato",
+        "translation": "トマト"
+      },
+      {
+        "text": "salad",
+        "translation": "サラダ"
+      },
+      {
+        "text": "melon",
+        "translation": "メロン"
+      },
+      {
+        "text": "lemon",
+        "translation": "レモン"
+      },
+      {
+        "text": "music",
+        "translation": "音楽"
+      },
+      {
+        "text": "guitar",
+        "translation": "ギター"
+      },
+      {
+        "text": "violin",
+        "translation": "バイオリン"
+      },
+      {
+        "text": "flute",
+        "translation": "フルート"
+      },
+      {
+        "text": "concert",
+        "translation": "コンサート"
+      },
+      {
+        "text": "radio",
+        "translation": "ラジオ"
+      },
+      {
+        "text": "sport",
+        "translation": "スポーツ"
+      },
+      {
+        "text": "tennis",
+        "translation": "テニス"
+      },
+      {
+        "text": "soccer",
+        "translation": "サッカー"
+      },
+      {
+        "text": "baseball",
+        "translation": "野球"
+      },
+      {
+        "text": "basketball",
+        "translation": "バスケットボール"
+      },
+      {
+        "text": "volleyball",
+        "translation": "バレーボール"
+      },
+      {
+        "text": "badminton",
+        "translation": "バドミントン"
+      },
+      {
+        "text": "ski",
+        "translation": "スキーする"
+      },
+      {
+        "text": "skate",
+        "translation": "スケートする"
+      },
+      {
+        "text": "pool",
+        "translation": "プール"
+      },
+      {
+        "text": "racket",
+        "translation": "ラケット"
+      },
+      {
+        "text": "glove",
+        "translation": "手袋"
+      },
+      {
+        "text": "bat",
+        "translation": "バット"
+      },
+      {
+        "text": "team",
+        "translation": "チーム"
+      },
+      {
+        "text": "player",
+        "translation": "選手"
+      },
+      {
+        "text": "score",
+        "translation": "得点"
+      },
+      {
+        "text": "game",
+        "translation": "ゲーム、試合"
+      },
+      {
+        "text": "start",
+        "translation": "始める"
+      },
+      {
+        "text": "goal",
+        "translation": "ゴール"
+      },
+      {
+        "text": "camp",
+        "translation": "キャンプする"
+      },
+      {
+        "text": "picnic",
+        "translation": "ピクニック"
+      },
+      {
+        "text": "hiking",
+        "translation": "ハイキング"
+      },
+      {
+        "text": "party",
+        "translation": "パーティー"
+      },
+      {
+        "text": "festival",
+        "translation": "祭り"
+      },
+      {
+        "text": "present",
+        "translation": "プレゼント"
+      },
+      {
+        "text": "card",
+        "translation": "カード"
+      },
+      {
+        "text": "calendar",
+        "translation": "カレンダー"
+      },
+      {
+        "text": "notebook",
+        "translation": "ノート"
+      },
+      {
+        "text": "pen",
+        "translation": "ペン"
+      },
+      {
+        "text": "pencil",
+        "translation": "鉛筆"
+      },
+      {
+        "text": "eraser",
+        "translation": "消しゴム"
+      },
+      {
+        "text": "ruler",
+        "translation": "定規"
+      },
+      {
+        "text": "bag",
+        "translation": "かばん"
+      },
+      {
+        "text": "cap",
+        "translation": "帽子 (キャップ)"
+      },
+      {
+        "text": "hat",
+        "translation": "帽子 (ハット)"
+      },
+      {
+        "text": "shirt",
+        "translation": "シャツ"
+      },
+      {
+        "text": "coat",
+        "translation": "コート"
+      },
+      {
+        "text": "jacket",
+        "translation": "ジャケット"
+      },
+      {
+        "text": "sweater",
+        "translation": "セーター"
+      },
+      {
+        "text": "dress",
+        "translation": "ドレス"
+      },
+      {
+        "text": "skirt",
+        "translation": "スカート"
+      },
+      {
+        "text": "shoe",
+        "translation": "靴"
+      },
+      {
+        "text": "sock",
+        "translation": "靴下"
+      },
+      {
+        "text": "pocket",
+        "translation": "ポケット"
+      },
+      {
+        "text": "umbrella",
+        "translation": "傘"
+      },
+      {
+        "text": "watch",
+        "translation": "腕時計"
+      },
+      {
+        "text": "cup",
+        "translation": "カップ"
+      },
+      {
+        "text": "glass",
+        "translation": "グラス"
+      },
+      {
+        "text": "dish",
+        "translation": "皿、料理"
+      },
+      {
+        "text": "plate",
+        "translation": "皿"
+      },
+      {
+        "text": "spoon",
+        "translation": "スプーン"
+      },
+      {
+        "text": "fork",
+        "translation": "フォーク"
+      },
+      {
+        "text": "knife",
+        "translation": "ナイフ"
+      },
+      {
+        "text": "chopstick",
+        "translation": "箸"
+      },
+      {
+        "text": "bottle",
+        "translation": "ボトル"
+      },
+      {
+        "text": "box",
+        "translation": "箱"
+      },
+      {
+        "text": "basket",
+        "translation": "バスケット"
+      },
+      {
+        "text": "table",
+        "translation": "テーブル"
+      },
+      {
+        "text": "chair",
+        "translation": "椅子"
+      },
+      {
+        "text": "desk",
+        "translation": "机"
+      },
+      {
+        "text": "bed",
+        "translation": "ベッド"
+      },
+      {
+        "text": "sofa",
+        "translation": "ソファ"
+      },
+      {
+        "text": "curtain",
+        "translation": "カーテン"
+      },
+      {
+        "text": "door",
+        "translation": "ドア"
+      },
+      {
+        "text": "window",
+        "translation": "窓"
+      },
+      {
+        "text": "floor",
+        "translation": "床"
+      },
+      {
+        "text": "wall",
+        "translation": "壁"
+      },
+      {
+        "text": "room",
+        "translation": "部屋"
+      },
+      {
+        "text": "kitchen",
+        "translation": "台所"
+      },
+      {
+        "text": "bathroom",
+        "translation": "浴室"
+      },
+      {
+        "text": "bedroom",
+        "translation": "寝室"
+      },
+      {
+        "text": "garden",
+        "translation": "庭"
+      },
+      {
+        "text": "school",
+        "translation": "学校"
+      },
+      {
+        "text": "classroom",
+        "translation": "教室"
+      },
+      {
+        "text": "gym",
+        "translation": "体育館"
+      },
+      {
+        "text": "library",
+        "translation": "図書館"
+      },
+      {
+        "text": "office",
+        "translation": "オフィス"
+      },
+      {
+        "text": "hospital",
+        "translation": "病院"
+      },
+      {
+        "text": "bank",
+        "translation": "銀行"
+      },
+      {
+        "text": "station",
+        "translation": "駅"
+      },
+      {
+        "text": "airport",
+        "translation": "空港"
+      },
+      {
+        "text": "park",
+        "translation": "公園"
+      },
+      {
+        "text": "bookstore",
+        "translation": "本屋"
+      },
+      {
+        "text": "supermarket",
+        "translation": "スーパーマーケット"
+      },
+      {
+        "text": "building",
+        "translation": "建物"
+      },
+      {
+        "text": "apartment",
+        "translation": "アパート"
+      },
+      {
+        "text": "zoo",
+        "translation": "動物園"
+      },
+      {
+        "text": "museum",
+        "translation": "博物館"
+      },
+      {
+        "text": "theater",
+        "translation": "劇場"
+      },
+      {
+        "text": "stadium",
+        "translation": "スタジアム"
+      },
+      {
+        "text": "bridge",
+        "translation": "橋"
+      },
+      {
+        "text": "tower",
+        "translation": "塔"
+      },
+      {
+        "text": "street",
+        "translation": "通り"
+      },
+      {
+        "text": "city",
+        "translation": "都市"
+      },
+      {
+        "text": "town",
+        "translation": "町"
+      },
+      {
+        "text": "village",
+        "translation": "村"
+      },
+      {
+        "text": "country",
+        "translation": "国"
+      },
+      {
+        "text": "world",
+        "translation": "世界"
+      },
+      {
+        "text": "Japan",
+        "translation": "日本"
+      },
+      {
+        "text": "America",
+        "translation": "アメリカ"
+      },
+      {
+        "text": "Canada",
+        "translation": "カナダ"
+      },
+      {
+        "text": "Australia",
+        "translation": "オーストラリア"
+      },
+      {
+        "text": "China",
+        "translation": "中国"
+      },
+      {
+        "text": "France",
+        "translation": "フランス"
+      },
+      {
+        "text": "English",
+        "translation": "英語"
+      },
+      {
+        "text": "Chinese",
+        "translation": "中国語"
+      },
+      {
+        "text": "French",
+        "translation": "フランス語"
+      },
+      {
+        "text": "car",
+        "translation": "車"
+      },
+      {
+        "text": "bike",
+        "translation": "自転車 (バイク)"
+      },
+      {
+        "text": "bicycle",
+        "translation": "自転車 (バイシクル)"
+      },
+      {
+        "text": "train",
+        "translation": "電車"
+      },
+      {
+        "text": "plane",
+        "translation": "飛行機"
+      },
+      {
+        "text": "ship",
+        "translation": "船"
+      },
+      {
+        "text": "boat",
+        "translation": "ボート"
+      },
+      {
+        "text": "truck",
+        "translation": "トラック"
+      },
+      {
+        "text": "ticket",
+        "translation": "チケット"
+      },
+      {
+        "text": "passport",
+        "translation": "パスポート"
+      },
+      {
+        "text": "map",
+        "translation": "地図"
+      },
+      {
+        "text": "picture",
+        "translation": "絵、写真"
+      },
+      {
+        "text": "letter",
+        "translation": "手紙"
+      },
+      {
+        "text": "postcard",
+        "translation": "はがき"
+      },
+      {
+        "text": "phone",
+        "translation": "電話"
+      },
+      {
+        "text": "book",
+        "translation": "本"
+      },
+      {
+        "text": "magazine",
+        "translation": "雑誌"
+      },
+      {
+        "text": "newspaper",
+        "translation": "新聞"
+      },
+      {
+        "text": "dictionary",
+        "translation": "辞書"
+      },
+      {
+        "text": "textbook",
+        "translation": "教科書"
+      },
+      {
+        "text": "story",
+        "translation": "物語"
+      },
+      {
+        "text": "page",
+        "translation": "ページ"
+      },
+      {
+        "text": "dog",
+        "translation": "犬"
+      },
+      {
+        "text": "cat",
+        "translation": "猫"
+      },
+      {
+        "text": "rabbit",
+        "translation": "うさぎ"
+      },
+      {
+        "text": "hamster",
+        "translation": "ハムスター"
+      },
+      {
+        "text": "bird",
+        "translation": "鳥"
+      },
+      {
+        "text": "fish",
+        "translation": "魚"
+      },
+      {
+        "text": "animal",
+        "translation": "動物"
+      },
+      {
+        "text": "lion",
+        "translation": "ライオン"
+      },
+      {
+        "text": "tiger",
+        "translation": "トラ"
+      },
+      {
+        "text": "elephant",
+        "translation": "象"
+      },
+      {
+        "text": "monkey",
+        "translation": "猿"
+      },
+      {
+        "text": "bear",
+        "translation": "熊"
+      },
+      {
+        "text": "panda",
+        "translation": "パンダ"
+      },
+      {
+        "text": "horse",
+        "translation": "馬"
+      },
+      {
+        "text": "cow",
+        "translation": "牛"
+      },
+      {
+        "text": "pig",
+        "translation": "豚"
+      },
+      {
+        "text": "sheep",
+        "translation": "羊"
+      },
+      {
+        "text": "chicken",
+        "translation": "鶏"
+      },
+      {
+        "text": "dolphin",
+        "translation": "イルカ"
+      },
+      {
+        "text": "whale",
+        "translation": "クジラ"
+      },
+      {
+        "text": "insect",
+        "translation": "昆虫"
+      },
+      {
+        "text": "flower",
+        "translation": "花"
+      },
+      {
+        "text": "rose",
+        "translation": "バラ"
+      },
+      {
+        "text": "tree",
+        "translation": "木"
+      },
+      {
+        "text": "leaf",
+        "translation": "葉"
+      },
+      {
+        "text": "grass",
+        "translation": "草"
+      },
+      {
+        "text": "mountain",
+        "translation": "山"
+      },
+      {
+        "text": "river",
+        "translation": "川"
+      },
+      {
+        "text": "sea",
+        "translation": "海"
+      },
+      {
+        "text": "beach",
+        "translation": "ビーチ"
+      },
+      {
+        "text": "sky",
+        "translation": "空"
+      },
+      {
+        "text": "star",
+        "translation": "星"
+      },
+      {
+        "text": "sun",
+        "translation": "太陽"
+      },
+      {
+        "text": "moon",
+        "translation": "月"
+      },
+      {
+        "text": "cloud",
+        "translation": "雲"
+      },
+      {
+        "text": "rain",
+        "translation": "雨"
+      },
+      {
+        "text": "snow",
+        "translation": "雪"
+      },
+      {
+        "text": "wind",
+        "translation": "風"
+      },
+      {
+        "text": "weather",
+        "translation": "天気"
+      },
+      {
+        "text": "sunny",
+        "translation": "晴れた"
+      },
+      {
+        "text": "cloudy",
+        "translation": "曇った"
+      },
+      {
+        "text": "rainy",
+        "translation": "雨の"
+      },
+      {
+        "text": "snowy",
+        "translation": "雪の"
+      },
+      {
+        "text": "windy",
+        "translation": "風の強い"
+      },
+      {
+        "text": "warm",
+        "translation": "暖かい"
+      },
+      {
+        "text": "cool",
+        "translation": "涼しい"
+      },
+      {
+        "text": "hot",
+        "translation": "暑い"
+      },
+      {
+        "text": "cold",
+        "translation": "寒い"
+      },
+      {
+        "text": "spring",
+        "translation": "春"
+      },
+      {
+        "text": "summer",
+        "translation": "夏"
+      },
+      {
+        "text": "fall",
+        "translation": "秋"
+      },
+      {
+        "text": "winter",
+        "translation": "冬"
+      },
+      {
+        "text": "color",
+        "translation": "色"
+      },
+      {
+        "text": "red",
+        "translation": "赤"
+      },
+      {
+        "text": "blue",
+        "translation": "青"
+      },
+      {
+        "text": "white",
+        "translation": "白"
+      },
+      {
+        "text": "black",
+        "translation": "黒"
+      },
+      {
+        "text": "green",
+        "translation": "緑"
+      },
+      {
+        "text": "yellow",
+        "translation": "黄色"
+      },
+      {
+        "text": "pink",
+        "translation": "ピンク"
+      },
+      {
+        "text": "orange",
+        "translation": "オレンジ色"
+      },
+      {
+        "text": "brown",
+        "translation": "茶色"
+      },
+      {
+        "text": "purple",
+        "translation": "紫"
+      },
+      {
+        "text": "gold",
+        "translation": "金"
+      },
+      {
+        "text": "silver",
+        "translation": "銀"
+      },
+      {
+        "text": "one",
+        "translation": "1"
+      },
+      {
+        "text": "two",
+        "translation": "2"
+      },
+      {
+        "text": "three",
+        "translation": "3"
+      },
+      {
+        "text": "four",
+        "translation": "4"
+      },
+      {
+        "text": "five",
+        "translation": "5"
+      },
+      {
+        "text": "six",
+        "translation": "6"
+      },
+      {
+        "text": "seven",
+        "translation": "7"
+      },
+      {
+        "text": "eight",
+        "translation": "8"
+      },
+      {
+        "text": "nine",
+        "translation": "9"
+      },
+      {
+        "text": "ten",
+        "translation": "10"
+      },
+      {
+        "text": "eleven",
+        "translation": "11"
+      },
+      {
+        "text": "twelve",
+        "translation": "12"
+      },
+      {
+        "text": "thirteen",
+        "translation": "13"
+      },
+      {
+        "text": "fourteen",
+        "translation": "14"
+      },
+      {
+        "text": "fifteen",
+        "translation": "15"
+      },
+      {
+        "text": "sixteen",
+        "translation": "16"
+      },
+      {
+        "text": "seventeen",
+        "translation": "17"
+      },
+      {
+        "text": "eighteen",
+        "translation": "18"
+      },
+      {
+        "text": "nineteen",
+        "translation": "19"
+      },
+      {
+        "text": "twenty",
+        "translation": "20"
+      },
+      {
+        "text": "thirty",
+        "translation": "30"
+      },
+      {
+        "text": "forty",
+        "translation": "40"
+      },
+      {
+        "text": "fifty",
+        "translation": "50"
+      },
+      {
+        "text": "sixty",
+        "translation": "60"
+      },
+      {
+        "text": "seventy",
+        "translation": "70"
+      },
+      {
+        "text": "eighty",
+        "translation": "80"
+      },
+      {
+        "text": "ninety",
+        "translation": "90"
+      },
+      {
+        "text": "hundred",
+        "translation": "100"
+      },
+      {
+        "text": "thousand",
+        "translation": "1000"
+      },
+      {
+        "text": "first",
+        "translation": "1番目"
+      },
+      {
+        "text": "second",
+        "translation": "2番目"
+      },
+      {
+        "text": "third",
+        "translation": "3番目"
+      },
+      {
+        "text": "fourth",
+        "translation": "4番目"
+      },
+      {
+        "text": "fifth",
+        "translation": "5番目"
+      },
+      {
+        "text": "sixth",
+        "translation": "6番目"
+      },
+      {
+        "text": "seventh",
+        "translation": "7番目"
+      },
+      {
+        "text": "eighth",
+        "translation": "8番目"
+      },
+      {
+        "text": "ninth",
+        "translation": "9番目"
+      },
+      {
+        "text": "tenth",
+        "translation": "10番目"
+      },
+      {
+        "text": "Sunday",
+        "translation": "日曜日"
+      },
+      {
+        "text": "Monday",
+        "translation": "月曜日"
+      },
+      {
+        "text": "Tuesday",
+        "translation": "火曜日"
+      },
+      {
+        "text": "Wednesday",
+        "translation": "水曜日"
+      },
+      {
+        "text": "Thursday",
+        "translation": "木曜日"
+      },
+      {
+        "text": "Friday",
+        "translation": "金曜日"
+      },
+      {
+        "text": "Saturday",
+        "translation": "土曜日"
+      },
+      {
+        "text": "January",
+        "translation": "1月"
+      },
+      {
+        "text": "February",
+        "translation": "2月"
+      },
+      {
+        "text": "March",
+        "translation": "3月"
+      },
+      {
+        "text": "April",
+        "translation": "4月"
+      },
+      {
+        "text": "May",
+        "translation": "5月"
+      },
+      {
+        "text": "June",
+        "translation": "6月"
+      },
+      {
+        "text": "July",
+        "translation": "7月"
+      },
+      {
+        "text": "August",
+        "translation": "8月"
+      },
+      {
+        "text": "September",
+        "translation": "9月"
+      },
+      {
+        "text": "October",
+        "translation": "10月"
+      },
+      {
+        "text": "November",
+        "translation": "11月"
+      },
+      {
+        "text": "December",
+        "translation": "12月"
+      },
+      {
+        "text": "time",
+        "translation": "時間"
+      },
+      {
+        "text": "hour",
+        "translation": "時間"
+      },
+      {
+        "text": "minute",
+        "translation": "分"
+      },
+      {
+        "text": "second",
+        "translation": "秒"
+      },
+      {
+        "text": "morning",
+        "translation": "朝"
+      },
+      {
+        "text": "afternoon",
+        "translation": "午後"
+      },
+      {
+        "text": "evening",
+        "translation": "夕方"
+      },
+      {
+        "text": "night",
+        "translation": "夜"
+      },
+      {
+        "text": "noon",
+        "translation": "正午"
+      },
+      {
+        "text": "day",
+        "translation": "日"
+      },
+      {
+        "text": "week",
+        "translation": "週"
+      },
+      {
+        "text": "month",
+        "translation": "月"
+      },
+      {
+        "text": "year",
+        "translation": "年"
+      },
+      {
+        "text": "today",
+        "translation": "今日"
+      },
+      {
+        "text": "tomorrow",
+        "translation": "明日"
+      },
+      {
+        "text": "yesterday",
+        "translation": "昨日"
+      },
+      {
+        "text": "weekend",
+        "translation": "週末"
+      },
+      {
+        "text": "holiday",
+        "translation": "休日"
+      },
+      {
+        "text": "birthday",
+        "translation": "誕生日"
+      },
+      {
+        "text": "Christmas",
+        "translation": "クリスマス"
+      },
+      {
+        "text": "date",
+        "translation": "日付"
+      },
+      {
+        "text": "breakfast",
+        "translation": "朝食"
+      },
+      {
+        "text": "lunch",
+        "translation": "昼食"
+      },
+      {
+        "text": "dinner",
+        "translation": "夕食"
+      },
+      {
+        "text": "supper",
+        "translation": "夕食"
+      },
+      {
+        "text": "snack",
+        "translation": "おやつ"
+      },
+      {
+        "text": "food",
+        "translation": "食べ物"
+      },
+      {
+        "text": "fruit",
+        "translation": "果物"
+      },
+      {
+        "text": "vegetable",
+        "translation": "野菜"
+      },
+      {
+        "text": "meat",
+        "translation": "肉"
+      },
+      {
+        "text": "fish",
+        "translation": "魚肉"
+      },
+      {
+        "text": "egg",
+        "translation": "卵"
+      },
+      {
+        "text": "bread",
+        "translation": "パン"
+      },
+      {
+        "text": "rice",
+        "translation": "ご飯"
+      },
+      {
+        "text": "water",
+        "translation": "水"
+      },
+      {
+        "text": "tea",
+        "translation": "お茶"
+      },
+      {
+        "text": "jam",
+        "translation": "ジャム"
+      },
+      {
+        "text": "butter",
+        "translation": "バター"
+      },
+      {
+        "text": "salt",
+        "translation": "塩"
+      },
+      {
+        "text": "sugar",
+        "translation": "砂糖"
+      },
+      {
+        "text": "pepper",
+        "translation": "こしょう"
+      },
+      {
+        "text": "soy sauce",
+        "translation": "醤油"
+      },
+      {
+        "text": "oil",
+        "translation": "油"
+      },
+      {
+        "text": "family",
+        "translation": "家族"
+      },
+      {
+        "text": "father",
+        "translation": "父"
+      },
+      {
+        "text": "mother",
+        "translation": "母"
+      },
+      {
+        "text": "parent",
+        "translation": "親"
+      },
+      {
+        "text": "brother",
+        "translation": "兄弟"
+      },
+      {
+        "text": "sister",
+        "translation": "姉妹"
+      },
+      {
+        "text": "grandfather",
+        "translation": "祖父"
+      },
+      {
+        "text": "grandmother",
+        "translation": "祖母"
+      },
+      {
+        "text": "uncle",
+        "translation": "おじ"
+      },
+      {
+        "text": "aunt",
+        "translation": "おば"
+      },
+      {
+        "text": "son",
+        "translation": "息子"
+      },
+      {
+        "text": "daughter",
+        "translation": "娘"
+      },
+      {
+        "text": "baby",
+        "translation": "赤ちゃん"
+      },
+      {
+        "text": "child",
+        "translation": "子供"
+      },
+      {
+        "text": "children",
+        "translation": "子供たち"
+      },
+      {
+        "text": "boy",
+        "translation": "男の子"
+      },
+      {
+        "text": "girl",
+        "translation": "女の子"
+      },
+      {
+        "text": "man",
+        "translation": "男性"
+      },
+      {
+        "text": "woman",
+        "translation": "女性"
+      },
+      {
+        "text": "friend",
+        "translation": "友達"
+      },
+      {
+        "text": "classmate",
+        "translation": "クラスメート"
+      },
+      {
+        "text": "neighbor",
+        "translation": "近所の人"
+      },
+      {
+        "text": "people",
+        "translation": "人々"
+      },
+      {
+        "text": "person",
+        "translation": "人"
+      },
+      {
+        "text": "name",
+        "translation": "名前"
+      },
+      {
+        "text": "address",
+        "translation": "住所"
+      },
+      {
+        "text": "job",
+        "translation": "仕事"
+      },
+      {
+        "text": "teacher",
+        "translation": "先生"
+      },
+      {
+        "text": "student",
+        "translation": "生徒"
+      },
+      {
+        "text": "doctor",
+        "translation": "医者"
+      },
+      {
+        "text": "nurse",
+        "translation": "看護師"
+      },
+      {
+        "text": "dentist",
+        "translation": "歯科医"
+      },
+      {
+        "text": "firefighter",
+        "translation": "消防士"
+      },
+      {
+        "text": "pilot",
+        "translation": "パイロット"
+      },
+      {
+        "text": "driver",
+        "translation": "運転手"
+      },
+      {
+        "text": "cook",
+        "translation": "料理人"
+      },
+      {
+        "text": "baker",
+        "translation": "パン屋"
+      },
+      {
+        "text": "farmer",
+        "translation": "農家"
+      },
+      {
+        "text": "singer",
+        "translation": "歌手"
+      },
+      {
+        "text": "artist",
+        "translation": "芸術家"
+      },
+      {
+        "text": "writer",
+        "translation": "作家"
+      },
+      {
+        "text": "scientist",
+        "translation": "科学者"
+      },
+      {
+        "text": "clerk",
+        "translation": "店員"
+      },
+      {
+        "text": "waiter",
+        "translation": "ウェイター"
+      },
+      {
+        "text": "waitress",
+        "translation": "ウェイトレス"
+      },
+      {
+        "text": "head",
+        "translation": "頭"
+      },
+      {
+        "text": "face",
+        "translation": "顔"
+      },
+      {
+        "text": "eye",
+        "translation": "目"
+      },
+      {
+        "text": "ear",
+        "translation": "耳"
+      },
+      {
+        "text": "nose",
+        "translation": "鼻"
+      },
+      {
+        "text": "mouth",
+        "translation": "口"
+      },
+      {
+        "text": "tooth",
+        "translation": "歯"
+      },
+      {
+        "text": "teeth",
+        "translation": "歯（複数）"
+      },
+      {
+        "text": "hair",
+        "translation": "髪"
+      },
+      {
+        "text": "hand",
+        "translation": "手"
+      },
+      {
+        "text": "finger",
+        "translation": "指"
+      },
+      {
+        "text": "arm",
+        "translation": "腕"
+      },
+      {
+        "text": "shoulder",
+        "translation": "肩"
+      },
+      {
+        "text": "leg",
+        "translation": "脚"
+      },
+      {
+        "text": "foot",
+        "translation": "足"
+      },
+      {
+        "text": "feet",
+        "translation": "足（複数）"
+      },
+      {
+        "text": "knee",
+        "translation": "膝"
+      },
+      {
+        "text": "body",
+        "translation": "体"
+      },
+      {
+        "text": "heart",
+        "translation": "心臓、心"
+      },
+      {
+        "text": "stomach",
+        "translation": "胃"
+      },
+      {
+        "text": "back",
+        "translation": "背中"
+      },
+      {
+        "text": "tall",
+        "translation": "背が高い"
+      },
+      {
+        "text": "short",
+        "translation": "背が低い、短い"
+      },
+      {
+        "text": "long",
+        "translation": "長い"
+      },
+      {
+        "text": "big",
+        "translation": "大きい"
+      },
+      {
+        "text": "small",
+        "translation": "小さい"
+      },
+      {
+        "text": "little",
+        "translation": "小さい"
+      },
+      {
+        "text": "large",
+        "translation": "大きい"
+      },
+      {
+        "text": "fat",
+        "translation": "太った"
+      },
+      {
+        "text": "thin",
+        "translation": "やせた"
+      },
+      {
+        "text": "heavy",
+        "translation": "重い"
+      },
+      {
+        "text": "light",
+        "translation": "軽い"
+      },
+      {
+        "text": "old",
+        "translation": "古い、年をとった"
+      },
+      {
+        "text": "new",
+        "translation": "新しい"
+      },
+      {
+        "text": "young",
+        "translation": "若い"
+      },
+      {
+        "text": "good",
+        "translation": "良い"
+      },
+      {
+        "text": "bad",
+        "translation": "悪い"
+      },
+      {
+        "text": "nice",
+        "translation": "素敵な"
+      },
+      {
+        "text": "great",
+        "translation": "素晴らしい"
+      },
+      {
+        "text": "wonderful",
+        "translation": "素晴らしい"
+      },
+      {
+        "text": "beautiful",
+        "translation": "美しい"
+      },
+      {
+        "text": "pretty",
+        "translation": "かわいい"
+      },
+      {
+        "text": "cute",
+        "translation": "かわいい"
+      },
+      {
+        "text": "happy",
+        "translation": "幸せな"
+      },
+      {
+        "text": "sad",
+        "translation": "悲しい"
+      },
+      {
+        "text": "angry",
+        "translation": "怒った"
+      },
+      {
+        "text": "tired",
+        "translation": "疲れた"
+      },
+      {
+        "text": "sleepy",
+        "translation": "眠い"
+      },
+      {
+        "text": "hungry",
+        "translation": "お腹がすいた"
+      },
+      {
+        "text": "thirsty",
+        "translation": "喉が渇いた"
+      },
+      {
+        "text": "sick",
+        "translation": "病気の"
+      },
+      {
+        "text": "fine",
+        "translation": "元気な"
+      },
+      {
+        "text": "well",
+        "translation": "元気な"
+      },
+      {
+        "text": "busy",
+        "translation": "忙しい"
+      },
+      {
+        "text": "free",
+        "translation": "暇な"
+      },
+      {
+        "text": "easy",
+        "translation": "簡単な"
+      },
+      {
+        "text": "hard",
+        "translation": "難しい、一生懸命"
+      },
+      {
+        "text": "difficult",
+        "translation": "難しい"
+      },
+      {
+        "text": "interesting",
+        "translation": "面白い"
+      },
+      {
+        "text": "exciting",
+        "translation": "興奮させる"
+      },
+      {
+        "text": "fun",
+        "translation": "楽しい"
+      },
+      {
+        "text": "funny",
+        "translation": "おかしい"
+      },
+      {
+        "text": "kind",
+        "translation": "親切な"
+      },
+      {
+        "text": "friendly",
+        "translation": "友好的な"
+      },
+      {
+        "text": "strong",
+        "translation": "強い"
+      },
+      {
+        "text": "weak",
+        "translation": "弱い"
+      },
+      {
+        "text": "fast",
+        "translation": "速い"
+      },
+      {
+        "text": "slow",
+        "translation": "遅い"
+      },
+      {
+        "text": "high",
+        "translation": "高い"
+      },
+      {
+        "text": "low",
+        "translation": "低い"
+      },
+      {
+        "text": "right",
+        "translation": "正しい、右"
+      },
+      {
+        "text": "left",
+        "translation": "左"
+      },
+      {
+        "text": "wrong",
+        "translation": "間違った"
+      },
+      {
+        "text": "same",
+        "translation": "同じ"
+      },
+      {
+        "text": "different",
+        "translation": "違う"
+      },
+      {
+        "text": "important",
+        "translation": "重要な"
+      },
+      {
+        "text": "special",
+        "translation": "特別な"
+      },
+      {
+        "text": "famous",
+        "translation": "有名な"
+      },
+      {
+        "text": "clean",
+        "translation": "きれいな"
+      },
+      {
+        "text": "dirty",
+        "translation": "汚れた"
+      },
+      {
+        "text": "quiet",
+        "translation": "静かな"
+      },
+      {
+        "text": "noisy",
+        "translation": "うるさい"
+      },
+      {
+        "text": "sweet",
+        "translation": "甘い"
+      },
+      {
+        "text": "sour",
+        "translation": "酸っぱい"
+      },
+      {
+        "text": "soft",
+        "translation": "柔らかい"
+      },
+      {
+        "text": "hard",
+        "translation": "硬い"
+      },
+      {
+        "text": "favorite",
+        "translation": "お気に入りの"
+      },
+      {
+        "text": "popular",
+        "translation": "人気のある"
+      },
+      {
+        "text": "lucky",
+        "translation": "運が良い"
+      },
+      {
+        "text": "careful",
+        "translation": "注意深い"
+      },
+      {
+        "text": "ready",
+        "translation": "準備ができた"
+      },
+      {
+        "text": "sorry",
+        "translation": "ごめんなさい"
+      },
+      {
+        "text": "glad",
+        "translation": "嬉しい"
+      },
+      {
+        "text": "sure",
+        "translation": "もちろん"
+      },
+      {
+        "text": "really",
+        "translation": "本当に"
+      },
+      {
+        "text": "very",
+        "translation": "とても"
+      },
+      {
+        "text": "so",
+        "translation": "とても"
+      },
+      {
+        "text": "too",
+        "translation": "〜も、あまりに"
+      },
+      {
+        "text": "much",
+        "translation": "たくさんの"
+      },
+      {
+        "text": "many",
+        "translation": "多くの"
+      },
+      {
+        "text": "a lot of",
+        "translation": "たくさんの"
+      },
+      {
+        "text": "some",
+        "translation": "いくつかの"
+      },
+      {
+        "text": "any",
+        "translation": "何か、どんな〜も"
+      },
+      {
+        "text": "all",
+        "translation": "すべての"
+      },
+      {
+        "text": "every",
+        "translation": "すべての"
+      },
+      {
+        "text": "each",
+        "translation": "それぞれの"
+      },
+      {
+        "text": "other",
+        "translation": "他の"
+      },
+      {
+        "text": "another",
+        "translation": "もう一つの"
+      },
+      {
+        "text": "both",
+        "translation": "両方の"
+      },
+      {
+        "text": "only",
+        "translation": "〜だけ"
+      },
+      {
+        "text": "just",
+        "translation": "ちょうど、ただ〜だけ"
+      },
+      {
+        "text": "about",
+        "translation": "およそ"
+      },
+      {
+        "text": "almost",
+        "translation": "ほとんど"
+      },
+      {
+        "text": "always",
+        "translation": "いつも"
+      },
+      {
+        "text": "usually",
+        "translation": "普段"
+      },
+      {
+        "text": "often",
+        "translation": "よく"
+      },
+      {
+        "text": "sometimes",
+        "translation": "時々"
+      },
+      {
+        "text": "never",
+        "translation": "決して〜ない"
+      },
+      {
+        "text": "again",
+        "translation": "再び"
+      },
+      {
+        "text": "also",
+        "translation": "〜もまた"
+      },
+      {
+        "text": "too",
+        "translation": "〜もまた"
+      },
+      {
+        "text": "either",
+        "translation": "〜もまた（否定文）"
+      },
+      {
+        "text": "together",
+        "translation": "一緒に"
+      },
+      {
+        "text": "alone",
+        "translation": "一人で"
+      },
+      {
+        "text": "here",
+        "translation": "ここに"
+      },
+      {
+        "text": "there",
+        "translation": "そこに"
+      },
+      {
+        "text": "near",
+        "translation": "近くに"
+      },
+      {
+        "text": "far",
+        "translation": "遠くに"
+      },
+      {
+        "text": "away",
+        "translation": "離れて"
+      },
+      {
+        "text": "home",
+        "translation": "家へ"
+      },
+      {
+        "text": "out",
+        "translation": "外へ"
+      },
+      {
+        "text": "into",
+        "translation": "〜の中へ"
+      }
+    ],
+    "2": [
+      {
+        "text": "get up",
+        "translation": "起きる"
+      },
+      {
+        "text": "go to school",
+        "translation": "学校へ行く"
+      },
+      {
+        "text": "come home",
+        "translation": "家に帰る"
+      },
+      {
+        "text": "look at",
+        "translation": "〜を見る (視線を向ける)"
+      },
+      {
+        "text": "listen to",
+        "translation": "〜を聞く (耳を傾ける)"
+      },
+      {
+        "text": "sit down",
+        "translation": "座る"
+      },
+      {
+        "text": "stand up",
+        "translation": "立つ"
+      },
+      {
+        "text": "write down",
+        "translation": "書き留める"
+      },
+      {
+        "text": "clean up",
+        "translation": "掃除する"
+      },
+      {
+        "text": "wake up",
+        "translation": "目を覚ます"
+      },
+      {
+        "text": "go to bed",
+        "translation": "寝る"
+      },
+      {
+        "text": "take a bath",
+        "translation": "お風呂に入る"
+      },
+      {
+        "text": "have breakfast",
+        "translation": "朝食を食べる"
+      },
+      {
+        "text": "have lunch",
+        "translation": "昼食を食べる"
+      },
+      {
+        "text": "have dinner",
+        "translation": "夕食を食べる"
+      },
+      {
+        "text": "a cup of",
+        "translation": "一杯の"
+      },
+      {
+        "text": "a piece of",
+        "translation": "一枚の"
+      },
+      {
+        "text": "a lot of",
+        "translation": "たくさんの"
+      },
+      {
+        "text": "kind of",
+        "translation": "種類"
+      },
+      {
+        "text": "in front of",
+        "translation": "〜の前に"
+      },
+      {
+        "text": "next to",
+        "translation": "〜の隣に"
+      },
+      {
+        "text": "police officer",
+        "translation": "警察官"
+      },
+      {
+        "text": "flight attendant",
+        "translation": "客室乗務員"
+      },
+      {
+        "text": "ice cream",
+        "translation": "アイスクリーム"
+      },
+      {
+        "text": "living room",
+        "translation": "居間"
+      },
+      {
+        "text": "post office",
+        "translation": "郵便局"
+      },
+      {
+        "text": "police station",
+        "translation": "警察署"
+      },
+      {
+        "text": "department store",
+        "translation": "デパート"
+      },
+      {
+        "text": "United Kingdom",
+        "translation": "イギリス"
+      },
+      {
+        "text": "comic book",
+        "translation": "漫画本"
+      },
+      {
+        "text": "junior high school",
+        "translation": "中学校"
+      },
+      {
+        "text": "high school",
+        "translation": "高校"
+      },
+      {
+        "text": "elementary school",
+        "translation": "小学校"
+      },
+      {
+        "text": "station master",
+        "translation": "駅長"
+      },
+      {
+        "text": "bus stop",
+        "translation": "バス停"
+      },
+      {
+        "text": "train station",
+        "translation": "駅"
+      },
+      {
+        "text": "traffic light",
+        "translation": "信号"
+      },
+      {
+        "text": "convenience store",
+        "translation": "コンビニ"
+      },
+      {
+        "text": "drug store",
+        "translation": "薬局"
+      },
+      {
+        "text": "book shop",
+        "translation": "本屋"
+      },
+      {
+        "text": "flower shop",
+        "translation": "花屋"
+      },
+      {
+        "text": "shoe shop",
+        "translation": "靴屋"
+      },
+      {
+        "text": "pet shop",
+        "translation": "ペットショップ"
+      },
+      {
+        "text": "toy shop",
+        "translation": "おもちゃ屋"
+      },
+      {
+        "text": "cake shop",
+        "translation": "ケーキ屋"
+      },
+      {
+        "text": "hot dog",
+        "translation": "ホットドッグ"
+      },
+      {
+        "text": "french fries",
+        "translation": "フライドポテト"
+      },
+      {
+        "text": "apple pie",
+        "translation": "アップルパイ"
+      },
+      {
+        "text": "orange juice",
+        "translation": "オレンジジュース"
+      },
+      {
+        "text": "school lunch",
+        "translation": "給食"
+      },
+      {
+        "text": "lunch box",
+        "translation": "弁当箱"
+      },
+      {
+        "text": "supper time",
+        "translation": "夕食の時間"
+      },
+      {
+        "text": "dining room",
+        "translation": "食堂"
+      },
+      {
+        "text": "bath room",
+        "translation": "浴室"
+      },
+      {
+        "text": "music room",
+        "translation": "音楽室"
+      },
+      {
+        "text": "science room",
+        "translation": "理科室"
+      },
+      {
+        "text": "computer room",
+        "translation": "コンピュータ室"
+      },
+      {
+        "text": "staff room",
+        "translation": "職員室"
+      },
+      {
+        "text": "nurse's office",
+        "translation": "保健室"
+      },
+      {
+        "text": "video game",
+        "translation": "テレビゲーム"
+      },
+      {
+        "text": "card game",
+        "translation": "カードゲーム"
+      },
+      {
+        "text": "board game",
+        "translation": "ボードゲーム"
+      },
+      {
+        "text": "pop music",
+        "translation": "ポップ音楽"
+      },
+      {
+        "text": "rock music",
+        "translation": "ロック音楽"
+      },
+      {
+        "text": "classical music",
+        "translation": "クラシック音楽"
+      },
+      {
+        "text": "jazz music",
+        "translation": "ジャズ音楽"
+      },
+      {
+        "text": "folk song",
+        "translation": "フォークソング"
+      },
+      {
+        "text": "over there",
+        "translation": "あそこに"
+      },
+      {
+        "text": "right here",
+        "translation": "ちょうどここに"
+      },
+      {
+        "text": "all day",
+        "translation": "一日中"
+      },
+      {
+        "text": "all night",
+        "translation": "一晩中"
+      },
+      {
+        "text": "all the time",
+        "translation": "ずっと"
+      },
+      {
+        "text": "for a long time",
+        "translation": "長い間"
+      },
+      {
+        "text": "once a week",
+        "translation": "週に一度"
+      },
+      {
+        "text": "twice a month",
+        "translation": "月に二度"
+      },
+      {
+        "text": "three times a year",
+        "translation": "年に三度"
+      },
+      {
+        "text": "every morning",
+        "translation": "毎朝"
+      },
+      {
+        "text": "last night",
+        "translation": "昨夜"
+      },
+      {
+        "text": "this morning",
+        "translation": "今朝"
+      },
+      {
+        "text": "tomorrow morning",
+        "translation": "明日の朝"
+      },
+      {
+        "text": "day after tomorrow",
+        "translation": "明後日"
+      },
+      {
+        "text": "day before yesterday",
+        "translation": "一昨日"
+      },
+      {
+        "text": "next week",
+        "translation": "来週"
+      },
+      {
+        "text": "last month",
+        "translation": "先月"
+      },
+      {
+        "text": "next year",
+        "translation": "来年"
+      },
+      {
+        "text": "T-shirt",
+        "translation": "Tシャツ"
+      },
+      {
+        "text": "take a picture",
+        "translation": "写真を撮る"
+      },
+      {
+        "text": "go home",
+        "translation": "家に帰る"
+      },
+      {
+        "text": "go to the park",
+        "translation": "公園に行く"
+      },
+      {
+        "text": "play the piano",
+        "translation": "ピアノを弾く"
+      },
+      {
+        "text": "play the guitar",
+        "translation": "ギターを弾く"
+      },
+      {
+        "text": "play soccer",
+        "translation": "サッカーをする"
+      },
+      {
+        "text": "play baseball",
+        "translation": "野球をする"
+      },
+      {
+        "text": "play tennis",
+        "translation": "テニスをする"
+      },
+      {
+        "text": "listen to music",
+        "translation": "音楽を聴く"
+      },
+      {
+        "text": "watch TV",
+        "translation": "テレビを見る"
+      },
+      {
+        "text": "read a book",
+        "translation": "本を読む"
+      },
+      {
+        "text": "write a letter",
+        "translation": "手紙を書く"
+      },
+      {
+        "text": "study English",
+        "translation": "英語を勉強する"
+      },
+      {
+        "text": "cook dinner",
+        "translation": "夕食を作る"
+      },
+      {
+        "text": "help my mother",
+        "translation": "母を手伝う"
+      },
+      {
+        "text": "do my homework",
+        "translation": "宿題をする"
+      },
+      {
+        "text": "wash my hands",
+        "translation": "手を洗う"
+      },
+      {
+        "text": "clean my room",
+        "translation": "部屋を掃除する"
+      },
+      {
+        "text": "use a computer",
+        "translation": "コンピュータを使う"
+      },
+      {
+        "text": "make a cake",
+        "translation": "ケーキを作る"
+      },
+      {
+        "text": "speak English",
+        "translation": "英語を話す"
+      },
+      {
+        "text": "swim in the sea",
+        "translation": "海で泳ぐ"
+      },
+      {
+        "text": "run fast",
+        "translation": "速く走る"
+      },
+      {
+        "text": "walk to school",
+        "translation": "歩いて学校へ行く"
+      },
+      {
+        "text": "come from",
+        "translation": "〜出身である"
+      },
+      {
+        "text": "live in",
+        "translation": "〜に住んでいる"
+      },
+      {
+        "text": "like to",
+        "translation": "〜するのが好き"
+      },
+      {
+        "text": "want to",
+        "translation": "〜したい"
+      },
+      {
+        "text": "thank you",
+        "translation": "ありがとう"
+      },
+      {
+        "text": "you are welcome",
+        "translation": "どういたしまして"
+      },
+      {
+        "text": "excuse me",
+        "translation": "すみません"
+      },
+      {
+        "text": "I am sorry",
+        "translation": "ごめんなさい"
+      },
+      {
+        "text": "see you",
+        "translation": "またね"
+      },
+      {
+        "text": "good morning",
+        "translation": "おはよう"
+      },
+      {
+        "text": "good afternoon",
+        "translation": "こんにちは"
+      },
+      {
+        "text": "good evening",
+        "translation": "こんばんは"
+      },
+      {
+        "text": "good night",
+        "translation": "おやすみ"
+      },
+      {
+        "text": "how are you",
+        "translation": "元気ですか"
+      },
+      {
+        "text": "nice to meet you",
+        "translation": "はじめまして"
+      },
+      {
+        "text": "of course",
+        "translation": "もちろん"
+      },
+      {
+        "text": "all right",
+        "translation": "いいですよ/大丈夫"
+      },
+      {
+        "text": "that is right",
+        "translation": "その通りです"
+      },
+      {
+        "text": "at home",
+        "translation": "家で"
+      },
+      {
+        "text": "at school",
+        "translation": "学校で"
+      },
+      {
+        "text": "in the morning",
+        "translation": "朝に"
+      },
+      {
+        "text": "in the afternoon",
+        "translation": "午後に"
+      },
+      {
+        "text": "in the evening",
+        "translation": "夕方に"
+      },
+      {
+        "text": "at night",
+        "translation": "夜に"
+      },
+      {
+        "text": "on Sunday",
+        "translation": "日曜日に"
+      },
+      {
+        "text": "after school",
+        "translation": "放課後"
+      },
+      {
+        "text": "go shopping",
+        "translation": "買い物に行く"
+      },
+      {
+        "text": "look for",
+        "translation": "〜を探す"
+      },
+      {
+        "text": "talk with",
+        "translation": "〜と話す"
+      },
+      {
+        "text": "wait for",
+        "translation": "〜を待つ"
+      }
+    ],
+    "3": [
+      {
+        "text": "I am a student.",
+        "translation": "私は生徒です。"
+      },
+      {
+        "text": "You are kind.",
+        "translation": "あなたは親切です。"
+      },
+      {
+        "text": "He is my teacher.",
+        "translation": "彼は私の先生です。"
+      },
+      {
+        "text": "She is a nurse.",
+        "translation": "彼女は看護師です。"
+      },
+      {
+        "text": "It is a dog.",
+        "translation": "それは犬です。"
+      },
+      {
+        "text": "This is a pen.",
+        "translation": "これはペンです。"
+      },
+      {
+        "text": "That is a bird.",
+        "translation": "あれは鳥です。"
+      },
+      {
+        "text": "We are friends.",
+        "translation": "私たちは友達です。"
+      },
+      {
+        "text": "They are happy.",
+        "translation": "彼らは幸せです。"
+      },
+      {
+        "text": "I like music.",
+        "translation": "私は音楽が好きです。"
+      },
+      {
+        "text": "I play tennis.",
+        "translation": "私はテニスをします。"
+      },
+      {
+        "text": "I have a book.",
+        "translation": "私は本を持っています。"
+      },
+      {
+        "text": "He runs fast.",
+        "translation": "彼は速く走ります。"
+      },
+      {
+        "text": "She cooks well.",
+        "translation": "彼女は料理が上手です。"
+      },
+      {
+        "text": "We study English.",
+        "translation": "私たちは英語を勉強します。"
+      },
+      {
+        "text": "They play soccer.",
+        "translation": "彼らはサッカーをします。"
+      },
+      {
+        "text": "Do you like cats?",
+        "translation": "あなたは猫が好きですか？"
+      },
+      {
+        "text": "Can you swim?",
+        "translation": "あなたは泳げますか？"
+      },
+      {
+        "text": "Is this yours?",
+        "translation": "これはあなたのですか？"
+      },
+      {
+        "text": "Who is he?",
+        "translation": "彼は誰ですか？"
+      },
+      {
+        "text": "What is this?",
+        "translation": "これは何ですか？"
+      },
+      {
+        "text": "Where is my bag?",
+        "translation": "私のかばんはどこですか？"
+      },
+      {
+        "text": "When is your birthday?",
+        "translation": "誕生日はいつですか？"
+      },
+      {
+        "text": "How are you?",
+        "translation": "元気ですか？"
+      },
+      {
+        "text": "What time is it?",
+        "translation": "何時ですか？"
+      },
+      {
+        "text": "How many books?",
+        "translation": "本は何冊ですか？"
+      },
+      {
+        "text": "How much is it?",
+        "translation": "いくらですか？"
+      },
+      {
+        "text": "Open the door.",
+        "translation": "ドアを開けてください。"
+      },
+      {
+        "text": "Close your book.",
+        "translation": "本を閉じてください。"
+      },
+      {
+        "text": "Let's go home.",
+        "translation": "家に帰りましょう。"
+      },
+      {
+        "text": "Let's play baseball.",
+        "translation": "野球をしましょう。"
+      },
+      {
+        "text": "Stand up, please.",
+        "translation": "立ってください。"
+      },
+      {
+        "text": "Sit down, please.",
+        "translation": "座ってください。"
+      },
+      {
+        "text": "Thank you very much.",
+        "translation": "本当にありがとう。"
+      },
+      {
+        "text": "You are welcome.",
+        "translation": "どういたしまして。"
+      },
+      {
+        "text": "Nice to meet you.",
+        "translation": "はじめまして。"
+      },
+      {
+        "text": "I want a bike.",
+        "translation": "私は自転車が欲しいです。"
+      },
+      {
+        "text": "I need some water.",
+        "translation": "私は水が必要です。"
+      },
+      {
+        "text": "He lives in Tokyo.",
+        "translation": "彼は東京に住んでいます。"
+      },
+      {
+        "text": "She goes to school.",
+        "translation": "彼女は学校へ行きます。"
+      },
+      {
+        "text": "My father is busy.",
+        "translation": "私の父は忙しいです。"
+      },
+      {
+        "text": "My mother is kind.",
+        "translation": "私の母は親切です。"
+      },
+      {
+        "text": "I have two dogs.",
+        "translation": "私は犬を2匹飼っています。"
+      },
+      {
+        "text": "Do you have a pen?",
+        "translation": "ペンを持っていますか？"
+      },
+      {
+        "text": "I don't know.",
+        "translation": "私は知りません。"
+      },
+      {
+        "text": "I can't play piano.",
+        "translation": "私はピアノが弾けません。"
+      },
+      {
+        "text": "It is sunny today.",
+        "translation": "今日は晴れです。"
+      },
+      {
+        "text": "It is hot today.",
+        "translation": "今日は暑いです。"
+      },
+      {
+        "text": "It is cold now.",
+        "translation": "今は寒いです。"
+      },
+      {
+        "text": "Look at the sky.",
+        "translation": "空を見てください (視線を向ける)。"
+      },
+      {
+        "text": "Listen to me.",
+        "translation": "私の話を聞いてください (耳を傾ける)。"
+      },
+      {
+        "text": "Wash your hands.",
+        "translation": "手を洗ってください。"
+      },
+      {
+        "text": "Don't run here.",
+        "translation": "ここで走ってはいけません。"
+      },
+      {
+        "text": "Let's eat lunch.",
+        "translation": "昼食を食べましょう。"
+      },
+      {
+        "text": "Let's study together.",
+        "translation": "一緒に勉強しましょう。"
+      },
+      {
+        "text": "Are you hungry?",
+        "translation": "お腹が空いていますか？"
+      },
+      {
+        "text": "Are you tired?",
+        "translation": "疲れていますか？"
+      },
+      {
+        "text": "Is he your brother?",
+        "translation": "彼はあなたの兄ですか？"
+      },
+      {
+        "text": "Is she your sister?",
+        "translation": "彼女はあなたの姉ですか？"
+      },
+      {
+        "text": "What do you do?",
+        "translation": "あなたは何をしますか？"
+      },
+      {
+        "text": "Where do you live?",
+        "translation": "どこに住んでいますか？"
+      },
+      {
+        "text": "When do you study?",
+        "translation": "いつ勉強しますか？"
+      },
+      {
+        "text": "Why are you sad?",
+        "translation": "なぜ悲しいのですか？"
+      },
+      {
+        "text": "How do you come?",
+        "translation": "どうやって来ますか？"
+      },
+      {
+        "text": "Whose bag is this?",
+        "translation": "これは誰のかばんですか？"
+      },
+      {
+        "text": "Which color do you like?",
+        "translation": "どの色が好きですか？"
+      },
+      {
+        "text": "I went to the park.",
+        "translation": "私は公園に行きました。"
+      },
+      {
+        "text": "I saw a movie.",
+        "translation": "私は映画を見ました。"
+      },
+      {
+        "text": "He came here.",
+        "translation": "彼はここに来ました。"
+      },
+      {
+        "text": "She bought a pen.",
+        "translation": "彼女はペンを買いました。"
+      },
+      {
+        "text": "Did you enjoy it?",
+        "translation": "楽しみましたか？"
+      },
+      {
+        "text": "Yes, I did.",
+        "translation": "はい、しました。"
+      },
+      {
+        "text": "No, I didn't.",
+        "translation": "いいえ、しませんでした。"
+      },
+      {
+        "text": "I will go there.",
+        "translation": "私はそこへ行くつもりです。"
+      },
+      {
+        "text": "It will rain tomorrow.",
+        "translation": "明日は雨でしょう。"
+      },
+      {
+        "text": "I am reading a book.",
+        "translation": "私は本を読んでいます。"
+      },
+      {
+        "text": "He is playing soccer.",
+        "translation": "彼はサッカーをしています。"
+      },
+      {
+        "text": "She is watching TV.",
+        "translation": "彼女はテレビを見ています。"
+      },
+      {
+        "text": "What are you doing?",
+        "translation": "何をしていますか？"
+      },
+      {
+        "text": "There is a cat.",
+        "translation": "猫がいます。"
+      },
+      {
+        "text": "There are two birds.",
+        "translation": "鳥が2羽います。"
+      },
+      {
+        "text": "There is an apple.",
+        "translation": "りんごがあります。"
+      },
+      {
+        "text": "The dog is cute.",
+        "translation": "その犬はかわいいです。"
+      },
+      {
+        "text": "The flower is red.",
+        "translation": "その花は赤いです。"
+      },
+      {
+        "text": "My bag is heavy.",
+        "translation": "私のかばんは重いです。"
+      },
+      {
+        "text": "His car is new.",
+        "translation": "彼の車は新しいです。"
+      },
+      {
+        "text": "Her dress is nice.",
+        "translation": "彼女のドレスは素敵です。"
+      },
+      {
+        "text": "Our school is big.",
+        "translation": "私たちの学校は大きいです。"
+      },
+      {
+        "text": "Their house is small.",
+        "translation": "彼らの家は小さいです。"
+      },
+      {
+        "text": "I like apples.",
+        "translation": "私はりんごが好きです。"
+      },
+      {
+        "text": "I want to be a doctor.",
+        "translation": "私は医者になりたいです。"
+      },
+      {
+        "text": "I want to go.",
+        "translation": "私は行きたいです。"
+      },
+      {
+        "text": "I like to swim.",
+        "translation": "私は泳ぐことが好きです。"
+      },
+      {
+        "text": "To see is to believe.",
+        "translation": "見ることは信じることです。"
+      },
+      {
+        "text": "It is fun to play.",
+        "translation": "遊ぶことは楽しいです。"
+      },
+      {
+        "text": "Please help me.",
+        "translation": "私を助けてください。"
+      },
+      {
+        "text": "Give me a pen.",
+        "translation": "私にペンをください。"
+      },
+      {
+        "text": "Show me your picture.",
+        "translation": "あなたの写真を見せて。"
+      },
+      {
+        "text": "Tell me the truth.",
+        "translation": "本当のことを話して。"
+      },
+      {
+        "text": "Have a nice day.",
+        "translation": "よい一日を。"
+      }
+    ]
+  }
+}

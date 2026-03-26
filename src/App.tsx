@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, Sword, Shield, Trophy, Home, SkipForward, Zap, ArrowRight, RotateCcw, BookOpen, Star, Lock, Flame, Skull, ClipboardList, Crown, Target, Medal, Keyboard, AlertCircle, Brain, CheckCircle2, FastForward, LayoutGrid, LogOut } from 'lucide-react';
+import { QUESTIONS } from './data/questions';
 
 // --- Types & Interfaces ---
 
@@ -62,6 +63,8 @@ interface GameState {
   hintLength: number; 
   currentBattleMissedQuestions: Question[]; 
   battleLog: BattleLogItem[];
+  battleStartScore: number;
+  battleStartKeystrokes: number;
 }
 
 // --- Rank System ---
@@ -111,6 +114,53 @@ const getSpeedMultiplier = (charsPerSec: number): number => {
   return 3.0;
 };
 
+const getMonsterBattleDialogue = (
+  monster: Monster,
+  options: {
+    isDefeated: boolean;
+    isDamaged: boolean;
+    hpRate: number;
+    combo: number;
+    missCount: number;
+  }
+): string => {
+  if (options.isDefeated) return monster.dialogueDefeat;
+
+  if (options.combo >= 7) {
+    return monster.type === 'boss' ? 'な、なんだその猛攻は…！' : 'その勢い、ちょっと反則だよ！';
+  }
+
+  if (options.hpRate <= 0.2) {
+    return monster.type === 'boss' ? 'まだだ…まだ倒れん…！' : 'ま、まだ負けない…！';
+  }
+
+  if (options.isDamaged) {
+    if (monster.type === 'robot') return 'ダメージ確認…制御低下…！';
+    if (monster.type === 'ghost') return 'その一撃はきいたぞ…！';
+    if (monster.type === 'boss') return 'くっ…やるではないか！';
+    return 'うわっ、きいたー！';
+  }
+
+  if (options.missCount >= 2) {
+    return monster.type === 'boss' ? '迷いがあるぞ。そこを突く！' : '焦ってるね？ まだいけるかな？';
+  }
+
+  if (options.combo >= 3) {
+    return monster.type === 'boss' ? '連撃だと…！？' : 'そんなに続けて決めるの！？';
+  }
+
+  return monster.dialogueStart;
+};
+
+const getBattleMusicPath = (mode: Mode, inputMode: InputMode, isBoss: boolean): string => {
+  if (isBoss) return '/sound/EnglishTyping006.mp3';
+  if (mode === 'weakness') return '/sound/EnglishTyping005.mp3';
+  if (mode === 'guide') return '/sound/EnglishTyping001.mp3';
+  if (mode === 'challenge' && inputMode === 'voice-text') return '/sound/EnglishTyping002.mp3';
+  if (mode === 'challenge' && inputMode === 'voice-only') return '/sound/EnglishTyping003.mp3';
+  return '/sound/EnglishTyping004.mp3';
+};
+
 const speakText = (text: string) => {
   // Cancel any ongoing speech to prevent queuing lag
   window.speechSynthesis.cancel();
@@ -126,6 +176,10 @@ const speakText = (text: string) => {
 // --- Sound Engine ---
 class SoundEngine {
   private ctx: AudioContext | null = null;
+  private ambienceOscillators: OscillatorNode[] = [];
+  private ambienceGain: GainNode | null = null;
+  private battleMusic: HTMLAudioElement | null = null;
+  private currentBattleMusicSrc = '';
 
   constructor() {
     try {
@@ -235,8 +289,93 @@ class SoundEngine {
     if (this.ctx.state === 'suspended') this.ctx.resume();
     [1000, 1200, 1500, 2000].forEach((freq, i) => { setTimeout(() => this.playTone(freq, 'sine', 0.1, 0.1), i * 80); });
   }
+
+  startBattleAmbience(isBoss: boolean = false) {
+    if (!this.ctx) return;
+    if (this.ambienceOscillators.length > 0) return;
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(isBoss ? 0.018 : 0.012, this.ctx.currentTime + 0.8);
+    gain.connect(this.ctx.destination);
+
+    const baseFrequencies = isBoss ? [65.4, 98.0] : [130.8, 196.0];
+    const oscillators = baseFrequencies.map((freq, index) => {
+      const osc = this.ctx!.createOscillator();
+      const oscGain = this.ctx!.createGain();
+      osc.type = index === 0 ? 'sine' : 'triangle';
+      osc.frequency.setValueAtTime(freq, this.ctx!.currentTime);
+      osc.frequency.linearRampToValueAtTime(freq * (isBoss ? 1.08 : 1.04), this.ctx!.currentTime + (isBoss ? 3.5 : 4.5));
+      osc.frequency.linearRampToValueAtTime(freq, this.ctx!.currentTime + (isBoss ? 7 : 9));
+      oscGain.gain.setValueAtTime(index === 0 ? 0.7 : 0.35, this.ctx!.currentTime);
+      osc.connect(oscGain);
+      oscGain.connect(gain);
+      osc.start();
+      return osc;
+    });
+
+    this.ambienceGain = gain;
+    this.ambienceOscillators = oscillators;
+  }
+
+  stopBattleAmbience() {
+    if (!this.ctx || !this.ambienceGain || this.ambienceOscillators.length === 0) return;
+
+    const stopTime = this.ctx.currentTime + 0.6;
+    this.ambienceGain.gain.cancelScheduledValues(this.ctx.currentTime);
+    this.ambienceGain.gain.setValueAtTime(this.ambienceGain.gain.value, this.ctx.currentTime);
+    this.ambienceGain.gain.exponentialRampToValueAtTime(0.0001, stopTime);
+
+    this.ambienceOscillators.forEach(osc => osc.stop(stopTime));
+    this.ambienceOscillators = [];
+    this.ambienceGain = null;
+  }
+
+  startBattleMusic(src: string, volume: number = 0.18) {
+    if (this.currentBattleMusicSrc === src && this.battleMusic) {
+      this.battleMusic.volume = volume;
+      void this.battleMusic.play().catch(() => {});
+      return;
+    }
+
+    this.stopBattleMusic();
+
+    const audio = new Audio(src);
+    audio.loop = true;
+    audio.preload = 'none';
+    audio.volume = volume;
+    this.battleMusic = audio;
+    this.currentBattleMusicSrc = src;
+    void audio.play().catch(() => {});
+  }
+
+  stopBattleMusic() {
+    if (!this.battleMusic) return;
+    this.battleMusic.pause();
+    this.battleMusic.currentTime = 0;
+    this.battleMusic = null;
+    this.currentBattleMusicSrc = '';
+  }
 }
 const soundEngine = new SoundEngine();
+
+const STORAGE_KEYS = {
+  defeatedMonsters: 'etyping_defeated_monsters',
+  bestScores: 'etyping_best_scores',
+  maxKeystrokes: 'etyping_max_keystrokes',
+  weakQuestions: 'etyping_weak_questions',
+} as const;
+
+const safeLoadJson = <T,>(key: string, fallback: T): T => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) as T : fallback;
+  } catch {
+    localStorage.removeItem(key);
+    return fallback;
+  }
+};
 
 // --- Rich Monster Avatar Component (SVG) ---
 const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: MonsterType, color: string, emotion?: 'normal' | 'damage' | 'win', size?: number }) => {
@@ -300,160 +439,6 @@ const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: 
   );
 };
 
-
-// --- Game Data (Compressed) ---
-const QUESTIONS: Record<Difficulty, Record<Level, Question[]>> = {
-  Eiken5: {
-    1: [
-      { text: "banana", translation: "バナナ" }, { text: "piano", translation: "ピアノ" }, { text: "camera", translation: "カメラ" }, { text: "computer", translation: "コンピューター" }, { text: "bus", translation: "バス" }, { text: "taxi", translation: "タクシー" }, { text: "hotel", translation: "ホテル" }, { text: "restaurant", translation: "レストラン" }, { text: "sandwich", translation: "サンドイッチ" },
-      { text: "hamburger", translation: "ハンバーガー" }, { text: "pizza", translation: "ピザ" }, { text: "curry", translation: "カレー" }, { text: "juice", translation: "ジュース" }, { text: "coffee", translation: "コーヒー" }, { text: "milk", translation: "牛乳" }, { text: "cake", translation: "ケーキ" }, { text: "chocolate", translation: "チョコレート" },
-      { text: "orange", translation: "オレンジ" }, { text: "apple", translation: "りんご" }, { text: "tomato", translation: "トマト" }, { text: "salad", translation: "サラダ" }, { text: "melon", translation: "メロン" }, { text: "lemon", translation: "レモン" }, { text: "music", translation: "音楽" }, { text: "guitar", translation: "ギター" }, { text: "violin", translation: "バイオリン" },
-      { text: "flute", translation: "フルート" }, { text: "concert", translation: "コンサート" }, { text: "radio", translation: "ラジオ" }, { text: "sport", translation: "スポーツ" }, { text: "tennis", translation: "テニス" }, { text: "soccer", translation: "サッカー" },
-      { text: "baseball", translation: "野球" }, { text: "basketball", translation: "バスケットボール" }, { text: "volleyball", translation: "バレーボール" }, { text: "badminton", translation: "バドミントン" }, { text: "ski", translation: "スキーする" }, { text: "skate", translation: "スケートする" }, { text: "pool", translation: "プール" }, { text: "racket", translation: "ラケット" }, { text: "glove", translation: "手袋" },
-      { text: "bat", translation: "バット" }, { text: "team", translation: "チーム" }, { text: "player", translation: "選手" }, { text: "score", translation: "得点" }, { text: "game", translation: "ゲーム、試合" }, { text: "start", translation: "始める" }, { text: "goal", translation: "ゴール" }, { text: "camp", translation: "キャンプする" }, { text: "picnic", translation: "ピクニック" },
-      { text: "hiking", translation: "ハイキング" }, { text: "party", translation: "パーティー" }, { text: "festival", translation: "祭り" }, { text: "present", translation: "プレゼント" }, { text: "card", translation: "カード" }, { text: "calendar", translation: "カレンダー" }, { text: "notebook", translation: "ノート" }, { text: "pen", translation: "ペン" }, { text: "pencil", translation: "鉛筆" },
-      { text: "eraser", translation: "消しゴム" }, { text: "ruler", translation: "定規" }, { text: "bag", translation: "かばん" }, { text: "cap", translation: "帽子 (キャップ)" }, { text: "hat", translation: "帽子 (ハット)" }, { text: "shirt", translation: "シャツ" }, { text: "coat", translation: "コート" }, { text: "jacket", translation: "ジャケット" },
-      { text: "sweater", translation: "セーター" }, { text: "dress", translation: "ドレス" }, { text: "skirt", translation: "スカート" }, { text: "shoe", translation: "靴" }, { text: "sock", translation: "靴下" }, { text: "pocket", translation: "ポケット" }, { text: "umbrella", translation: "傘" }, { text: "watch", translation: "腕時計" }, { text: "cup", translation: "カップ" },
-      { text: "glass", translation: "グラス" }, { text: "dish", translation: "皿、料理" }, { text: "plate", translation: "皿" }, { text: "spoon", translation: "スプーン" }, { text: "fork", translation: "フォーク" }, { text: "knife", translation: "ナイフ" }, { text: "chopstick", translation: "箸" }, { text: "bottle", translation: "ボトル" }, { text: "box", translation: "箱" },
-      { text: "basket", translation: "バスケット" }, { text: "table", translation: "テーブル" }, { text: "chair", translation: "椅子" }, { text: "desk", translation: "机" }, { text: "bed", translation: "ベッド" }, { text: "sofa", translation: "ソファ" }, { text: "curtain", translation: "カーテン" }, { text: "door", translation: "ドア" }, { text: "window", translation: "窓" },
-      { text: "floor", translation: "床" }, { text: "wall", translation: "壁" }, { text: "room", translation: "部屋" }, { text: "kitchen", translation: "台所" }, { text: "bathroom", translation: "浴室" }, { text: "bedroom", translation: "寝室" }, { text: "garden", translation: "庭" }, { text: "school", translation: "学校" }, { text: "classroom", translation: "教室" }, { text: "gym", translation: "体育館" }, { text: "library", translation: "図書館" }, { text: "office", translation: "オフィス" }, { text: "hospital", translation: "病院" }, { text: "bank", translation: "銀行" }, 
-      { text: "station", translation: "駅" }, { text: "airport", translation: "空港" }, { text: "park", translation: "公園" }, { text: "bookstore", translation: "本屋" }, { text: "supermarket", translation: "スーパーマーケット" }, 
-      { text: "building", translation: "建物" }, { text: "apartment", translation: "アパート" }, { text: "zoo", translation: "動物園" }, { text: "museum", translation: "博物館" }, { text: "theater", translation: "劇場" }, { text: "stadium", translation: "スタジアム" }, { text: "bridge", translation: "橋" }, { text: "tower", translation: "塔" }, { text: "street", translation: "通り" },
-      { text: "city", translation: "都市" }, { text: "town", translation: "町" }, { text: "village", translation: "村" }, { text: "country", translation: "国" }, { text: "world", translation: "世界" }, { text: "Japan", translation: "日本" }, { text: "America", translation: "アメリカ" }, { text: "Canada", translation: "カナダ" }, { text: "Australia", translation: "オーストラリア" },
-      { text: "China", translation: "中国" }, { text: "France", translation: "フランス" }, { text: "English", translation: "英語" }, { text: "Chinese", translation: "中国語" }, { text: "French", translation: "フランス語" }, { text: "car", translation: "車" }, { text: "bike", translation: "自転車 (バイク)" },
-      { text: "bicycle", translation: "自転車 (バイシクル)" }, { text: "train", translation: "電車" }, { text: "plane", translation: "飛行機" }, { text: "ship", translation: "船" }, { text: "boat", translation: "ボート" }, { text: "truck", translation: "トラック" }, { text: "ticket", translation: "チケット" }, { text: "passport", translation: "パスポート" }, { text: "map", translation: "地図" },
-      { text: "picture", translation: "絵、写真" }, { text: "letter", translation: "手紙" }, { text: "postcard", translation: "はがき" }, { text: "phone", translation: "電話" }, { text: "book", translation: "本" }, { text: "magazine", translation: "雑誌" }, { text: "newspaper", translation: "新聞" }, { text: "dictionary", translation: "辞書" },
-      { text: "textbook", translation: "教科書" }, { text: "story", translation: "物語" }, { text: "page", translation: "ページ" }, { text: "dog", translation: "犬" }, { text: "cat", translation: "猫" }, { text: "rabbit", translation: "うさぎ" }, { text: "hamster", translation: "ハムスター" }, { text: "bird", translation: "鳥" },
-      { text: "fish", translation: "魚" }, { text: "animal", translation: "動物" }, { text: "lion", translation: "ライオン" }, { text: "tiger", translation: "トラ" }, { text: "elephant", translation: "象" }, { text: "monkey", translation: "猿" }, { text: "bear", translation: "熊" }, { text: "panda", translation: "パンダ" }, { text: "horse", translation: "馬" },
-      { text: "cow", translation: "牛" }, { text: "pig", translation: "豚" }, { text: "sheep", translation: "羊" }, { text: "chicken", translation: "鶏" }, { text: "dolphin", translation: "イルカ" }, { text: "whale", translation: "クジラ" }, { text: "insect", translation: "昆虫" }, { text: "flower", translation: "花" }, { text: "rose", translation: "バラ" },
-      { text: "tree", translation: "木" }, { text: "leaf", translation: "葉" }, { text: "grass", translation: "草" }, { text: "mountain", translation: "山" }, { text: "river", translation: "川" }, { text: "sea", translation: "海" }, { text: "beach", translation: "ビーチ" }, { text: "sky", translation: "空" }, { text: "star", translation: "星" },
-      { text: "sun", translation: "太陽" }, { text: "moon", translation: "月" }, { text: "cloud", translation: "雲" }, { text: "rain", translation: "雨" }, { text: "snow", translation: "雪" }, { text: "wind", translation: "風" }, { text: "weather", translation: "天気" }, { text: "sunny", translation: "晴れた" }, { text: "cloudy", translation: "曇った" },
-      { text: "rainy", translation: "雨の" }, { text: "snowy", translation: "雪の" }, { text: "windy", translation: "風の強い" }, { text: "warm", translation: "暖かい" }, { text: "cool", translation: "涼しい" }, { text: "hot", translation: "暑い" }, { text: "cold", translation: "寒い" }, { text: "spring", translation: "春" }, { text: "summer", translation: "夏" },
-      { text: "fall", translation: "秋" }, { text: "winter", translation: "冬" }, { text: "color", translation: "色" }, { text: "red", translation: "赤" }, { text: "blue", translation: "青" }, { text: "white", translation: "白" }, { text: "black", translation: "黒" }, { text: "green", translation: "緑" }, { text: "yellow", translation: "黄色" },
-      { text: "pink", translation: "ピンク" }, { text: "orange", translation: "オレンジ色" }, { text: "brown", translation: "茶色" }, { text: "purple", translation: "紫" }, { text: "gold", translation: "金" }, { text: "silver", translation: "銀" }, { text: "one", translation: "1" }, { text: "two", translation: "2" }, { text: "three", translation: "3" },
-      { text: "four", translation: "4" }, { text: "five", translation: "5" }, { text: "six", translation: "6" }, { text: "seven", translation: "7" }, { text: "eight", translation: "8" }, { text: "nine", translation: "9" }, { text: "ten", translation: "10" }, { text: "eleven", translation: "11" }, { text: "twelve", translation: "12" },
-      { text: "thirteen", translation: "13" }, { text: "fourteen", translation: "14" }, { text: "fifteen", translation: "15" }, { text: "sixteen", translation: "16" }, { text: "seventeen", translation: "17" }, { text: "eighteen", translation: "18" }, { text: "nineteen", translation: "19" }, { text: "twenty", translation: "20" }, { text: "thirty", translation: "30" },
-      { text: "forty", translation: "40" }, { text: "fifty", translation: "50" }, { text: "sixty", translation: "60" }, { text: "seventy", translation: "70" }, { text: "eighty", translation: "80" }, { text: "ninety", translation: "90" }, { text: "hundred", translation: "100" }, { text: "thousand", translation: "1000" }, { text: "first", translation: "1番目" },
-      { text: "second", translation: "2番目" }, { text: "third", translation: "3番目" }, { text: "fourth", translation: "4番目" }, { text: "fifth", translation: "5番目" }, { text: "sixth", translation: "6番目" }, { text: "seventh", translation: "7番目" }, { text: "eighth", translation: "8番目" }, { text: "ninth", translation: "9番目" }, { text: "tenth", translation: "10番目" },
-      { text: "Sunday", translation: "日曜日" }, { text: "Monday", translation: "月曜日" }, { text: "Tuesday", translation: "火曜日" }, { text: "Wednesday", translation: "水曜日" }, { text: "Thursday", translation: "木曜日" }, { text: "Friday", translation: "金曜日" }, { text: "Saturday", translation: "土曜日" }, { text: "January", translation: "1月" }, { text: "February", translation: "2月" },
-      { text: "March", translation: "3月" }, { text: "April", translation: "4月" }, { text: "May", translation: "5月" }, { text: "June", translation: "6月" }, { text: "July", translation: "7月" }, { text: "August", translation: "8月" }, { text: "September", translation: "9月" }, { text: "October", translation: "10月" }, { text: "November", translation: "11月" },
-      { text: "December", translation: "12月" }, { text: "time", translation: "時間" }, { text: "hour", translation: "時間" }, { text: "minute", translation: "分" }, { text: "second", translation: "秒" }, { text: "morning", translation: "朝" }, { text: "afternoon", translation: "午後" }, { text: "evening", translation: "夕方" },
-      { text: "night", translation: "夜" }, { text: "noon", translation: "正午" }, { text: "day", translation: "日" }, { text: "week", translation: "週" }, { text: "month", translation: "月" }, { text: "year", translation: "年" }, { text: "today", translation: "今日" }, { text: "tomorrow", translation: "明日" }, { text: "yesterday", translation: "昨日" },
-      { text: "weekend", translation: "週末" }, { text: "holiday", translation: "休日" }, { text: "birthday", translation: "誕生日" }, { text: "Christmas", translation: "クリスマス" }, { text: "date", translation: "日付" }, { text: "breakfast", translation: "朝食" }, { text: "lunch", translation: "昼食" }, { text: "dinner", translation: "夕食" }, { text: "supper", translation: "夕食" },
-      { text: "snack", translation: "おやつ" }, { text: "food", translation: "食べ物" }, { text: "fruit", translation: "果物" }, { text: "vegetable", translation: "野菜" }, { text: "meat", translation: "肉" }, { text: "fish", translation: "魚肉" }, { text: "egg", translation: "卵" }, { text: "bread", translation: "パン" }, { text: "rice", translation: "ご飯" },
-      { text: "water", translation: "水" }, { text: "tea", translation: "お茶" }, { text: "jam", translation: "ジャム" }, { text: "butter", translation: "バター" }, { text: "salt", translation: "塩" }, { text: "sugar", translation: "砂糖" }, { text: "pepper", translation: "こしょう" }, { text: "soy sauce", translation: "醤油" }, { text: "oil", translation: "油" },
-      { text: "family", translation: "家族" }, { text: "father", translation: "父" }, { text: "mother", translation: "母" }, { text: "parent", translation: "親" }, { text: "brother", translation: "兄弟" }, { text: "sister", translation: "姉妹" }, { text: "grandfather", translation: "祖父" }, { text: "grandmother", translation: "祖母" }, { text: "uncle", translation: "おじ" },
-      { text: "aunt", translation: "おば" }, { text: "son", translation: "息子" }, { text: "daughter", translation: "娘" }, { text: "baby", translation: "赤ちゃん" }, { text: "child", translation: "子供" }, { text: "children", translation: "子供たち" }, { text: "boy", translation: "男の子" }, { text: "girl", translation: "女の子" }, { text: "man", translation: "男性" },
-      { text: "woman", translation: "女性" }, { text: "friend", translation: "友達" }, { text: "classmate", translation: "クラスメート" }, { text: "neighbor", translation: "近所の人" }, { text: "people", translation: "人々" }, { text: "person", translation: "人" }, { text: "name", translation: "名前" }, { text: "address", translation: "住所" }, { text: "job", translation: "仕事" },
-      { text: "teacher", translation: "先生" }, { text: "student", translation: "生徒" }, { text: "doctor", translation: "医者" }, { text: "nurse", translation: "看護師" }, { text: "dentist", translation: "歯科医" }, { text: "firefighter", translation: "消防士" }, { text: "pilot", translation: "パイロット" }, 
-      { text: "driver", translation: "運転手" }, { text: "cook", translation: "料理人" }, { text: "baker", translation: "パン屋" }, { text: "farmer", translation: "農家" }, { text: "singer", translation: "歌手" }, { text: "artist", translation: "芸術家" }, { text: "writer", translation: "作家" }, { text: "scientist", translation: "科学者" }, { text: "clerk", translation: "店員" },
-      { text: "waiter", translation: "ウェイター" }, { text: "waitress", translation: "ウェイトレス" }, { text: "head", translation: "頭" }, { text: "face", translation: "顔" }, { text: "eye", translation: "目" }, { text: "ear", translation: "耳" }, { text: "nose", translation: "鼻" }, { text: "mouth", translation: "口" }, { text: "tooth", translation: "歯" },
-      { text: "teeth", translation: "歯（複数）" }, { text: "hair", translation: "髪" }, { text: "hand", translation: "手" }, { text: "finger", translation: "指" }, { text: "arm", translation: "腕" }, { text: "shoulder", translation: "肩" }, { text: "leg", translation: "脚" }, { text: "foot", translation: "足" }, { text: "feet", translation: "足（複数）" },
-      { text: "knee", translation: "膝" }, { text: "body", translation: "体" }, { text: "heart", translation: "心臓、心" }, { text: "stomach", translation: "胃" }, { text: "back", translation: "背中" }, { text: "tall", translation: "背が高い" }, { text: "short", translation: "背が低い、短い" }, { text: "long", translation: "長い" }, { text: "big", translation: "大きい" },
-      { text: "small", translation: "小さい" }, { text: "little", translation: "小さい" }, { text: "large", translation: "大きい" }, { text: "fat", translation: "太った" }, { text: "thin", translation: "やせた" }, { text: "heavy", translation: "重い" }, { text: "light", translation: "軽い" }, { text: "old", translation: "古い、年をとった" }, { text: "new", translation: "新しい" },
-      { text: "young", translation: "若い" }, { text: "good", translation: "良い" }, { text: "bad", translation: "悪い" }, { text: "nice", translation: "素敵な" }, { text: "great", translation: "素晴らしい" }, { text: "wonderful", translation: "素晴らしい" }, { text: "beautiful", translation: "美しい" }, { text: "pretty", translation: "かわいい" }, { text: "cute", translation: "かわいい" },
-      { text: "happy", translation: "幸せな" }, { text: "sad", translation: "悲しい" }, { text: "angry", translation: "怒った" }, { text: "tired", translation: "疲れた" }, { text: "sleepy", translation: "眠い" }, { text: "hungry", translation: "お腹がすいた" }, { text: "thirsty", translation: "喉が渇いた" }, { text: "sick", translation: "病気の" }, { text: "fine", translation: "元気な" },
-      { text: "well", translation: "元気な" }, { text: "busy", translation: "忙しい" }, { text: "free", translation: "暇な" }, { text: "easy", translation: "簡単な" }, { text: "hard", translation: "難しい、一生懸命" }, { text: "difficult", translation: "難しい" }, { text: "interesting", translation: "面白い" }, { text: "exciting", translation: "興奮させる" }, { text: "fun", translation: "楽しい" },
-      { text: "funny", translation: "おかしい" }, { text: "kind", translation: "親切な" }, { text: "friendly", translation: "友好的な" }, { text: "strong", translation: "強い" }, { text: "weak", translation: "弱い" }, { text: "fast", translation: "速い" }, { text: "slow", translation: "遅い" }, { text: "high", translation: "高い" }, { text: "low", translation: "低い" },
-      { text: "right", translation: "正しい、右" }, { text: "left", translation: "左" }, { text: "wrong", translation: "間違った" }, { text: "same", translation: "同じ" }, { text: "different", translation: "違う" }, { text: "important", translation: "重要な" }, { text: "special", translation: "特別な" }, { text: "famous", translation: "有名な" }, { text: "clean", translation: "きれいな" },
-      { text: "dirty", translation: "汚れた" }, { text: "quiet", translation: "静かな" }, { text: "noisy", translation: "うるさい" }, { text: "sweet", translation: "甘い" }, { text: "sour", translation: "酸っぱい" }, { text: "soft", translation: "柔らかい" }, { text: "hard", translation: "硬い" }, { text: "favorite", translation: "お気に入りの" }, { text: "popular", translation: "人気のある" },
-      { text: "lucky", translation: "運が良い" }, { text: "careful", translation: "注意深い" }, { text: "ready", translation: "準備ができた" }, { text: "sorry", translation: "ごめんなさい" }, { text: "glad", translation: "嬉しい" }, { text: "sure", translation: "もちろん" }, { text: "really", translation: "本当に" }, { text: "very", translation: "とても" }, { text: "so", translation: "とても" },
-      { text: "too", translation: "〜も、あまりに" }, { text: "much", translation: "たくさんの" }, { text: "many", translation: "多くの" }, { text: "a lot of", translation: "たくさんの" }, { text: "some", translation: "いくつかの" }, { text: "any", translation: "何か、どんな〜も" }, { text: "all", translation: "すべての" }, { text: "every", translation: "すべての" }, { text: "each", translation: "それぞれの" },
-      { text: "other", translation: "他の" }, { text: "another", translation: "もう一つの" }, { text: "both", translation: "両方の" }, { text: "only", translation: "〜だけ" }, { text: "just", translation: "ちょうど、ただ〜だけ" }, { text: "about", translation: "およそ" }, { text: "almost", translation: "ほとんど" }, { text: "always", translation: "いつも" }, { text: "usually", translation: "普段" },
-      { text: "often", translation: "よく" }, { text: "sometimes", translation: "時々" }, { text: "never", translation: "決して〜ない" }, { text: "again", translation: "再び" }, { text: "also", translation: "〜もまた" }, { text: "too", translation: "〜もまた" }, { text: "either", translation: "〜もまた（否定文）" }, { text: "together", translation: "一緒に" }, { text: "alone", translation: "一人で" },
-      { text: "here", translation: "ここに" }, { text: "there", translation: "そこに" }, { text: "near", translation: "近くに" }, { text: "far", translation: "遠くに" }, { text: "away", translation: "離れて" }, { text: "home", translation: "家へ" }, { text: "out", translation: "外へ" }, { text: "into", translation: "〜の中へ" },
-    ],
-    2: [
-      { text: "get up", translation: "起きる" }, { text: "go to school", translation: "学校へ行く" }, { text: "come home", translation: "家に帰る" }, { text: "look at", translation: "〜を見る (視線を向ける)" }, { text: "listen to", translation: "〜を聞く (耳を傾ける)" }, { text: "sit down", translation: "座る" }, { text: "stand up", translation: "立つ" }, { text: "write down", translation: "書き留める" }, { text: "clean up", translation: "掃除する" },
-      { text: "wake up", translation: "目を覚ます" }, { text: "go to bed", translation: "寝る" }, { text: "take a bath", translation: "お風呂に入る" }, { text: "have breakfast", translation: "朝食を食べる" }, { text: "have lunch", translation: "昼食を食べる" }, { text: "have dinner", translation: "夕食を食べる" }, { text: "a cup of", translation: "一杯の" }, { text: "a piece of", translation: "一枚の" }, { text: "a lot of", translation: "たくさんの" },
-      { text: "kind of", translation: "種類" }, { text: "in front of", translation: "〜の前に" }, { text: "next to", translation: "〜の隣に" },
-      // Moved from Level 1
-      { text: "police officer", translation: "警察官" }, { text: "flight attendant", translation: "客室乗務員" },
-      { text: "ice cream", translation: "アイスクリーム" }, { text: "living room", translation: "居間" }, { text: "post office", translation: "郵便局" }, { text: "police station", translation: "警察署" }, { text: "department store", translation: "デパート" }, { text: "United Kingdom", translation: "イギリス" }, { text: "comic book", translation: "漫画本" }, { text: "junior high school", translation: "中学校" }, { text: "high school", translation: "高校" }, { text: "elementary school", translation: "小学校" }, { text: "station master", translation: "駅長" }, { text: "bus stop", translation: "バス停" }, { text: "train station", translation: "駅" }, { text: "traffic light", translation: "信号" }, { text: "convenience store", translation: "コンビニ" }, { text: "drug store", translation: "薬局" }, { text: "book shop", translation: "本屋" }, { text: "flower shop", translation: "花屋" }, { text: "shoe shop", translation: "靴屋" }, { text: "pet shop", translation: "ペットショップ" }, { text: "toy shop", translation: "おもちゃ屋" }, { text: "cake shop", translation: "ケーキ屋" }, { text: "hot dog", translation: "ホットドッグ" }, { text: "french fries", translation: "フライドポテト" }, { text: "apple pie", translation: "アップルパイ" }, { text: "orange juice", translation: "オレンジジュース" }, { text: "school lunch", translation: "給食" }, { text: "lunch box", translation: "弁当箱" }, { text: "supper time", translation: "夕食の時間" }, { text: "dining room", translation: "食堂" }, { text: "bath room", translation: "浴室" }, { text: "music room", translation: "音楽室" }, { text: "science room", translation: "理科室" }, { text: "computer room", translation: "コンピュータ室" }, { text: "staff room", translation: "職員室" }, { text: "nurse's office", translation: "保健室" }, { text: "video game", translation: "テレビゲーム" }, { text: "card game", translation: "カードゲーム" }, { text: "board game", translation: "ボードゲーム" }, { text: "pop music", translation: "ポップ音楽" }, { text: "rock music", translation: "ロック音楽" }, { text: "classical music", translation: "クラシック音楽" }, { text: "jazz music", translation: "ジャズ音楽" }, { text: "folk song", translation: "フォークソング" },
-      { text: "over there", translation: "あそこに" }, { text: "right here", translation: "ちょうどここに" }, { text: "all day", translation: "一日中" }, { text: "all night", translation: "一晩中" }, { text: "all the time", translation: "ずっと" }, { text: "for a long time", translation: "長い間" }, { text: "once a week", translation: "週に一度" }, { text: "twice a month", translation: "月に二度" }, { text: "three times a year", translation: "年に三度" }, { text: "every morning", translation: "毎朝" }, { text: "last night", translation: "昨夜" }, { text: "this morning", translation: "今朝" }, { text: "tomorrow morning", translation: "明日の朝" }, { text: "day after tomorrow", translation: "明後日" }, { text: "day before yesterday", translation: "一昨日" }, { text: "next week", translation: "来週" }, { text: "last month", translation: "先月" }, { text: "next year", translation: "来年" },
-      { text: "T-shirt", translation: "Tシャツ" }, 
-      // Added phrases
-      { text: "take a picture", translation: "写真を撮る" },
-      { text: "go home", translation: "家に帰る" },
-      { text: "go to the park", translation: "公園に行く" },
-      { text: "play the piano", translation: "ピアノを弾く" },
-      { text: "play the guitar", translation: "ギターを弾く" },
-      { text: "play soccer", translation: "サッカーをする" },
-      { text: "play baseball", translation: "野球をする" },
-      { text: "play tennis", translation: "テニスをする" },
-      { text: "listen to music", translation: "音楽を聴く" },
-      { text: "watch TV", translation: "テレビを見る" },
-      { text: "read a book", translation: "本を読む" },
-      { text: "write a letter", translation: "手紙を書く" },
-      { text: "study English", translation: "英語を勉強する" },
-      { text: "cook dinner", translation: "夕食を作る" },
-      { text: "help my mother", translation: "母を手伝う" },
-      { text: "do my homework", translation: "宿題をする" },
-      { text: "wash my hands", translation: "手を洗う" },
-      { text: "clean my room", translation: "部屋を掃除する" },
-      { text: "use a computer", translation: "コンピュータを使う" },
-      { text: "make a cake", translation: "ケーキを作る" },
-      { text: "speak English", translation: "英語を話す" },
-      { text: "swim in the sea", translation: "海で泳ぐ" },
-      { text: "run fast", translation: "速く走る" },
-      { text: "walk to school", translation: "歩いて学校へ行く" },
-      { text: "come from", translation: "〜出身である" },
-      { text: "live in", translation: "〜に住んでいる" },
-      { text: "like to", translation: "〜するのが好き" },
-      { text: "want to", translation: "〜したい" },
-      { text: "thank you", translation: "ありがとう" },
-      { text: "you are welcome", translation: "どういたしまして" },
-      { text: "excuse me", translation: "すみません" },
-      { text: "I am sorry", translation: "ごめんなさい" },
-      { text: "see you", translation: "またね" },
-      { text: "good morning", translation: "おはよう" },
-      { text: "good afternoon", translation: "こんにちは" },
-      { text: "good evening", translation: "こんばんは" },
-      { text: "good night", translation: "おやすみ" },
-      { text: "how are you", translation: "元気ですか" },
-      { text: "nice to meet you", translation: "はじめまして" },
-      { text: "of course", translation: "もちろん" },
-      { text: "all right", translation: "いいですよ/大丈夫" },
-      { text: "that is right", translation: "その通りです" },
-      { text: "at home", translation: "家で" },
-      { text: "at school", translation: "学校で" },
-      { text: "in the morning", translation: "朝に" },
-      { text: "in the afternoon", translation: "午後に" },
-      { text: "in the evening", translation: "夕方に" },
-      { text: "at night", translation: "夜に" },
-      { text: "on Sunday", translation: "日曜日に" },
-      { text: "after school", translation: "放課後" },
-      { text: "go shopping", translation: "買い物に行く" },
-      { text: "look for", translation: "〜を探す" },
-      { text: "talk with", translation: "〜と話す" },
-      { text: "wait for", translation: "〜を待つ" }
-    ],
-    3: [
-      { text: "I am a student.", translation: "私は生徒です。" }, { text: "You are kind.", translation: "あなたは親切です。" }, { text: "He is my teacher.", translation: "彼は私の先生です。" }, { text: "She is a nurse.", translation: "彼女は看護師です。" }, { text: "It is a dog.", translation: "それは犬です。" }, { text: "This is a pen.", translation: "これはペンです。" }, { text: "That is a bird.", translation: "あれは鳥です。" }, { text: "We are friends.", translation: "私たちは友達です。" },
-      { text: "They are happy.", translation: "彼らは幸せです。" }, { text: "I like music.", translation: "私は音楽が好きです。" }, { text: "I play tennis.", translation: "私はテニスをします。" }, { text: "I have a book.", translation: "私は本を持っています。" }, { text: "He runs fast.", translation: "彼は速く走ります。" }, { text: "She cooks well.", translation: "彼女は料理が上手です。" }, { text: "We study English.", translation: "私たちは英語を勉強します。" }, { text: "They play soccer.", translation: "彼らはサッカーをします。" },
-      { text: "Do you like cats?", translation: "あなたは猫が好きですか？" }, { text: "Can you swim?", translation: "あなたは泳げますか？" }, { text: "Is this yours?", translation: "これはあなたのですか？" }, { text: "Who is he?", translation: "彼は誰ですか？" }, { text: "What is this?", translation: "これは何ですか？" }, { text: "Where is my bag?", translation: "私のかばんはどこですか？" }, { text: "When is your birthday?", translation: "誕生日はいつですか？" }, { text: "How are you?", translation: "元気ですか？" },
-      { text: "What time is it?", translation: "何時ですか？" }, { text: "How many books?", translation: "本は何冊ですか？" }, { text: "How much is it?", translation: "いくらですか？" }, { text: "Open the door.", translation: "ドアを開けてください。" }, { text: "Close your book.", translation: "本を閉じてください。" }, { text: "Let's go home.", translation: "家に帰りましょう。" }, { text: "Let's play baseball.", translation: "野球をしましょう。" }, { text: "Stand up, please.", translation: "立ってください。" },
-      { text: "Sit down, please.", translation: "座ってください。" }, { text: "Thank you very much.", translation: "本当にありがとう。" }, { text: "You are welcome.", translation: "どういたしまして。" }, { text: "Nice to meet you.", translation: "はじめまして。" }, { text: "I want a bike.", translation: "私は自転車が欲しいです。" }, { text: "I need some water.", translation: "私は水が必要です。" }, { text: "He lives in Tokyo.", translation: "彼は東京に住んでいます。" }, { text: "She goes to school.", translation: "彼女は学校へ行きます。" },
-      { text: "My father is busy.", translation: "私の父は忙しいです。" }, { text: "My mother is kind.", translation: "私の母は親切です。" }, { text: "I have two dogs.", translation: "私は犬を2匹飼っています。" }, { text: "Do you have a pen?", translation: "ペンを持っていますか？" }, { text: "I don't know.", translation: "私は知りません。" }, { text: "I can't play piano.", translation: "私はピアノが弾けません。" }, { text: "It is sunny today.", translation: "今日は晴れです。" }, { text: "It is hot today.", translation: "今日は暑いです。" },
-      { text: "It is cold now.", translation: "今は寒いです。" }, { text: "Look at the sky.", translation: "空を見てください (視線を向ける)。" }, { text: "Listen to me.", translation: "私の話を聞いてください (耳を傾ける)。" }, { text: "Wash your hands.", translation: "手を洗ってください。" }, { text: "Don't run here.", translation: "ここで走ってはいけません。" }, { text: "Let's eat lunch.", translation: "昼食を食べましょう。" }, { text: "Let's study together.", translation: "一緒に勉強しましょう。" }, { text: "Are you hungry?", translation: "お腹が空いていますか？" },
-      { text: "Are you tired?", translation: "疲れていますか？" }, { text: "Is he your brother?", translation: "彼はあなたの兄ですか？" }, { text: "Is she your sister?", translation: "彼女はあなたの姉ですか？" }, { text: "What do you do?", translation: "あなたは何をしますか？" }, { text: "Where do you live?", translation: "どこに住んでいますか？" }, { text: "When do you study?", translation: "いつ勉強しますか？" }, { text: "Why are you sad?", translation: "なぜ悲しいのですか？" }, { text: "How do you come?", translation: "どうやって来ますか？" },
-      { text: "Whose bag is this?", translation: "これは誰のかばんですか？" }, { text: "Which color do you like?", translation: "どの色が好きですか？" }, { text: "I went to the park.", translation: "私は公園に行きました。" }, { text: "I saw a movie.", translation: "私は映画を見ました。" }, { text: "He came here.", translation: "彼はここに来ました。" }, { text: "She bought a pen.", translation: "彼女はペンを買いました。" }, { text: "Did you enjoy it?", translation: "楽しみましたか？" }, { text: "Yes, I did.", translation: "はい、しました。" },
-      { text: "No, I didn't.", translation: "いいえ、しませんでした。" }, { text: "I will go there.", translation: "私はそこへ行くつもりです。" }, { text: "It will rain tomorrow.", translation: "明日は雨でしょう。" }, { text: "I am reading a book.", translation: "私は本を読んでいます。" }, { text: "He is playing soccer.", translation: "彼はサッカーをしています。" }, { text: "She is watching TV.", translation: "彼女はテレビを見ています。" }, { text: "What are you doing?", translation: "何をしていますか？" }, { text: "There is a cat.", translation: "猫がいます。" },
-      { text: "There are two birds.", translation: "鳥が2羽います。" }, { text: "There is an apple.", translation: "りんごがあります。" }, { text: "The dog is cute.", translation: "その犬はかわいいです。" }, { text: "The flower is red.", translation: "その花は赤いです。" }, { text: "My bag is heavy.", translation: "私のかばんは重いです。" }, { text: "His car is new.", translation: "彼の車は新しいです。" }, { text: "Her dress is nice.", translation: "彼女のドレスは素敵です。" }, { text: "Our school is big.", translation: "私たちの学校は大きいです。" },
-      { text: "Their house is small.", translation: "彼らの家は小さいです。" }, { text: "I like apples.", translation: "私はりんごが好きです。" }, { text: "I want to be a doctor.", translation: "私は医者になりたいです。" }, { text: "I want to go.", translation: "私は行きたいです。" }, { text: "I like to swim.", translation: "私は泳ぐことが好きです。" }, { text: "To see is to believe.", translation: "見ることは信じることです。" }, { text: "It is fun to play.", translation: "遊ぶことは楽しいです。" }, { text: "Please help me.", translation: "私を助けてください。" },
-      { text: "Give me a pen.", translation: "私にペンをください。" }, { text: "Show me your picture.", translation: "あなたの写真を見せて。" }, { text: "Tell me the truth.", translation: "本当のことを話して。" }, { text: "Have a nice day.", translation: "よい一日を。" }
-    ]
-  },
-  Eiken4: {
-      1: [
-          { text: "delicious", translation: "おいしい" }, { text: "library", translation: "図書館" }, { text: "station", translation: "駅" }, { text: "hospital", translation: "病院" }, { text: "restaurant", translation: "レストラン" }, { text: "museum", translation: "博物館" }, { text: "science", translation: "科学" }, { text: "history", translation: "歴史" }, { text: "math", translation: "数学" }, { text: "subject", translation: "教科" }, { text: "homework", translation: "宿題" }, { text: "uniform", translation: "制服" },
-          { text: "vacation", translation: "休暇" }, { text: "travel", translation: "旅行" }, { text: "tour", translation: "ツアー" }, { text: "ticket", translation: "チケット" }, { text: "guide", translation: "ガイド" }, { text: "passport", translation: "パスポート" }, { text: "airport", translation: "空港" }, { text: "flight", translation: "フライト" }, { text: "hotel", translation: "ホテル" }, { text: "nature", translation: "自然" }, { text: "earth", translation: "地球" }, { text: "plant", translation: "植物" },
-          { text: "forest", translation: "森" }, { text: "river", translation: "川" }, { text: "ocean", translation: "海" }, { text: "weather", translation: "天気" }, { text: "environment", translation: "環境" }, { text: "garbage", translation: "ゴミ" }, { text: "recycle", translation: "リサイクル" }, { text: "energy", translation: "エネルギー" }, { text: "save", translation: "節約する、救う" }, { text: "future", translation: "未来" }, { text: "peace", translation: "平和" }, { text: "dream", translation: "夢" }
-      ],
-      2: [{ text: "sample phrase", translation: "サンプル熟語" }],
-      3: [{ text: "This is a sample.", translation: "これはサンプルです。" }]
-  }
-};
 
 const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
   1: {
@@ -586,7 +571,9 @@ export default function App() {
     totalKeystrokes: 0,
     hintLength: 0,
     currentBattleMissedQuestions: [],
-    battleLog: []
+    battleLog: [],
+    battleStartScore: 0,
+    battleStartKeystrokes: 0,
   });
 
   const [bestScores, setBestScores] = useState<Record<string, number>>({});
@@ -597,26 +584,67 @@ export default function App() {
   const [flash, setFlash] = useState(false);
   const [monsterShake, setMonsterShake] = useState(false); 
   const [scoreViewDiff, setScoreViewDiff] = useState<Difficulty>('Eiken5');
+  const [questionListFilter, setQuestionListFilter] = useState<'all' | 'weak'>('all');
   const [showHelp, setShowHelp] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('etyping_defeated_monsters');
-    if (saved) setGameState(prev => ({ ...prev, defeatedMonsterIds: JSON.parse(saved) }));
-    
-    const savedScores = localStorage.getItem('etyping_best_scores');
-    if (savedScores) setBestScores(JSON.parse(savedScores));
+    const defeatedMonsterIds = safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []);
+    const savedScores = safeLoadJson<Record<string, number>>(STORAGE_KEYS.bestScores, {});
+    const savedWeak = safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []);
 
-    const savedMaxK = localStorage.getItem('etyping_max_keystrokes');
-    if (savedMaxK) setMaxKeystrokes(parseInt(savedMaxK, 10));
+    if (defeatedMonsterIds.length > 0) {
+      setGameState(prev => ({ ...prev, defeatedMonsterIds }));
+    }
+    setBestScores(savedScores);
 
-    const savedWeak = localStorage.getItem('etyping_weak_questions');
-    if (savedWeak) setWeakQuestions(JSON.parse(savedWeak));
+    const savedMaxK = localStorage.getItem(STORAGE_KEYS.maxKeystrokes);
+    if (savedMaxK) {
+      const parsedMaxK = parseInt(savedMaxK, 10);
+      if (Number.isFinite(parsedMaxK) && parsedMaxK >= 0) {
+        setMaxKeystrokes(parsedMaxK);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.maxKeystrokes);
+      }
+    }
+    setWeakQuestions(savedWeak);
   }, []);
 
   useEffect(() => {
     if (gameState.screen === 'battle') inputRef.current?.focus();
   }, [gameState.screen, gameState.currentQuestion]);
+
+  useEffect(() => {
+    if (gameState.screen === 'battle') {
+      const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
+      const currentMonster = gameState.currentMonsterList[actualMonsterId];
+      soundEngine.stopBattleAmbience();
+      soundEngine.startBattleMusic(
+        getBattleMusicPath(gameState.mode, gameState.inputMode, currentMonster?.type === 'boss'),
+        currentMonster?.type === 'boss' ? 0.22 : 0.18
+      );
+    } else {
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
+    }
+
+    return () => {
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
+    };
+  }, [gameState.screen, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList]);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (showResetConfirm) setShowResetConfirm(false);
+      if (showHelp) setShowHelp(false);
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [showHelp, showResetConfirm]);
   
   // Keyboard Support & Right-Control Speech
   useEffect(() => {
@@ -645,7 +673,7 @@ export default function App() {
                     }
                 } else {
                     // Retry
-                    initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.score, 0);
+                    initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.battleStartScore, gameState.battleStartKeystrokes);
                 }
             }
         }
@@ -665,7 +693,7 @@ export default function App() {
       const uniqueKey = getUniqueKey(prev.mode, prev.inputMode, monsterId);
       if (prev.defeatedMonsterIds.includes(uniqueKey)) return prev;
       const newIds = [...prev.defeatedMonsterIds, uniqueKey];
-      localStorage.setItem('etyping_defeated_monsters', JSON.stringify(newIds));
+      localStorage.setItem(STORAGE_KEYS.defeatedMonsters, JSON.stringify(newIds));
       return { ...prev, defeatedMonsterIds: newIds };
     });
   };
@@ -677,7 +705,34 @@ export default function App() {
           if (!updatedWeak.some(wq => wq.text === q.text)) { updatedWeak.push(q); }
       });
       setWeakQuestions(updatedWeak);
-      localStorage.setItem('etyping_weak_questions', JSON.stringify(updatedWeak));
+      localStorage.setItem(STORAGE_KEYS.weakQuestions, JSON.stringify(updatedWeak));
+  };
+
+  const handleResetHistory = () => {
+    setShowResetConfirm(true);
+  };
+
+  const confirmResetHistory = () => {
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+    setBestScores({});
+    setMaxKeystrokes(0);
+    setWeakQuestions([]);
+    setShowResetConfirm(false);
+    setGameState(prev => ({
+      ...prev,
+      defeatedMonsterIds: [],
+      score: 0,
+      history: [],
+      battleResult: null,
+      isNewRecord: false,
+      missCount: 0,
+      totalKeystrokes: 0,
+      hintLength: 0,
+      currentBattleMissedQuestions: [],
+      battleLog: [],
+      battleStartScore: 0,
+      battleStartKeystrokes: 0,
+    }));
   };
 
   const handleGameEnd = (result: BattleResult, finalScore: number, history: any[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[]) => {
@@ -690,7 +745,7 @@ export default function App() {
             isNewRecord = true;
             const newScores = { ...bestScores, [key]: finalScore };
             setBestScores(newScores);
-            localStorage.setItem('etyping_best_scores', JSON.stringify(newScores));
+            localStorage.setItem(STORAGE_KEYS.bestScores, JSON.stringify(newScores));
             soundEngine.playNewRecord();
         } else if (result === 'win') {
             soundEngine.playClear();
@@ -699,7 +754,7 @@ export default function App() {
         }
         if (finalKeystrokes > maxKeystrokes) {
             setMaxKeystrokes(finalKeystrokes);
-            localStorage.setItem('etyping_max_keystrokes', finalKeystrokes.toString());
+            localStorage.setItem(STORAGE_KEYS.maxKeystrokes, finalKeystrokes.toString());
         }
       } else {
           if (result === 'win') soundEngine.playClear();
@@ -723,15 +778,18 @@ export default function App() {
 
     const findStageIndices = (list: Monster[], targetMode: Mode, targetInputMode: InputMode, countToSelect: number, rangeLimit: number) => {
         const pool = list.slice(0, rangeLimit); 
+        const poolIndices = pool.map((_, i) => i);
         const unDefeated = pool.map((m, i) => ({m, i})).filter(x => !gameState.defeatedMonsterIds.includes(getUniqueKey(targetMode, targetInputMode, x.m.id)));
         let resultIndices: number[] = [];
+        if (poolIndices.length === 0) return resultIndices;
         if (unDefeated.length > 0) {
             resultIndices.push(unDefeated[0].i); 
         } else {
-             resultIndices.push(Math.floor(Math.random() * pool.length));
+             resultIndices.push(poolIndices[Math.floor(Math.random() * poolIndices.length)]);
         }
-        while(resultIndices.length < countToSelect) {
-            resultIndices.push(Math.floor(Math.random() * pool.length));
+        while(resultIndices.length < countToSelect && resultIndices.length < poolIndices.length) {
+            const remainingIndices = poolIndices.filter(i => !resultIndices.includes(i));
+            resultIndices.push(remainingIndices[Math.floor(Math.random() * remainingIndices.length)]);
         }
         return resultIndices;
     };
@@ -800,7 +858,9 @@ export default function App() {
       currentQuestion: question, userInput: "", startTime: null, history: [], questionCount: 1, maxQuestions: 10,
       battleResult: null, totalMonstersInStage: totalMonsters, isNewRecord: false, missCount: 0,
       totalKeystrokes: currentKeystrokes, hintLength: 0, currentBattleMissedQuestions: [],
-      battleLog: [] 
+      battleLog: [],
+      battleStartScore: currentScore,
+      battleStartKeystrokes: currentKeystrokes,
     }));
   };
 
@@ -824,10 +884,12 @@ export default function App() {
     let newMissedQs = [...gameState.currentBattleMissedQuestions];
     if (gameState.missCount > 0 && !newMissedQs.some(q => q.text === gameState.currentQuestion.text)) { newMissedQs.push(gameState.currentQuestion); }
     
+    let remainingWeakQuestions = weakQuestions;
     if (gameState.mode === 'weakness' && gameState.missCount === 0) {
         const updatedWeak = weakQuestions.filter(q => q.text !== gameState.currentQuestion.text);
+        remainingWeakQuestions = updatedWeak;
         setWeakQuestions(updatedWeak);
-        localStorage.setItem('etyping_weak_questions', JSON.stringify(updatedWeak));
+        localStorage.setItem(STORAGE_KEYS.weakQuestions, JSON.stringify(updatedWeak));
     }
 
     const logItem: BattleLogItem = {
@@ -836,6 +898,12 @@ export default function App() {
         skipped: skipped
     };
     const newBattleLog = [...gameState.battleLog, logItem];
+
+    if (gameState.mode === 'weakness' && gameState.missCount === 0 && remainingWeakQuestions.length === 0) {
+      handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs);
+      setGameState(prev => ({ ...prev, monsterHp: 0, score: currentScore, history: newHistory, totalKeystrokes: nextKeystrokes, currentBattleMissedQuestions: newMissedQs, battleLog: newBattleLog }));
+      return;
+    }
 
     if (isMonsterDefeated) {
       setFlash(true);
@@ -864,7 +932,7 @@ export default function App() {
        return;
     }
 
-    let nextQ: Question = (gameState.mode === 'weakness' && weakQuestions.length > 0) ? weakQuestions[Math.floor(Math.random() * weakQuestions.length)] : getRandomQuestion(gameState.selectedDifficulty, gameState.selectedLevel, gameState.currentQuestion);
+    let nextQ: Question = (gameState.mode === 'weakness' && remainingWeakQuestions.length > 0) ? remainingWeakQuestions[Math.floor(Math.random() * remainingWeakQuestions.length)] : getRandomQuestion(gameState.selectedDifficulty, gameState.selectedLevel, gameState.currentQuestion);
     
     setGameState(prev => ({
       ...prev, monsterHp: nextHp, score: currentScore, combo: skipped ? 0 : prev.combo + 1, currentQuestion: nextQ, userInput: "", 
@@ -1042,6 +1110,9 @@ export default function App() {
 
   if (gameState.screen === 'question-list') {
     const questions = QUESTIONS[gameState.selectedDifficulty][gameState.selectedLevel] || [];
+    const weakQuestionTexts = new Set(weakQuestions.map(q => q.text));
+    const weakCountInView = questions.filter(q => weakQuestionTexts.has(q.text)).length;
+    const visibleQuestions = questionListFilter === 'weak' ? questions.filter(q => weakQuestionTexts.has(q.text)) : questions;
     return (
       <ScreenContainer className="bg-slate-900">
         <div className="max-w-4xl w-full p-4 h-full flex flex-col">
@@ -1053,9 +1124,42 @@ export default function App() {
                <div className="flex bg-slate-800 p-1 rounded-lg">{(['Eiken5', 'Eiken4'] as Difficulty[]).map(d => (<button key={d} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: d }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedDifficulty === d ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{d === 'Eiken5' ? '英検5級' : '英検4級'}</button>))}</div>
                <div className="flex bg-slate-800 p-1 rounded-lg">{([1, 2, 3] as Level[]).map(l => (<button key={l} onClick={() => setGameState(prev => ({ ...prev, selectedLevel: l }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedLevel === l ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Level {l}</button>))}</div>
            </div>
-           <div className="flex-1 min-h-0">
+           <div className="mb-4 flex-shrink-0">
+             <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-900/30 px-4 py-2 text-sm font-bold text-orange-200">
+               <AlertCircle size={16} className="text-orange-300" />
+               この一覧の苦手語: {weakCountInView}件
+             </div>
+           </div>
+            <div className="mb-4 flex-shrink-0">
+              <div className="flex bg-slate-800 p-1 rounded-lg self-start">
+                <button onClick={() => setQuestionListFilter('all')} className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${questionListFilter === 'all' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>すべて</button>
+                <button onClick={() => setQuestionListFilter('weak')} className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${questionListFilter === 'weak' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>苦手だけ</button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
                <Box className="h-full flex flex-col" title={`${gameState.selectedDifficulty === 'Eiken5' ? '英検5級' : '英検4級'} - Level ${gameState.selectedLevel} (${questions.length} words)`}>
-                   <div className="overflow-y-auto pr-2 custom-scrollbar flex-1"><div className="grid gap-2 pb-4">{questions.map((q, idx) => (<div key={idx} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-colors group"><div className="flex items-center gap-4"><button onClick={() => speakText(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button><span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span></div><span className="text-slate-300 font-bold text-sm md:text-base ml-4 text-right flex-shrink-0">{q.translation}</span></div>))}</div></div>
+                   <div className="overflow-y-auto pr-2 custom-scrollbar flex-1">{visibleQuestions.length === 0 ? (
+                     <div className="flex h-full min-h-[240px] flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-900/40 px-6 text-center">
+                       <AlertCircle size={28} className="mb-3 text-slate-500" />
+                       <p className="text-lg font-bold text-slate-200">この一覧に苦手語はまだありません</p>
+                       <p className="mt-2 text-sm text-slate-400">通常の一覧に戻して、全問題を確認できます。</p>
+                       <GameButton onClick={() => setQuestionListFilter('all')} variant="outline" size="sm" className="mt-4">すべて表示に戻す</GameButton>
+                     </div>
+                   ) : <div className="grid gap-2 pb-4">{visibleQuestions.map((q, idx) => {
+                     const isWeakQuestion = weakQuestionTexts.has(q.text);
+                     return (
+                       <div key={`${q.text}-${idx}`} className={`flex items-center justify-between p-3 rounded-lg border transition-colors group ${isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
+                         <div className="flex items-center gap-4">
+                           <button onClick={() => speakText(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
+                           <div className="flex items-center gap-3">
+                             <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span>
+                             {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
+                           </div>
+                         </div>
+                         <span className="text-slate-300 font-bold text-sm md:text-base ml-4 text-right flex-shrink-0">{q.translation}</span>
+                       </div>
+                     );
+                   })}</div>}</div>
                </Box>
            </div>
         </div>
@@ -1098,6 +1202,27 @@ export default function App() {
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'question-list' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Word List</GameButton>
                         <GameButton onClick={() => setShowHelp(true)} variant="outline" className="px-2 border-slate-600 text-slate-300"><AlertCircle size={16} /> ヘルプ</GameButton>
                     </div>
+                    <div className="mt-4 flex justify-center">
+                        <GameButton onClick={handleResetHistory} variant="outline" className="border-red-700/60 text-red-300 hover:border-red-500 hover:bg-red-950/40">
+                          <RotateCcw size={16} /> 履歴をリセット
+                        </GameButton>
+                    </div>
+                    {showResetConfirm && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/60" onClick={() => setShowResetConfirm(false)}></div>
+                        <div className="relative w-full max-w-xl rounded-xl border-2 border-red-700/60 bg-slate-900 p-6 shadow-2xl">
+                          <h3 className="mb-4 text-2xl font-black text-red-300">履歴をリセット</h3>
+                          <div className="space-y-2 text-slate-200">
+                            <p>本当にPlay履歴データを消去して良いですか？</p>
+                            <p>Are you sure you want to delete your Play history data?</p>
+                          </div>
+                          <div className="mt-6 flex justify-end gap-3">
+                            <GameButton onClick={() => setShowResetConfirm(false)} variant="outline" size="sm" autoFocus>No</GameButton>
+                            <GameButton onClick={confirmResetHistory} size="sm" className="bg-red-600 border-red-400 text-white hover:bg-red-500">Yes</GameButton>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {showHelp && (
                       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-black/60" onClick={() => setShowHelp(false)}></div>
@@ -1110,7 +1235,7 @@ export default function App() {
                             <p>4. 苦手特訓や図鑑を使って、単語と記録を確認できます。</p>
                           </div>
                           <div className="mt-6 flex justify-end">
-                            <GameButton onClick={() => setShowHelp(false)} variant="outline" size="sm">閉じる</GameButton>
+                            <GameButton onClick={() => setShowHelp(false)} variant="outline" size="sm" autoFocus>閉じる</GameButton>
                           </div>
                         </div>
                       </div>
@@ -1239,17 +1364,45 @@ export default function App() {
     const showJapanese = gameState.inputMode !== 'voice-only';
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
+    const remainingWeakCount = weakQuestions.length;
     const monsterEmotion = gameState.monsterHp <= 0 ? 'win' : flash ? 'damage' : 'normal';
+    const comboLabel = gameState.combo >= 10 ? 'Legendary' : gameState.combo >= 7 ? 'Blazing' : gameState.combo >= 5 ? 'Hot Streak' : gameState.combo >= 3 ? 'Combo' : '';
+    const monsterDialogue = getMonsterBattleDialogue(currentMonster, {
+      isDefeated: gameState.monsterHp <= 0,
+      isDamaged: flash,
+      hpRate: hpPercent,
+      combo: gameState.combo,
+      missCount: gameState.missCount,
+    });
 
     return (
       <ScreenContainer className={isBoss ? "bg-red-950" : "bg-slate-900"}>
         <div className="w-full bg-slate-900/80 border-b border-slate-700 p-2 z-20 flex justify-between items-center shadow-md">
              <GameButton size="sm" variant="ghost" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))} className="text-slate-400 text-xs py-1"><Home size={16} /> EXIT</GameButton>
-             <div className="flex gap-4"><div className="bg-black/50 border border-slate-600 px-3 py-1 rounded-full text-slate-300 text-xs font-mono flex items-center gap-2"><Trophy size={14} className="text-yellow-500"/> SCORE: {gameState.score}</div><div className="bg-red-900/50 border border-red-500/50 px-3 py-1 rounded-full text-red-200 text-xs font-bold">あと {questionsLeft}問</div></div>
+             <div className="flex gap-4">
+               <div className="bg-black/50 border border-slate-600 px-3 py-1 rounded-full text-slate-300 text-xs font-mono flex items-center gap-2"><Trophy size={14} className="text-yellow-500"/> SCORE: {gameState.score}</div>
+               {gameState.combo >= 2 && (
+                 <div className="bg-yellow-900/50 border border-yellow-500/50 px-3 py-1 rounded-full text-yellow-200 text-xs font-black tracking-wide">
+                   {gameState.combo} COMBO
+                 </div>
+               )}
+               <div className="bg-red-900/50 border border-red-500/50 px-3 py-1 rounded-full text-red-200 text-xs font-bold">あと {questionsLeft}問</div>
+               {gameState.mode === 'weakness' && (
+                 <div className="bg-orange-900/50 border border-orange-500/50 px-3 py-1 rounded-full text-orange-200 text-xs font-bold">
+                   残り苦手語: {remainingWeakCount}
+                 </div>
+               )}
+             </div>
         </div>
         <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-start mt-4 px-4 pb-20">
             <div className="relative w-full flex flex-col items-center z-10 mb-4">
-                <div className={`transition-all duration-300 ${flash ? 'scale-110' : ''} mb-2`}><div className="inline-block bg-white text-slate-900 px-4 py-1.5 rounded-xl shadow-lg border-2 border-slate-200 font-bold relative text-xs">{gameState.monsterHp <= 0 ? currentMonster.dialogueDefeat : currentMonster.dialogueStart}<div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b-2 border-r-2 border-slate-200"></div></div></div>
+                {gameState.combo >= 3 && (
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-yellow-400/50 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 px-4 py-1.5 text-sm font-black uppercase tracking-[0.2em] text-yellow-200 shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+                    <Flame size={16} className="text-yellow-300" />
+                    {comboLabel} x{gameState.combo}
+                  </div>
+                )}
+                <div className={`transition-all duration-300 ${flash ? 'scale-110' : ''} mb-2`}><div className="inline-block bg-white text-slate-900 px-4 py-1.5 rounded-xl shadow-lg border-2 border-slate-200 font-bold relative text-xs">{monsterDialogue}<div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b-2 border-r-2 border-slate-200"></div></div></div>
                 <div className={`transition-transform duration-100 relative ${flash ? 'translate-x-2 -translate-y-2 brightness-150 saturate-150' : monsterShake ? 'animate-shake brightness-110' : 'animate-bounce-slow'}`}><MonsterAvatar type={currentMonster.type} color={currentMonster.color} emotion={monsterEmotion} size={140} />{isBoss && <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded animate-pulse">BOSS</div>}</div>
                 <div className="w-64 mt-2 bg-slate-800/80 p-2 rounded-lg border border-slate-600"><div className="flex justify-between text-slate-300 text-[10px] font-bold mb-1 px-1"><span className="flex items-center gap-2">{currentMonster.name} <span className="bg-slate-700 px-1 rounded text-slate-400">Lv.{gameState.currentMonsterIndex + 1}</span></span><span>{gameState.monsterHp} / {gameState.maxMonsterHp}</span></div><div className="h-3 bg-slate-900 rounded-full overflow-hidden relative shadow-inner"><div className={`h-full transition-all duration-300 relative overflow-hidden ${hpPercent < 30 ? 'bg-red-600' : 'bg-green-500'}`} style={{ width: `${hpPercent}%` }}><div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent"></div></div></div></div>
             </div>
@@ -1287,16 +1440,27 @@ export default function App() {
     const isWin = gameState.battleResult === 'win';
     const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
     const defeatedMonster = gameState.currentMonsterList[actualMonsterId];
+    const missedCount = gameState.currentBattleMissedQuestions.length;
+    const perfectCount = gameState.battleLog.filter(log => !log.skipped && log.missCount === 0).length;
+    const recoveredCount = gameState.battleLog.filter(log => !log.skipped && log.missCount > 0).length;
+    const skippedCount = gameState.battleLog.filter(log => log.skipped).length;
+    const answeredCount = gameState.battleLog.length - skippedCount;
+    const perfectRate = answeredCount > 0 ? Math.round((perfectCount / answeredCount) * 100) : 0;
     // Determine if next monster is available based on totalMonstersInStage
     // Guide/Easy have 3, Normal 5, Hard 7.
     // If current index < total - 1, we can go next.
     const isNextAvailable = gameState.currentMonsterIndex < gameState.totalMonstersInStage - 1;
     
     const handleNextMonster = () => initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex + 1, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.score, gameState.totalKeystrokes);
-    const handleRetry = () => initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.score, 0);
+    const handleRetry = () => initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.battleStartScore, gameState.battleStartKeystrokes);
     const handleBackToMode = () => setGameState(prev => ({ ...prev, screen: 'mode-select' }));
     const handleBackToLevel = () => setGameState(prev => ({ ...prev, screen: 'level-select' }));
     const handleBackToTitle = () => setGameState(prev => ({ ...prev, screen: 'title' }));
+    const handleOpenWeakList = () => {
+      setQuestionListFilter('weak');
+      setGameState(prev => ({ ...prev, screen: 'question-list' }));
+    };
+    const handleStartWeaknessFromResult = () => startGame(gameState.selectedDifficulty, gameState.selectedLevel, 'weakness', 'text-only');
 
     return (
       <ScreenContainer className="items-center justify-center p-4">
@@ -1327,6 +1491,31 @@ export default function App() {
                   <p className="text-slate-500 text-sm">にげられてしまった！</p>
                 </>
               )}
+              {missedCount > 0 && (
+                <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-900/30 px-4 py-2 text-sm font-bold text-orange-200">
+                  <AlertCircle size={16} className="text-orange-300" />
+                  今回の苦手登録: {missedCount}語
+                </div>
+              )}
+          </div>
+
+          <div className="mb-4 grid grid-cols-2 gap-3 flex-shrink-0">
+            <div className="rounded-xl border border-green-500/30 bg-green-950/20 p-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-green-300">Perfect</p>
+              <p className="mt-1 text-2xl font-black text-white">{perfectCount}</p>
+            </div>
+            <div className="rounded-xl border border-yellow-500/30 bg-yellow-950/20 p-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-yellow-300">Recovered</p>
+              <p className="mt-1 text-2xl font-black text-white">{recoveredCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-500/30 bg-slate-900/40 p-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Skip</p>
+              <p className="mt-1 text-2xl font-black text-white">{skippedCount}</p>
+            </div>
+            <div className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-3 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-blue-300">Perfect Rate</p>
+              <p className="mt-1 text-2xl font-black text-white">{perfectRate}%</p>
+            </div>
           </div>
 
           {/* Battle Review Log - Flexible height */}
@@ -1344,7 +1533,7 @@ export default function App() {
                                 <span className="text-slate-500 flex items-center gap-1"><FastForward size={14}/> Skip</span> :
                                 log.missCount === 0 ? 
                                 <span className="text-green-400 flex items-center gap-1"><CheckCircle2 size={14}/> Perfect</span> :
-                                <span className="text-yellow-500 flex items-center gap-1"><AlertCircle size={14}/> Cleared</span>
+                                <span className="text-yellow-500 flex items-center gap-1"><AlertCircle size={14}/> Miss x{log.missCount}</span>
                              }
                          </div>
                      </div>
@@ -1353,6 +1542,19 @@ export default function App() {
           </div>
 
           <div className="space-y-3 mt-auto flex-shrink-0">
+              {missedCount > 0 && (
+                <div className="rounded-xl border border-orange-500/30 bg-orange-950/20 p-3 text-left">
+                  <p className="mb-3 text-sm font-bold text-orange-200">復習に進む</p>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <GameButton onClick={handleOpenWeakList} size="sm" variant="outline" className="border-orange-500/40 text-orange-200 hover:bg-orange-900/30">
+                      <ClipboardList size={16} className="mr-2" /> 苦手だけ見る
+                    </GameButton>
+                    <GameButton onClick={handleStartWeaknessFromResult} size="sm" className="bg-orange-600 border-orange-400 text-white hover:bg-orange-500">
+                      <Flame size={16} className="mr-2" /> 苦手特訓へ
+                    </GameButton>
+                  </div>
+                </div>
+              )}
               {isWin ? (
                   isNextAvailable ? (
                     <GameButton onClick={handleNextMonster} className="w-full text-lg py-3" variant="success" autoFocus>つぎのモンスターへ <ArrowRight className="ml-2" size={20}/></GameButton>

@@ -1,0 +1,166 @@
+{
+  "category": "eiken",
+  "series": "grade4",
+  "difficultyKey": "Eiken4",
+  "displayName": "??4?",
+  "levels": {
+    "1": [
+      {
+        "text": "delicious",
+        "translation": "おいしい"
+      },
+      {
+        "text": "library",
+        "translation": "図書館"
+      },
+      {
+        "text": "station",
+        "translation": "駅"
+      },
+      {
+        "text": "hospital",
+        "translation": "病院"
+      },
+      {
+        "text": "restaurant",
+        "translation": "レストラン"
+      },
+      {
+        "text": "museum",
+        "translation": "博物館"
+      },
+      {
+        "text": "science",
+        "translation": "科学"
+      },
+      {
+        "text": "history",
+        "translation": "歴史"
+      },
+      {
+        "text": "math",
+        "translation": "数学"
+      },
+      {
+        "text": "subject",
+        "translation": "教科"
+      },
+      {
+        "text": "homework",
+        "translation": "宿題"
+      },
+      {
+        "text": "uniform",
+        "translation": "制服"
+      },
+      {
+        "text": "vacation",
+        "translation": "休暇"
+      },
+      {
+        "text": "travel",
+        "translation": "旅行"
+      },
+      {
+        "text": "tour",
+        "translation": "ツアー"
+      },
+      {
+        "text": "ticket",
+        "translation": "チケット"
+      },
+      {
+        "text": "guide",
+        "translation": "ガイド"
+      },
+      {
+        "text": "passport",
+        "translation": "パスポート"
+      },
+      {
+        "text": "airport",
+        "translation": "空港"
+      },
+      {
+        "text": "flight",
+        "translation": "フライト"
+      },
+      {
+        "text": "hotel",
+        "translation": "ホテル"
+      },
+      {
+        "text": "nature",
+        "translation": "自然"
+      },
+      {
+        "text": "earth",
+        "translation": "地球"
+      },
+      {
+        "text": "plant",
+        "translation": "植物"
+      },
+      {
+        "text": "forest",
+        "translation": "森"
+      },
+      {
+        "text": "river",
+        "translation": "川"
+      },
+      {
+        "text": "ocean",
+        "translation": "海"
+      },
+      {
+        "text": "weather",
+        "translation": "天気"
+      },
+      {
+        "text": "environment",
+        "translation": "環境"
+      },
+      {
+        "text": "garbage",
+        "translation": "ゴミ"
+      },
+      {
+        "text": "recycle",
+        "translation": "リサイクル"
+      },
+      {
+        "text": "energy",
+        "translation": "エネルギー"
+      },
+      {
+        "text": "save",
+        "translation": "節約する、救う"
+      },
+      {
+        "text": "future",
+        "translation": "未来"
+      },
+      {
+        "text": "peace",
+        "translation": "平和"
+      },
+      {
+        "text": "dream",
+        "translation": "夢"
+      }
+    ],
+    "2": [
+      {
+        "text": "sample phrase",
+        "translation": "サンプル熟語"
+      }
+    ],
+    "3": [
+      {
+        "text": "This is a sample.",
+        "translation": "これはサンプルです。"
+      }
+    ]
+  }
+}
