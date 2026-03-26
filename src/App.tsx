@@ -616,24 +616,18 @@ export default function App() {
   }, [gameState.screen, gameState.currentQuestion]);
 
   useEffect(() => {
-    if (gameState.screen === 'battle') {
-      const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
-      const currentMonster = gameState.currentMonsterList[actualMonsterId];
-      soundEngine.stopBattleAmbience();
-      soundEngine.startBattleMusic(
-        getBattleMusicPath(gameState.mode, gameState.inputMode, currentMonster?.type === 'boss'),
-        currentMonster?.type === 'boss' ? 0.22 : 0.18
-      );
-    } else {
+    if (gameState.screen !== 'battle') {
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
     }
+  }, [gameState.screen]);
 
+  useEffect(() => {
     return () => {
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
     };
-  }, [gameState.screen, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList]);
+  }, []);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -843,6 +837,11 @@ export default function App() {
   const initBattle = (diff: Difficulty, level: Level, mode: Mode, inputMode: InputMode, stepIndex: number, indices: number[], monsterList: Monster[], totalMonsters: number, currentScore: number, currentKeystrokes: number) => {
     const actualMonsterIndex = indices[stepIndex];
     const startingMonster = monsterList[actualMonsterIndex];
+    soundEngine.stopBattleMusic();
+    soundEngine.startBattleMusic(
+      getBattleMusicPath(mode, inputMode, startingMonster?.type === 'boss'),
+      startingMonster?.type === 'boss' ? 0.22 : 0.18
+    );
     let question: Question;
     if (mode === 'weakness') {
         if (weakQuestions.length > 0) { question = weakQuestions[Math.floor(Math.random() * weakQuestions.length)]; } 
