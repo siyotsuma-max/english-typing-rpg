@@ -298,6 +298,16 @@ const getSupportedSpeechModes = (voices: SpeechSynthesisVoice[]) => (
   NON_RANDOM_SPEECH_VOICE_MODES.filter(mode => isExactSpeechModeSupported(voices, mode))
 );
 
+const matchesRequestedGender = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
+  const isFemaleMode = mode.endsWith('female');
+
+  if (isFemaleMode) {
+    return !matchesVoiceHint(voice, MALE_VOICE_HINTS);
+  }
+
+  return matchesVoiceHint(voice, MALE_VOICE_HINTS) && !matchesVoiceHint(voice, FEMALE_VOICE_HINTS);
+};
+
 const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
   const isFemaleMode = mode.endsWith('female');
@@ -409,10 +419,7 @@ const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMo
 
   const lang = getSpeechLocale(resolvedMode);
   const localeVoice = getStrictLocaleVoice(voices, resolvedMode);
-  const hasLocaleGenderMatch = localeVoice
-    ? matchesVoiceHint(localeVoice, resolvedMode.endsWith('female') ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS)
-      && !matchesVoiceHint(localeVoice, resolvedMode.endsWith('female') ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS)
-    : false;
+  const hasLocaleGenderMatch = localeVoice ? matchesRequestedGender(localeVoice, resolvedMode) : false;
   const genderFallbackVoice = hasLocaleGenderMatch ? null : getGenderFallbackVoice(voices, resolvedMode);
   const resolvedVoice = localeVoice && hasLocaleGenderMatch
     ? localeVoice
