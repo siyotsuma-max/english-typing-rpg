@@ -232,12 +232,14 @@ const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
   return hints.some(hint => normalized.includes(hint));
 };
 
-const isEnglishVoice = (voice: SpeechSynthesisVoice) => voice.lang.toLowerCase().startsWith('en');
+const normalizeVoiceLang = (lang: string) => lang.toLowerCase().replace(/_/g, '-');
+
+const isEnglishVoice = (voice: SpeechSynthesisVoice) => normalizeVoiceLang(voice.lang).startsWith('en');
 
 const matchesVoiceLocale = (voice: SpeechSynthesisVoice, locale: 'en-us' | 'en-gb') => {
-  const lang = voice.lang.toLowerCase();
+  const lang = normalizeVoiceLang(voice.lang);
   const localeHints = locale === 'en-us' ? US_VOICE_HINTS : UK_VOICE_HINTS;
-  return lang.startsWith(locale) || matchesVoiceHint(voice, localeHints);
+  return lang === locale || lang.startsWith(`${locale}-`) || matchesVoiceHint(voice, localeHints);
 };
 
 const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
@@ -247,7 +249,7 @@ const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoi
   const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
   const preferredLocaleHints = locale === 'en-us' ? US_VOICE_HINTS : UK_VOICE_HINTS;
   const oppositeLocaleHints = locale === 'en-us' ? UK_VOICE_HINTS : US_VOICE_HINTS;
-  const lang = voice.lang.toLowerCase();
+  const lang = normalizeVoiceLang(voice.lang);
 
   if (!lang.startsWith('en')) return -1_000;
 
@@ -903,7 +905,7 @@ export default function App() {
     const loadVoices = () => {
       try {
         const voices = synth.getVoices();
-        const englishVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith('en'));
+        const englishVoices = voices.filter(isEnglishVoice);
         setSpeechVoices(englishVoices.length > 0 ? englishVoices : voices);
       } catch (error) {
         console.error('Failed to load speech voices:', error);
