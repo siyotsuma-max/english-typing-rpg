@@ -42,6 +42,12 @@ type QuestionPoolState = {
   lastIndex: number | null;
 };
 
+type ResolvedSpeechConfig = {
+  mode: Exclude<SpeechVoiceMode, 'random'>;
+  lang: 'en-US' | 'en-GB';
+  voice: SpeechSynthesisVoice | null;
+};
+
 interface GameState {
   screen: 'title' | 'settings' | 'monster-book' | 'question-list' | 'score-view' | 'rank-list' | 'level-select' | 'mode-select' | 'battle' | 'result';
   selectedDifficulty: Difficulty;
@@ -242,6 +248,10 @@ const matchesVoiceLocale = (voice: SpeechSynthesisVoice, locale: 'en-us' | 'en-g
   return lang === locale || lang.startsWith(`${locale}-`) || matchesVoiceHint(voice, localeHints);
 };
 
+const getSpeechLocale = (mode: Exclude<SpeechVoiceMode, 'random'>): 'en-US' | 'en-GB' => (
+  mode.startsWith('us_') ? 'en-US' : 'en-GB'
+);
+
 const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
   const isFemaleMode = mode.endsWith('female');
@@ -318,21 +328,24 @@ const getVoicesForSpeechMode = (voices: SpeechSynthesisVoice[], mode: Exclude<Sp
     .map(entry => entry.voice);
 };
 
-const resolveSpeechVoice = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): SpeechSynthesisVoice | null => {
-  if (voices.length === 0) return null;
+const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): ResolvedSpeechConfig => {
+  const resolvedMode: Exclude<SpeechVoiceMode, 'random'> = mode === 'random'
+    ? ['us_female', 'us_male', 'uk_female', 'uk_male'][Math.floor(Math.random() * 4)] as Exclude<SpeechVoiceMode, 'random'>
+    : mode;
 
-  if (mode === 'random') {
-    const randomTargets: Exclude<SpeechVoiceMode, 'random'>[] = ['us_female', 'us_male', 'uk_female', 'uk_male'];
-    const randomMode = randomTargets[Math.floor(Math.random() * randomTargets.length)];
-    const candidates = getVoicesForSpeechMode(voices, randomMode);
-    return candidates[0] ?? voices[0];
-  }
+  const lang = getSpeechLocale(resolvedMode);
+  const candidates = getVoicesForSpeechMode(voices, resolvedMode);
+  const locale = normalizeVoiceLang(lang) as 'en-us' | 'en-gb';
+  const localeCandidates = candidates.filter(voice => matchesVoiceLocale(voice, locale));
 
-  const candidates = getVoicesForSpeechMode(voices, mode);
-  return candidates[0] ?? voices[0];
+  return {
+    mode: resolvedMode,
+    lang,
+    voice: localeCandidates[0] ?? null,
+  };
 };
 
-const speakText = (text: string, options?: { voiceURI?: string; rate?: number }) => {
+const speakText = (text: string, options?: { voiceURI?: string; rate?: number; lang?: string }) => {
   // Cancel any ongoing speech to prevent queuing lag
   window.speechSynthesis.cancel();
   
@@ -343,7 +356,7 @@ const speakText = (text: string, options?: { voiceURI?: string; rate?: number })
     selectedVoice = window.speechSynthesis.getVoices().find(v => v.voiceURI === options.voiceURI);
     if (selectedVoice) utterance.voice = selectedVoice;
   }
-  utterance.lang = selectedVoice?.lang || 'en-US';
+  utterance.lang = options?.lang || selectedVoice?.lang || 'en-US';
   
   window.speechSynthesis.speak(utterance);
 };
@@ -1014,9 +1027,10 @@ export default function App() {
   }, [gameState]);
 
   const speakWithSettings = (text: string) => {
-      const selectedVoice = resolveSpeechVoice(speechVoices, speechVoiceMode);
+      const speechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
       speakText(text, {
-          voiceURI: selectedVoice?.voiceURI,
+          voiceURI: speechConfig.voice?.voiceURI,
+          lang: speechConfig.lang,
           rate: speechRatePercent / 100,
       });
   };
@@ -1031,9 +1045,10 @@ export default function App() {
   const playSpeechPreview = (voiceMode: SpeechVoiceMode, ratePercent: number) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     clearSpeechPreviewTimeout();
-    const selectedVoice = resolveSpeechVoice(speechVoices, voiceMode);
+    const speechConfig = resolveSpeechConfig(speechVoices, voiceMode);
     speakText(SETTINGS_SPEECH_PREVIEW_TEXT, {
-      voiceURI: selectedVoice?.voiceURI,
+      voiceURI: speechConfig.voice?.voiceURI,
+      lang: speechConfig.lang,
       rate: ratePercent / 100,
     });
   };
