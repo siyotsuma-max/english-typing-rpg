@@ -163,7 +163,7 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
 const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia'];
-const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'google us english', 'google uk english male', 'aaron'];
+const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark'];
 
 const NORMAL_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
@@ -179,6 +179,28 @@ const BOSS_BATTLE_TRACKS = [
 
 const SETTINGS_BGM_PREVIEW_TRACK = NORMAL_BATTLE_TRACKS[0];
 const SETTINGS_SPEECH_PREVIEW_TEXT = 'The brave hero learns English every day.';
+const SPEECH_VOICE_COPY: Record<SpeechVoiceMode, { label: string; description: string }> = {
+  random: {
+    label: 'ランダム / Random',
+    description: '4種類の英語音声からランダムで再生します。',
+  },
+  us_female: {
+    label: '米語女性 / American Accent - Female',
+    description: 'アメリカ英語の女性音声で再生します。',
+  },
+  us_male: {
+    label: '米語男性 / American Accent - Male',
+    description: 'アメリカ英語の男性音声で再生します。',
+  },
+  uk_female: {
+    label: '英語女性 / British Accent - Female',
+    description: 'イギリス英語の女性音声で再生します。',
+  },
+  uk_male: {
+    label: '英語男性 / British Accent - Male',
+    description: 'イギリス英語の男性音声で再生します。',
+  },
+};
 
 let lastBattleMusicPath = '';
 
@@ -197,14 +219,30 @@ const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
   return hints.some(hint => normalized.includes(hint));
 };
 
+const excludeVoiceHints = (voices: SpeechSynthesisVoice[], hints: string[]) => {
+  const filteredVoices = voices.filter(voice => !matchesVoiceHint(voice, hints));
+  return filteredVoices.length > 0 ? filteredVoices : voices;
+};
+
 const getVoicesForSpeechMode = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
-  const genderHints = mode.endsWith('female') ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const isFemaleMode = mode.endsWith('female');
+  const genderHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
   const localeVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith(locale));
   const hintedVoices = localeVoices.filter(voice => matchesVoiceHint(voice, genderHints));
   if (hintedVoices.length > 0) return hintedVoices;
+  if (!isFemaleMode && localeVoices.length > 0) {
+    return excludeVoiceHints(localeVoices, FEMALE_VOICE_HINTS);
+  }
   if (localeVoices.length > 0) return localeVoices;
-  return voices.filter(voice => voice.lang.toLowerCase().startsWith('en'));
+
+  const englishVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith('en'));
+  const hintedEnglishVoices = englishVoices.filter(voice => matchesVoiceHint(voice, genderHints));
+  if (hintedEnglishVoices.length > 0) return hintedEnglishVoices;
+  if (!isFemaleMode && englishVoices.length > 0) {
+    return excludeVoiceHints(englishVoices, FEMALE_VOICE_HINTS);
+  }
+  return englishVoices;
 };
 
 const resolveSpeechVoice = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): SpeechSynthesisVoice | null => {
@@ -226,12 +264,13 @@ const speakText = (text: string, options?: { voiceURI?: string; rate?: number })
   window.speechSynthesis.cancel();
   
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-US';
+  let selectedVoice: SpeechSynthesisVoice | undefined;
   utterance.rate = options?.rate ?? 0.9;
   if (options?.voiceURI) {
-    const voice = window.speechSynthesis.getVoices().find(v => v.voiceURI === options.voiceURI);
-    if (voice) utterance.voice = voice;
+    selectedVoice = window.speechSynthesis.getVoices().find(v => v.voiceURI === options.voiceURI);
+    if (selectedVoice) utterance.voice = selectedVoice;
   }
+  utterance.lang = selectedVoice?.lang || 'en-US';
   
   window.speechSynthesis.speak(utterance);
 };
@@ -1473,6 +1512,7 @@ export default function App() {
           <Box title="English Voice" className="w-full mt-6">
             <div className="space-y-6">
               <p className="text-slate-300 text-sm">アメリカ英語・イギリス英語の男女4種類と、ランダム切り替えから選べます。利用できる音声はブラウザやOSによって変わるため、近い候補を自動で選びます。</p>
+              <p className="text-slate-400 text-xs">American Accent / British Accent を聞き比べながら選べます。</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {SPEECH_VOICE_OPTIONS.map((option) => (
                   <button
@@ -1480,8 +1520,8 @@ export default function App() {
                     onClick={() => handleSpeechVoiceSelect(option.id)}
                     className={`rounded-xl border-2 px-4 py-4 text-left transition-all ${speechVoiceMode === option.id ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
                   >
-                    <div className="font-bold">{option.label}</div>
-                    <div className={`text-xs mt-1 ${speechVoiceMode === option.id ? 'text-blue-100' : 'text-slate-400'}`}>{option.description}</div>
+                    <div className="font-bold">{SPEECH_VOICE_COPY[option.id].label}</div>
+                    <div className={`text-xs mt-1 ${speechVoiceMode === option.id ? 'text-blue-100' : 'text-slate-400'}`}>{SPEECH_VOICE_COPY[option.id].description}</div>
                   </button>
                 ))}
               </div>
