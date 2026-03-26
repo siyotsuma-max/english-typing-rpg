@@ -233,12 +233,33 @@ const getBattleMusicPath = (_mode: Mode, _inputMode: InputMode, isBoss: boolean)
   return nextTrack;
 };
 
-const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
-  const normalized = `${voice.name} ${voice.voiceURI}`.toLowerCase();
-  return hints.some(hint => normalized.includes(hint));
-};
-
 const normalizeVoiceLang = (lang: string) => lang.toLowerCase().replace(/_/g, '-');
+
+const normalizeVoiceText = (voice: SpeechSynthesisVoice) => (
+  `${voice.name} ${voice.voiceURI} ${normalizeVoiceLang(voice.lang)}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+);
+
+const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
+  const normalized = normalizeVoiceText(voice);
+  const tokens = new Set(normalized.split(/\s+/));
+
+  return hints.some(hint => {
+    const normalizedHint = hint
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+
+    if (!normalizedHint) return false;
+    if (normalizedHint.includes(' ')) {
+      return ` ${normalized} `.includes(` ${normalizedHint} `);
+    }
+
+    return tokens.has(normalizedHint);
+  });
+};
 
 const isEnglishVoice = (voice: SpeechSynthesisVoice) => normalizeVoiceLang(voice.lang).startsWith('en');
 
