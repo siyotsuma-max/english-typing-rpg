@@ -177,6 +177,9 @@ const BOSS_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping006.mp3`,
 ];
 
+const SETTINGS_BGM_PREVIEW_TRACK = NORMAL_BATTLE_TRACKS[0];
+const SETTINGS_SPEECH_PREVIEW_TEXT = 'The brave hero learns English every day.';
+
 let lastBattleMusicPath = '';
 
 const getBattleMusicPath = (_mode: Mode, _inputMode: InputMode, isBoss: boolean): string => {
@@ -241,6 +244,8 @@ class SoundEngine {
   private ambienceGain: GainNode | null = null;
   private battleMusic: HTMLAudioElement | null = null;
   private currentBattleMusicSrc = '';
+  private previewMusic: HTMLAudioElement | null = null;
+  private previewMusicTimeout: number | null = null;
 
   constructor() {
     try {
@@ -436,6 +441,45 @@ class SoundEngine {
   setBattleMusicVolume(volume: number) {
     if (!this.battleMusic) return;
     this.battleMusic.volume = volume;
+  }
+
+  playBattleMusicPreview(src: string, volume: number = 0.18, durationMs: number = 2200) {
+    this.stopBattleMusicPreview();
+
+    const audio = new Audio(src);
+    audio.loop = true;
+    audio.preload = 'auto';
+    audio.volume = volume;
+    audio.src = src;
+    audio.addEventListener('error', () => {
+      console.error('Battle music preview failed to load:', src, audio.error);
+    });
+    audio.addEventListener('canplaythrough', () => {
+      void audio.play().catch((error) => {
+        console.error('Battle music preview play after load failed:', src, error);
+      });
+    }, { once: true });
+
+    this.previewMusic = audio;
+    this.previewMusicTimeout = window.setTimeout(() => {
+      this.stopBattleMusicPreview();
+    }, durationMs);
+
+    audio.load();
+    void audio.play().catch((error) => {
+      console.error('Battle music preview initial play failed:', src, error);
+    });
+  }
+
+  stopBattleMusicPreview() {
+    if (this.previewMusicTimeout !== null) {
+      window.clearTimeout(this.previewMusicTimeout);
+      this.previewMusicTimeout = null;
+    }
+    if (!this.previewMusic) return;
+    this.previewMusic.pause();
+    this.previewMusic.currentTime = 0;
+    this.previewMusic = null;
   }
 }
 const soundEngine = new SoundEngine();
@@ -675,6 +719,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const speechPreviewTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const defeatedMonsterIds = safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []);
@@ -769,6 +814,27 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (speechPreviewTimeoutRef.current !== null) {
+        window.clearTimeout(speechPreviewTimeoutRef.current);
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      soundEngine.stopBattleMusicPreview();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (gameState.screen === 'settings') return;
+    clearSpeechPreviewTimeout();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    soundEngine.stopBattleMusicPreview();
+  }, [gameState.screen]);
+
+  useEffect(() => {
     if (gameState.screen === 'battle') inputRef.current?.focus();
   }, [gameState.screen, gameState.currentQuestion]);
 
@@ -839,6 +905,51 @@ export default function App() {
           voiceURI: selectedVoice?.voiceURI,
           rate: speechRatePercent / 100,
       });
+  };
+
+  const clearSpeechPreviewTimeout = () => {
+    if (speechPreviewTimeoutRef.current !== null) {
+      window.clearTimeout(speechPreviewTimeoutRef.current);
+      speechPreviewTimeoutRef.current = null;
+    }
+  };
+
+  const playSpeechPreview = (voiceMode: SpeechVoiceMode, ratePercent: number) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    clearSpeechPreviewTimeout();
+    const selectedVoice = resolveSpeechVoice(speechVoices, voiceMode);
+    speakText(SETTINGS_SPEECH_PREVIEW_TEXT, {
+      voiceURI: selectedVoice?.voiceURI,
+      rate: ratePercent / 100,
+    });
+  };
+
+  const scheduleSpeechPreview = (voiceMode: SpeechVoiceMode, ratePercent: number, delayMs: number = 250) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    clearSpeechPreviewTimeout();
+    speechPreviewTimeoutRef.current = window.setTimeout(() => {
+      speechPreviewTimeoutRef.current = null;
+      playSpeechPreview(voiceMode, ratePercent);
+    }, delayMs);
+  };
+
+  const handleBgmVolumeSelect = (level: number) => {
+    setBgmVolumeLevel(level);
+    if (level === 0) {
+      soundEngine.stopBattleMusicPreview();
+      return;
+    }
+    soundEngine.playBattleMusicPreview(SETTINGS_BGM_PREVIEW_TRACK, BGM_VOLUME_LEVELS[level]);
+  };
+
+  const handleSpeechVoiceSelect = (voiceMode: SpeechVoiceMode) => {
+    setSpeechVoiceMode(voiceMode);
+    playSpeechPreview(voiceMode, speechRatePercent);
+  };
+
+  const handleSpeechRateChange = (nextRatePercent: number) => {
+    setSpeechRatePercent(nextRatePercent);
+    scheduleSpeechPreview(speechVoiceMode, nextRatePercent);
   };
 
   const speakCurrentQuestion = () => {
@@ -1347,7 +1458,7 @@ export default function App() {
                 {['Off', '1', '2', '3', '4', '5'].map((label, index) => (
                   <button
                     key={label}
-                    onClick={() => setBgmVolumeLevel(index)}
+                    onClick={() => handleBgmVolumeSelect(index)}
                     className={`rounded-xl border-2 px-4 py-4 font-bold transition-all ${bgmVolumeLevel === index ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
                   >
                     {label}
@@ -1366,7 +1477,7 @@ export default function App() {
                 {SPEECH_VOICE_OPTIONS.map((option) => (
                   <button
                     key={option.id}
-                    onClick={() => setSpeechVoiceMode(option.id)}
+                    onClick={() => handleSpeechVoiceSelect(option.id)}
                     className={`rounded-xl border-2 px-4 py-4 text-left transition-all ${speechVoiceMode === option.id ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
                   >
                     <div className="font-bold">{option.label}</div>
@@ -1385,7 +1496,7 @@ export default function App() {
                 max="200"
                 step="5"
                 value={speechRatePercent}
-                onChange={(e) => setSpeechRatePercent(parseInt(e.target.value, 10))}
+                onChange={(e) => handleSpeechRateChange(parseInt(e.target.value, 10))}
                 className="w-full accent-blue-500"
               />
               <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 text-sm text-slate-300">
