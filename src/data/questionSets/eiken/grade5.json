@@ -315,7 +315,7 @@
       },
       {
         "text": "dish",
-        "translation": "皿、料理"
+        "translation": "深めの皿、料理"
       },
       {
         "text": "plate",
@@ -1223,11 +1223,11 @@
       },
       {
         "text": "dinner",
-        "translation": "夕食"
+        "translation": "夕食（ふつうの言い方）"
       },
       {
         "text": "supper",
-        "translation": "夕食"
+        "translation": "夕食（やや古い言い方）"
       },
       {
         "text": "snack",
@@ -1855,7 +1855,7 @@
       },
       {
         "text": "sure",
-        "translation": "もちろん"
+        "translation": "もちろん、いいですよ"
       },
       {
         "text": "really",
@@ -1875,15 +1875,15 @@
       },
       {
         "text": "much",
-        "translation": "たくさんの"
+        "translation": "たくさんの（数えられないもの）"
       },
       {
         "text": "many",
-        "translation": "多くの"
+        "translation": "たくさんの（数えられるもの）"
       },
       {
         "text": "a lot of",
-        "translation": "たくさんの"
+        "translation": "たくさんの（広く使える表現）"
       },
       {
         "text": "some",
@@ -2513,11 +2513,11 @@
       },
       {
         "text": "of course",
-        "translation": "もちろん"
+        "translation": "もちろんそうです"
       },
       {
         "text": "all right",
-        "translation": "いいですよ/大丈夫"
+        "translation": "だいじょうぶです"
       },
       {
         "text": "that is right",

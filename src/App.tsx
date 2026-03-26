@@ -36,6 +36,12 @@ interface BattleLogItem {
     skipped: boolean;
 }
 
+type QuestionPoolState = {
+  order: number[];
+  cursor: number;
+  lastIndex: number | null;
+};
+
 interface GameState {
   screen: 'title' | 'settings' | 'monster-book' | 'question-list' | 'score-view' | 'rank-list' | 'level-select' | 'mode-select' | 'battle' | 'result';
   selectedDifficulty: Difficulty;
@@ -70,6 +76,11 @@ interface GameState {
 
 // --- Rank System ---
 interface RankData { threshold: number; title: string; color: string; }
+
+const GUIDE_TARGET_COUNT = 3;
+const CHALLENGE_TARGET_COUNT = 3;
+const NORMAL_TARGET_COUNT = 5;
+const HARD_TARGET_COUNT = 7;
 
 const RANKS: RankData[] = [
     { threshold: 0, title: "見習いチャレンジャー", color: "text-slate-400" },
@@ -154,7 +165,7 @@ const getMonsterBattleDialogue = (
 };
 
 const SOUND_BASE_PATH = `${import.meta.env.BASE_URL}sound/`;
-const BGM_VOLUME_LEVELS = [0, 0.06, 0.1, 0.153, 0.2, 0.255] as const;
+const BGM_VOLUME_LEVELS = [0, 0.035, 0.06, 0.092, 0.125, 0.16] as const;
 const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: string }[] = [
   { id: 'random', label: 'ランダム', description: '4種類の音声からランダム' },
   { id: 'us_female', label: '米語 女性', description: 'アメリカ英語の女性音声' },
@@ -162,8 +173,8 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_female', label: '英語 女性', description: 'イギリス英語の女性音声' },
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
-const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel'];
-const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'google uk english male', 'google us english male', 'google us english', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
+const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel', 'google us english', 'google uk english female'];
+const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
 
 const NORMAL_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
@@ -770,8 +781,10 @@ export default function App() {
   const [questionListFilter, setQuestionListFilter] = useState<'all' | 'weak'>('all');
   const [showHelp, setShowHelp] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [lastSolvedTranslation, setLastSolvedTranslation] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechPreviewTimeoutRef = useRef<number | null>(null);
+  const questionPoolRef = useRef<Record<string, QuestionPoolState>>({});
 
   useEffect(() => {
     const defeatedMonsterIds = safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []);
@@ -1092,12 +1105,6 @@ export default function App() {
     let indices: number[] = [];
     let totalStageMonsters = 0;
 
-    // --- MODE CONFIGURATION ---
-    const GUIDE_TARGET_COUNT = 3;
-    const CHALLENGE_TARGET_COUNT = 3; 
-    const NORMAL_TARGET_COUNT = 5;
-    const HARD_TARGET_COUNT = 7;
-
     const findStageIndices = (list: Monster[], targetMode: Mode, targetInputMode: InputMode, countToSelect: number, rangeLimit: number) => {
         const pool = list.slice(0, rangeLimit); 
         const poolIndices = pool.map((_, i) => i);
@@ -1163,8 +1170,12 @@ export default function App() {
   };
 
   const initBattle = (diff: Difficulty, level: Level, mode: Mode, inputMode: InputMode, stepIndex: number, indices: number[], monsterList: Monster[], totalMonsters: number, currentScore: number, currentKeystrokes: number) => {
-    const actualMonsterIndex = indices[stepIndex];
-    const startingMonster = monsterList[actualMonsterIndex];
+    setLastSolvedTranslation(null);
+    const safeIndices = indices.length > 0 ? indices : [0];
+    const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
+    const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
+    const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
+    if (!startingMonster) return;
     soundEngine.stopBattleMusic();
     soundEngine.startBattleMusic(
       getBattleMusicPath(mode, inputMode, startingMonster?.type === 'boss'),
@@ -1180,7 +1191,7 @@ export default function App() {
 
     setGameState(prev => ({
       ...prev, screen: 'battle', selectedDifficulty: diff, selectedLevel: level, mode: mode, inputMode: inputMode,
-      currentMonsterIndex: stepIndex, currentMonsterList: monsterList, challengeModeIndices: indices,
+      currentMonsterIndex: safeStepIndex, currentMonsterList: monsterList, challengeModeIndices: safeIndices,
       monsterHp: startingMonster.baseHp, maxMonsterHp: startingMonster.baseHp, score: currentScore, combo: 0,
       currentQuestion: question, userInput: "", startTime: null, history: [], questionCount: 1, maxQuestions: 10,
       battleResult: null, totalMonstersInStage: totalMonsters, isNewRecord: false, missCount: 0,
@@ -1191,15 +1202,62 @@ export default function App() {
     }));
   };
 
+  const shuffleIndices = (length: number) => {
+    const indices = Array.from({ length }, (_, index) => index);
+    for (let i = indices.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    return indices;
+  };
+
+  const getQuestionPoolKey = (diff: Difficulty, level: Level) => `${diff}:${level}`;
+
+  const getNextQuestionFromPool = (diff: Difficulty, level: Level): Question => {
+    const list = QUESTIONS[diff]?.[level] || [];
+    if (list.length === 0) return { text: "No Data", translation: "No questions" };
+
+    const poolKey = getQuestionPoolKey(diff, level);
+    const existingPool = questionPoolRef.current[poolKey];
+    const shouldRefreshPool =
+      !existingPool ||
+      existingPool.order.length !== list.length ||
+      existingPool.cursor >= existingPool.order.length;
+
+    if (shouldRefreshPool) {
+      const order = shuffleIndices(list.length);
+      if (existingPool && existingPool.lastIndex !== null && list.length > 1 && order[0] === existingPool.lastIndex) {
+        const swapIndex = order.findIndex(index => index !== existingPool.lastIndex);
+        if (swapIndex > 0) {
+          [order[0], order[swapIndex]] = [order[swapIndex], order[0]];
+        }
+      }
+      questionPoolRef.current[poolKey] = {
+        order,
+        cursor: 0,
+        lastIndex: existingPool?.lastIndex ?? null,
+      };
+    }
+
+    const pool = questionPoolRef.current[poolKey];
+    const nextIndex = pool.order[pool.cursor] ?? 0;
+    pool.cursor += 1;
+    pool.lastIndex = nextIndex;
+    return list[nextIndex] ?? list[0];
+  };
+
   const getRandomQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
     const list = QUESTIONS[diff]?.[level] || []; 
     if (list.length === 0) return { text: "No Data", translation: "データがありません" };
-    let nextQ = list[Math.floor(Math.random() * list.length)];
-    if (currentQ && list.length > 1 && nextQ.text === currentQ.text) nextQ = list[Math.floor(Math.random() * list.length)];
-    return nextQ;
+    const nextQ = getNextQuestionFromPool(diff, level);
+    if (!currentQ || nextQ.text !== currentQ.text) return nextQ;
+    return getNextQuestionFromPool(diff, level);
   };
 
-  const handleSkip = () => { advanceGame(0, 0, true, 0); inputRef.current?.focus(); };
+  const handleSkip = () => {
+    advanceGame(0, 0, true, 0);
+    inputRef.current?.focus();
+  };
 
   const advanceGame = (damage: number, speed: number, skipped: boolean, addedChars: number) => {
     let nextHp = skipped ? gameState.monsterHp : Math.max(0, gameState.monsterHp - damage);
@@ -1282,6 +1340,9 @@ export default function App() {
     if (speedMultiplier >= 2.0 && gameState.missCount === 0) { soundEngine.playCritical(); } else { soundEngine.playAttack(); }
     setMonsterShake(true);
     setTimeout(() => setMonsterShake(false), 400); 
+    if (gameState.mode === 'challenge' && gameState.inputMode === 'voice-only') {
+      setLastSolvedTranslation(gameState.currentQuestion.translation);
+    }
     advanceGame(finalDamage, charsPerSec, false, charCount);
   };
 
@@ -1399,7 +1460,9 @@ export default function App() {
 
   if (gameState.screen === 'monster-book') {
     const monstersObj = MONSTERS[bookLevel];
-    const allMonsters = [...monstersObj.guide, ...monstersObj.challenge];
+    const visibleGuideMonsters = monstersObj.guide.slice(0, GUIDE_TARGET_COUNT);
+    const visibleChallengeMonsters = monstersObj.challenge.slice(0, HARD_TARGET_COUNT);
+    const allMonsters = [...visibleGuideMonsters, ...visibleChallengeMonsters];
     const uniqueDefeatedIds = new Set(gameState.defeatedMonsterIds.map(key => extractMonsterId(key)));
     const totalDefeated = [...uniqueDefeatedIds].filter(id => allMonsters.some(m => m.id === id)).length;
     return (
@@ -1414,7 +1477,7 @@ export default function App() {
                <div className="mb-8">
                  <h3 className="text-blue-300 font-bold mb-4 flex items-center gap-2 text-xl"><Shield size={20} /> 練習エリア (Training Zone)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {monstersObj.guide.map((m) => {
+                    {visibleGuideMonsters.map((m) => {
                       const isDefeated = uniqueDefeatedIds.has(m.id);
                       return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
@@ -1423,7 +1486,7 @@ export default function App() {
                <div>
                  <h3 className="text-red-400 font-bold mb-4 flex items-center gap-2 text-xl"><Skull size={20} /> 危険エリア (Danger Zone)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {monstersObj.challenge.map((m) => {
+                    {visibleChallengeMonsters.map((m) => {
                       const isDefeated = uniqueDefeatedIds.has(m.id);
                       return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
@@ -1657,12 +1720,6 @@ export default function App() {
   if (gameState.screen === 'mode-select') {
     const monstersObj = MONSTERS[gameState.selectedLevel];
     
-    // --- MODE CONFIGURATION ---
-    const GUIDE_TARGET_COUNT = 3;
-    const CHALLENGE_TARGET_COUNT = 3; 
-    const NORMAL_TARGET_COUNT = 5;
-    const HARD_TARGET_COUNT = 7;
-
     // Helper to check progress against the LIMITED target count
     const getModeProgress = (list: Monster[], mode: Mode, inputMode: InputMode, targetCount: number) => {
         // Only check the monsters within the target range for "Complete" status
@@ -1752,11 +1809,26 @@ export default function App() {
   }
 
   if (gameState.screen === 'battle') {
-    const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
-    const currentMonster = gameState.currentMonsterList[actualMonsterId];
+    const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex] ?? 0;
+    const currentMonster = gameState.currentMonsterList[actualMonsterId] ?? gameState.currentMonsterList[0];
+    if (!currentMonster) {
+      return (
+        <ScreenContainer className="bg-slate-900">
+          <div className="w-full max-w-xl p-6">
+            <Box title="Battle Error" className="w-full">
+              <div className="space-y-4 text-center">
+                <p className="text-slate-300">バトルの初期化に失敗しました。モード選択へ戻ります。</p>
+                <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'mode-select' }))} variant="outline">戻る</GameButton>
+              </div>
+            </Box>
+          </div>
+        </ScreenContainer>
+      );
+    }
     const hpPercent = (gameState.monsterHp / gameState.maxMonsterHp) * 100;
     const isBoss = currentMonster.type === 'boss';
     const showJapanese = gameState.inputMode !== 'voice-only';
+    const showPreviousMeaning = gameState.mode === 'challenge' && gameState.inputMode === 'voice-only' && !!lastSolvedTranslation;
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
     const remainingWeakCount = weakQuestions.length;
@@ -1804,7 +1876,14 @@ export default function App() {
             <div className="w-full bg-slate-800/95 backdrop-blur border-4 border-slate-600 rounded-2xl shadow-xl p-4 mt-4 relative">
                  <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div><div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div><div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div><div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div>
                  <button onClick={handleSkip} className="absolute top-2 right-6 text-slate-500 hover:text-white flex items-center gap-1 text-[10px] font-bold transition-colors border border-slate-600 px-2 py-1 rounded hover:bg-slate-700">SKIP <SkipForward size={10} /></button>
-                 <div className="text-center mb-2 min-h-[24px]">{showJapanese && <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>}</div>
+                 <div className="text-center mb-2 min-h-[24px]">
+                   {showJapanese && <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>}
+                   {showPreviousMeaning && (
+                     <p className="mt-2 text-sm font-bold text-emerald-300 drop-shadow-md">
+                       前の問題の意味: <span className="text-white">{lastSolvedTranslation}</span>
+                     </p>
+                   )}
+                 </div>
                  <div className="relative py-3 bg-black/40 rounded-xl border border-slate-700 shadow-inner">
                     <div className="absolute top-1/2 left-3 -translate-y-1/2 z-20">
                          {/* Button type='button' ensures it doesn't trigger form submits and behavior */}
@@ -1860,9 +1939,10 @@ export default function App() {
     return (
       <ScreenContainer className="items-center justify-center p-4">
         {/* Main Result Box - Scrollable if content is long, but constrained to viewport */}
-        <Box className="max-w-xl w-full text-center border-4 border-yellow-600/50 bg-slate-800 relative flex flex-col max-h-full">
+        <Box className="max-w-5xl w-full text-center border-4 border-yellow-600/50 bg-slate-800 relative flex flex-col max-h-full">
           {gameState.isNewRecord && (<div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full font-black text-xl shadow-[0_0_20px_rgba(250,204,21,0.8)] animate-bounce z-50 whitespace-nowrap">👑 NEW RECORD! 👑</div>)}
           
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
           <div className="mb-4 flex-shrink-0">
               {isWin ? (
                 <>
@@ -1912,28 +1992,6 @@ export default function App() {
               <p className="mt-1 text-2xl font-black text-white">{perfectRate}%</p>
             </div>
           </div>
-
-          {/* Battle Review Log - Flexible height */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar mb-4 bg-slate-900/50 rounded-lg p-2 border border-slate-700/50 text-left min-h-[150px]">
-             <h3 className="text-slate-400 text-xs font-bold uppercase mb-2 sticky top-0 bg-slate-900/90 p-1 border-b border-slate-700">Battle Review</h3>
-             <div className="space-y-1">
-                 {gameState.battleLog.map((log, idx) => (
-                     <div key={idx} className="flex items-center justify-between p-2 rounded bg-slate-800 border border-slate-700 text-xs">
-                         <div className="flex flex-col">
-                             <span className="font-mono text-blue-200 font-bold">{log.question.text}</span>
-                             <span className="text-slate-500">{log.question.translation}</span>
-                         </div>
-                         <div className="flex items-center">
-                             {log.skipped ? 
-                                <span className="text-slate-500 flex items-center gap-1"><FastForward size={14}/> Skip</span> :
-                                log.missCount === 0 ? 
-                                <span className="text-green-400 flex items-center gap-1"><CheckCircle2 size={14}/> Perfect</span> :
-                                <span className="text-yellow-500 flex items-center gap-1"><AlertCircle size={14}/> Miss x{log.missCount}</span>
-                             }
-                         </div>
-                     </div>
-                 ))}
-             </div>
           </div>
 
           <div className="space-y-3 mt-auto flex-shrink-0">
@@ -1967,6 +2025,28 @@ export default function App() {
                  <GameButton onClick={handleBackToTitle} size="sm" variant="ghost">ホームへ <LogOut className="ml-1" size={14}/></GameButton>
                  <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'monster-book' }))} size="sm" variant="ghost"><BookOpen size={16} className="mr-2" /> 図鑑</GameButton>
               </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto custom-scrollbar mb-4 bg-slate-900/50 rounded-lg p-2 border border-slate-700/50 text-left min-h-[180px] max-h-[38vh]">
+             <h3 className="text-slate-400 text-xs font-bold uppercase mb-2 sticky top-0 bg-slate-900/90 p-1 border-b border-slate-700">Battle Review</h3>
+             <div className="space-y-1">
+                 {gameState.battleLog.map((log, idx) => (
+                     <div key={idx} className="flex items-center justify-between p-2 rounded bg-slate-800 border border-slate-700 text-xs">
+                         <div className="flex flex-col">
+                             <span className="font-mono text-blue-200 font-bold">{log.question.text}</span>
+                             <span className="text-slate-500">{log.question.translation}</span>
+                         </div>
+                         <div className="flex items-center">
+                             {log.skipped ? 
+                                <span className="text-slate-500 flex items-center gap-1"><FastForward size={14}/> Skip</span> :
+                                log.missCount === 0 ? 
+                                <span className="text-green-400 flex items-center gap-1"><CheckCircle2 size={14}/> Perfect</span> :
+                                <span className="text-yellow-500 flex items-center gap-1"><AlertCircle size={14}/> Miss x{log.missCount}</span>
+                             }
+                         </div>
+                     </div>
+                 ))}
+             </div>
           </div>
         </Box>
         <style>{`.custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }`}</style>
