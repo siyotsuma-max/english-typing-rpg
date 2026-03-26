@@ -359,18 +359,16 @@ const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMo
   };
 };
 
-const speakText = (text: string, options?: { voiceURI?: string; rate?: number; lang?: string }) => {
+const speakText = (text: string, options?: { voice?: SpeechSynthesisVoice | null; rate?: number; lang?: string }) => {
   // Cancel any ongoing speech to prevent queuing lag
   window.speechSynthesis.cancel();
   
   const utterance = new SpeechSynthesisUtterance(text);
-  let selectedVoice: SpeechSynthesisVoice | undefined;
   utterance.rate = options?.rate ?? 0.9;
-  if (options?.voiceURI) {
-    selectedVoice = window.speechSynthesis.getVoices().find(v => v.voiceURI === options.voiceURI);
-    if (selectedVoice) utterance.voice = selectedVoice;
+  if (options?.voice) {
+    utterance.voice = options.voice;
   }
-  utterance.lang = options?.lang || selectedVoice?.lang || 'en-US';
+  utterance.lang = options?.lang || options?.voice?.lang || 'en-US';
   
   window.speechSynthesis.speak(utterance);
 };
@@ -1043,7 +1041,7 @@ export default function App() {
   const speakWithSettings = (text: string) => {
       const speechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
       speakText(text, {
-          voiceURI: speechConfig.voice?.voiceURI,
+          voice: speechConfig.voice,
           lang: speechConfig.lang,
           rate: speechRatePercent / 100,
       });
@@ -1061,7 +1059,7 @@ export default function App() {
     clearSpeechPreviewTimeout();
     const speechConfig = resolveSpeechConfig(speechVoices, voiceMode);
     speakText(SETTINGS_SPEECH_PREVIEW_TEXT, {
-      voiceURI: speechConfig.voice?.voiceURI,
+      voice: speechConfig.voice,
       lang: speechConfig.lang,
       rate: ratePercent / 100,
     });
