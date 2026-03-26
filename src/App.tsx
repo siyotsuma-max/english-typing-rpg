@@ -180,6 +180,7 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_female', label: '英語 女性', description: 'イギリス英語の女性音声' },
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
+const NON_RANDOM_SPEECH_VOICE_MODES: Exclude<SpeechVoiceMode, 'random'>[] = ['us_female', 'us_male', 'uk_female', 'uk_male'];
 const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel', 'aria', 'jenny', 'joanna', 'salli', 'ivy', 'ruth', 'amy'];
 const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'nathan', 'joey', 'roger', 'steffan', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
 const US_VOICE_HINTS = ['en-us', 'us', 'american', 'united states'];
@@ -272,6 +273,23 @@ const matchesVoiceLocale = (voice: SpeechSynthesisVoice, locale: 'en-us' | 'en-g
 
 const getSpeechLocale = (mode: Exclude<SpeechVoiceMode, 'random'>): 'en-US' | 'en-GB' => (
   mode.startsWith('us_') ? 'en-US' : 'en-GB'
+);
+
+const isExactSpeechModeSupported = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
+  const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
+  const isFemaleMode = mode.endsWith('female');
+  const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+
+  return voices.some(voice => (
+    matchesVoiceLocale(voice, locale)
+    && matchesVoiceHint(voice, preferredHints)
+    && !matchesVoiceHint(voice, oppositeHints)
+  ));
+};
+
+const getSupportedSpeechModes = (voices: SpeechSynthesisVoice[]) => (
+  NON_RANDOM_SPEECH_VOICE_MODES.filter(mode => isExactSpeechModeSupported(voices, mode))
 );
 
 const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
@@ -378,8 +396,9 @@ const getGenderFallbackVoice = (voices: SpeechSynthesisVoice[], mode: Exclude<Sp
 };
 
 const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): ResolvedSpeechConfig => {
+  const supportedModes = getSupportedSpeechModes(voices);
   const resolvedMode: Exclude<SpeechVoiceMode, 'random'> = mode === 'random'
-    ? ['us_female', 'us_male', 'uk_female', 'uk_male'][Math.floor(Math.random() * 4)] as Exclude<SpeechVoiceMode, 'random'>
+    ? supportedModes[Math.floor(Math.random() * supportedModes.length)] ?? 'us_female'
     : mode;
 
   const lang = getSpeechLocale(resolvedMode);
@@ -966,6 +985,13 @@ export default function App() {
   }, [speechVoiceMode]);
 
   useEffect(() => {
+    if (speechVoiceMode === 'random') return;
+    if (speechVoices.length === 0) return;
+    if (isExactSpeechModeSupported(speechVoices, speechVoiceMode)) return;
+    setSpeechVoiceMode('random');
+  }, [speechVoices, speechVoiceMode]);
+
+  useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.speechRatePercent, speechRatePercent.toString());
   }, [speechRatePercent]);
 
@@ -1133,6 +1159,9 @@ export default function App() {
   };
 
   const handleSpeechVoiceSelect = (voiceMode: SpeechVoiceMode) => {
+    if (voiceMode !== 'random' && !isExactSpeechModeSupported(speechVoices, voiceMode)) {
+      return;
+    }
     setSpeechVoiceMode(voiceMode);
     playSpeechPreview(voiceMode, speechRatePercent);
   };
@@ -1520,6 +1549,7 @@ export default function App() {
   );
 
   const selectedSpeechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
+  const supportedSpeechModes = getSupportedSpeechModes(speechVoices);
   const selectedSpeechLocale = normalizeVoiceLang(selectedSpeechConfig.lang);
   const speechDebugCandidates = speechVoices
     .filter(voice => matchesVoiceLocale(voice, selectedSpeechLocale as 'en-us' | 'en-gb'))
@@ -1726,16 +1756,25 @@ export default function App() {
               <p className="text-slate-300 text-sm">アメリカ英語・イギリス英語の男女4種類と、ランダム切り替えから選べます。利用できる音声はブラウザやOSによって変わるため、近い候補を自動で選びます。</p>
               <p className="text-slate-400 text-xs">American Accent / British Accent を聞き比べながら選べます。</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {SPEECH_VOICE_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => handleSpeechVoiceSelect(option.id)}
-                    className={`rounded-xl border-2 px-4 py-4 text-left transition-all ${speechVoiceMode === option.id ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
-                  >
-                    <div className="font-bold">{SPEECH_VOICE_COPY[option.id].label}</div>
-                    <div className={`text-xs mt-1 ${speechVoiceMode === option.id ? 'text-blue-100' : 'text-slate-400'}`}>{SPEECH_VOICE_COPY[option.id].description}</div>
-                  </button>
-                ))}
+                {SPEECH_VOICE_OPTIONS.map((option) => {
+                  const isSupported = option.id === 'random' || supportedSpeechModes.includes(option.id as Exclude<SpeechVoiceMode, 'random'>);
+                  const isSelected = speechVoiceMode === option.id;
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => handleSpeechVoiceSelect(option.id)}
+                      disabled={!isSupported}
+                      className={`rounded-xl border-2 px-4 py-4 text-left transition-all ${!isSupported ? 'cursor-not-allowed border-slate-800 bg-slate-900/60 text-slate-500 opacity-70' : isSelected ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="font-bold">{SPEECH_VOICE_COPY[option.id].label}</div>
+                        {!isSupported && <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300">未対応</span>}
+                      </div>
+                      <div className={`text-xs mt-1 ${isSupported && isSelected ? 'text-blue-100' : 'text-slate-400'}`}>{SPEECH_VOICE_COPY[option.id].description}</div>
+                    </button>
+                  );
+                })}
               </div>
               <div className="rounded-xl border border-cyan-500/30 bg-slate-950/70 p-4 text-xs text-slate-300">
                 <div className="font-bold text-cyan-300">Voice Debug</div>
