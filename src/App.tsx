@@ -89,6 +89,14 @@ const CHALLENGE_TARGET_COUNT = 3;
 const NORMAL_TARGET_COUNT = 5;
 const HARD_TARGET_COUNT = 7;
 
+const getGuideTargetCount = (difficulty: Difficulty, level: Level) => (
+  difficulty === 'Eiken5' && level === 1 ? 5 : GUIDE_TARGET_COUNT
+);
+
+const getListeningTargetCount = (difficulty: Difficulty, level: Level) => (
+  difficulty === 'Eiken5' && level === 1 ? 5 : CHALLENGE_TARGET_COUNT
+);
+
 const RANKS: RankData[] = [
     { threshold: 0, title: "見習いチャレンジャー", color: "text-slate-400" },
     { threshold: 5, title: "駆け出しの冒険者", color: "text-green-400" },
@@ -1268,6 +1276,8 @@ export default function App() {
 
   const startGame = (diff: Difficulty, level: Level, mode: Mode, inputMode: InputMode) => {
     const monstersObj = MONSTERS[level];
+    const guideTargetCount = getGuideTargetCount(diff, level);
+    const listeningTargetCount = getListeningTargetCount(diff, level);
     let selectedList: Monster[] = [];
     let indices: number[] = [];
     let totalStageMonsters = 0;
@@ -1279,7 +1289,8 @@ export default function App() {
         let resultIndices: number[] = [];
         if (poolIndices.length === 0) return resultIndices;
         if (unDefeated.length > 0) {
-            resultIndices.push(unDefeated[0].i); 
+            const randomUnDefeated = unDefeated[Math.floor(Math.random() * unDefeated.length)];
+            resultIndices.push(randomUnDefeated.i); 
         } else {
              resultIndices.push(poolIndices[Math.floor(Math.random() * poolIndices.length)]);
         }
@@ -1292,8 +1303,8 @@ export default function App() {
 
     if (mode === 'guide') {
       selectedList = monstersObj.guide;
-      indices = findStageIndices(selectedList, 'guide', 'voice-text', GUIDE_TARGET_COUNT, GUIDE_TARGET_COUNT); 
-      totalStageMonsters = GUIDE_TARGET_COUNT;
+      indices = findStageIndices(selectedList, 'guide', 'voice-text', guideTargetCount, guideTargetCount); 
+      totalStageMonsters = guideTargetCount;
     } else if (mode === 'weakness') {
         if (weakQuestions.length === 0) { alert("まだ苦手な単語がありません！"); return; }
         selectedList = monstersObj.guide; 
@@ -1303,8 +1314,8 @@ export default function App() {
     } else {
       if (inputMode === 'voice-text') {
         selectedList = monstersObj.guide;
-        indices = findStageIndices(selectedList, 'challenge', 'voice-text', CHALLENGE_TARGET_COUNT, CHALLENGE_TARGET_COUNT);
-        totalStageMonsters = CHALLENGE_TARGET_COUNT;
+        indices = findStageIndices(selectedList, 'challenge', 'voice-text', listeningTargetCount, listeningTargetCount);
+        totalStageMonsters = listeningTargetCount;
       } else if (inputMode === 'voice-only') {
         selectedList = monstersObj.challenge;
         // Normal Mode: Fixed order, 5 monsters. No randomization.
@@ -1639,7 +1650,7 @@ export default function App() {
 
   if (gameState.screen === 'monster-book') {
     const monstersObj = MONSTERS[bookLevel];
-    const visibleGuideMonsters = monstersObj.guide.slice(0, GUIDE_TARGET_COUNT);
+    const visibleGuideMonsters = monstersObj.guide.slice(0, getGuideTargetCount(gameState.selectedDifficulty, gameState.selectedLevel));
     const visibleChallengeMonsters = monstersObj.challenge.slice(0, HARD_TARGET_COUNT);
     const allMonsters = [...visibleGuideMonsters, ...visibleChallengeMonsters];
     const uniqueDefeatedIds = new Set(gameState.defeatedMonsterIds.map(key => extractMonsterId(key)));
@@ -1933,6 +1944,8 @@ export default function App() {
 
   if (gameState.screen === 'mode-select') {
     const monstersObj = MONSTERS[gameState.selectedLevel];
+    const guideTargetCount = getGuideTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
+    const listeningTargetCount = getListeningTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
     
     // Helper to check progress against the LIMITED target count
     const getModeProgress = (list: Monster[], mode: Mode, inputMode: InputMode, targetCount: number) => {
@@ -1946,8 +1959,8 @@ export default function App() {
         };
     };
 
-    const guideStatus = getModeProgress(monstersObj.guide, 'guide', 'voice-text', GUIDE_TARGET_COUNT);
-    const easyStatus = getModeProgress(monstersObj.guide, 'challenge', 'voice-text', CHALLENGE_TARGET_COUNT);
+    const guideStatus = getModeProgress(monstersObj.guide, 'guide', 'voice-text', guideTargetCount);
+    const easyStatus = getModeProgress(monstersObj.guide, 'challenge', 'voice-text', listeningTargetCount);
     const normalStatus = getModeProgress(monstersObj.challenge, 'challenge', 'voice-only', NORMAL_TARGET_COUNT);
     const hardStatus = getModeProgress(monstersObj.challenge, 'challenge', 'text-only', HARD_TARGET_COUNT);
 
