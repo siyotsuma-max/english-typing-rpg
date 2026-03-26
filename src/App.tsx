@@ -278,13 +278,19 @@ const getSpeechLocale = (mode: Exclude<SpeechVoiceMode, 'random'>): 'en-US' | 'e
 const isExactSpeechModeSupported = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
   const isFemaleMode = mode.endsWith('female');
-  const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
-  const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  const localeVoices = voices.filter(voice => matchesVoiceLocale(voice, locale));
 
-  return voices.some(voice => (
-    matchesVoiceLocale(voice, locale)
-    && matchesVoiceHint(voice, preferredHints)
-    && !matchesVoiceHint(voice, oppositeHints)
+  if (localeVoices.length === 0) {
+    return false;
+  }
+
+  if (isFemaleMode) {
+    return localeVoices.some(voice => !matchesVoiceHint(voice, MALE_VOICE_HINTS));
+  }
+
+  return localeVoices.some(voice => (
+    matchesVoiceHint(voice, MALE_VOICE_HINTS)
+    && !matchesVoiceHint(voice, FEMALE_VOICE_HINTS)
   ));
 };
 
@@ -913,7 +919,7 @@ export default function App() {
   const [weakQuestions, setWeakQuestions] = useState<Question[]>([]); 
   const [bgmVolumeLevel, setBgmVolumeLevel] = useState<number>(3);
   const [speechVoices, setSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [speechVoiceMode, setSpeechVoiceMode] = useState<SpeechVoiceMode>('random');
+  const [speechVoiceMode, setSpeechVoiceMode] = useState<SpeechVoiceMode>('us_female');
   const [speechRatePercent, setSpeechRatePercent] = useState<number>(100);
   const [bookLevel, setBookLevel] = useState<Level>(1);
   const [, setShake] = useState(false);
@@ -988,7 +994,7 @@ export default function App() {
     if (speechVoiceMode === 'random') return;
     if (speechVoices.length === 0) return;
     if (isExactSpeechModeSupported(speechVoices, speechVoiceMode)) return;
-    setSpeechVoiceMode('random');
+    setSpeechVoiceMode(isExactSpeechModeSupported(speechVoices, 'us_female') ? 'us_female' : 'random');
   }, [speechVoices, speechVoiceMode]);
 
   useEffect(() => {
