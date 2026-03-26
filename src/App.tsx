@@ -9,6 +9,7 @@ type Level = 1 | 2 | 3;
 type Mode = 'guide' | 'challenge' | 'weakness'; 
 type InputMode = 'voice-text' | 'text-only' | 'voice-only';
 type BattleResult = 'win' | 'lose' | 'draw' | null;
+type SpeechVoiceMode = 'random' | 'us_female' | 'us_male' | 'uk_female' | 'uk_male';
 
 // Monster Types for Visuals
 type MonsterType = 'slime' | 'beast' | 'wing' | 'ghost' | 'robot' | 'boss' | 'object';
@@ -36,7 +37,7 @@ interface BattleLogItem {
 }
 
 interface GameState {
-  screen: 'title' | 'monster-book' | 'question-list' | 'score-view' | 'rank-list' | 'level-select' | 'mode-select' | 'battle' | 'result';
+  screen: 'title' | 'settings' | 'monster-book' | 'question-list' | 'score-view' | 'rank-list' | 'level-select' | 'mode-select' | 'battle' | 'result';
   selectedDifficulty: Difficulty;
   selectedLevel: Level;
   mode: Mode;
@@ -153,6 +154,16 @@ const getMonsterBattleDialogue = (
 };
 
 const SOUND_BASE_PATH = `${import.meta.env.BASE_URL}sound/`;
+const BGM_VOLUME_LEVELS = [0, 0.06, 0.1, 0.153, 0.2, 0.255] as const;
+const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: string }[] = [
+  { id: 'random', label: 'ランダム', description: '4種類の音声からランダム' },
+  { id: 'us_female', label: '米語 女性', description: 'アメリカ英語の女性音声' },
+  { id: 'us_male', label: '米語 男性', description: 'アメリカ英語の男性音声' },
+  { id: 'uk_female', label: '英語 女性', description: 'イギリス英語の女性音声' },
+  { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
+];
+const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia'];
+const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'google us english', 'google uk english male', 'aaron'];
 
 const NORMAL_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
@@ -178,13 +189,46 @@ const getBattleMusicPath = (_mode: Mode, _inputMode: InputMode, isBoss: boolean)
   return nextTrack;
 };
 
-const speakText = (text: string) => {
+const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
+  const normalized = `${voice.name} ${voice.voiceURI}`.toLowerCase();
+  return hints.some(hint => normalized.includes(hint));
+};
+
+const getVoicesForSpeechMode = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
+  const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
+  const genderHints = mode.endsWith('female') ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const localeVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith(locale));
+  const hintedVoices = localeVoices.filter(voice => matchesVoiceHint(voice, genderHints));
+  if (hintedVoices.length > 0) return hintedVoices;
+  if (localeVoices.length > 0) return localeVoices;
+  return voices.filter(voice => voice.lang.toLowerCase().startsWith('en'));
+};
+
+const resolveSpeechVoice = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): SpeechSynthesisVoice | null => {
+  if (voices.length === 0) return null;
+
+  if (mode === 'random') {
+    const randomTargets: Exclude<SpeechVoiceMode, 'random'>[] = ['us_female', 'us_male', 'uk_female', 'uk_male'];
+    const randomMode = randomTargets[Math.floor(Math.random() * randomTargets.length)];
+    const candidates = getVoicesForSpeechMode(voices, randomMode);
+    return candidates[Math.floor(Math.random() * candidates.length)] ?? voices[0];
+  }
+
+  const candidates = getVoicesForSpeechMode(voices, mode);
+  return candidates[Math.floor(Math.random() * candidates.length)] ?? voices[0];
+};
+
+const speakText = (text: string, options?: { voiceURI?: string; rate?: number }) => {
   // Cancel any ongoing speech to prevent queuing lag
   window.speechSynthesis.cancel();
   
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = 'en-US';
-  utterance.rate = 0.9;
+  utterance.rate = options?.rate ?? 0.9;
+  if (options?.voiceURI) {
+    const voice = window.speechSynthesis.getVoices().find(v => v.voiceURI === options.voiceURI);
+    if (voice) utterance.voice = voice;
+  }
   
   window.speechSynthesis.speak(utterance);
 };
@@ -388,6 +432,11 @@ class SoundEngine {
     this.battleMusic = null;
     this.currentBattleMusicSrc = '';
   }
+
+  setBattleMusicVolume(volume: number) {
+    if (!this.battleMusic) return;
+    this.battleMusic.volume = volume;
+  }
 }
 const soundEngine = new SoundEngine();
 
@@ -396,6 +445,9 @@ const STORAGE_KEYS = {
   bestScores: 'etyping_best_scores',
   maxKeystrokes: 'etyping_max_keystrokes',
   weakQuestions: 'etyping_weak_questions',
+  bgmVolumeLevel: 'etyping_bgm_volume_level',
+  speechVoiceMode: 'etyping_speech_voice_mode',
+  speechRatePercent: 'etyping_speech_rate_percent',
 } as const;
 
 const safeLoadJson = <T,>(key: string, fallback: T): T => {
@@ -610,6 +662,10 @@ export default function App() {
   const [bestScores, setBestScores] = useState<Record<string, number>>({});
   const [maxKeystrokes, setMaxKeystrokes] = useState<number>(0);
   const [weakQuestions, setWeakQuestions] = useState<Question[]>([]); 
+  const [bgmVolumeLevel, setBgmVolumeLevel] = useState<number>(3);
+  const [speechVoices, setSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [speechVoiceMode, setSpeechVoiceMode] = useState<SpeechVoiceMode>('random');
+  const [speechRatePercent, setSpeechRatePercent] = useState<number>(100);
   const [bookLevel, setBookLevel] = useState<Level>(1);
   const [, setShake] = useState(false);
   const [flash, setFlash] = useState(false);
@@ -640,6 +696,76 @@ export default function App() {
       }
     }
     setWeakQuestions(savedWeak);
+
+    const savedBgmVolumeLevel = localStorage.getItem(STORAGE_KEYS.bgmVolumeLevel);
+    if (savedBgmVolumeLevel) {
+      const parsedBgmVolumeLevel = parseInt(savedBgmVolumeLevel, 10);
+      if (Number.isFinite(parsedBgmVolumeLevel) && parsedBgmVolumeLevel >= 0 && parsedBgmVolumeLevel < BGM_VOLUME_LEVELS.length) {
+        setBgmVolumeLevel(parsedBgmVolumeLevel);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.bgmVolumeLevel);
+      }
+    }
+
+    const savedSpeechVoiceMode = localStorage.getItem(STORAGE_KEYS.speechVoiceMode);
+    if (savedSpeechVoiceMode && SPEECH_VOICE_OPTIONS.some(option => option.id === savedSpeechVoiceMode)) {
+      setSpeechVoiceMode(savedSpeechVoiceMode as SpeechVoiceMode);
+    }
+
+    const savedSpeechRatePercent = localStorage.getItem(STORAGE_KEYS.speechRatePercent);
+    if (savedSpeechRatePercent) {
+      const parsedSpeechRatePercent = parseInt(savedSpeechRatePercent, 10);
+      if (Number.isFinite(parsedSpeechRatePercent) && parsedSpeechRatePercent >= 50 && parsedSpeechRatePercent <= 200) {
+        setSpeechRatePercent(parsedSpeechRatePercent);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.speechRatePercent);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.bgmVolumeLevel, bgmVolumeLevel.toString());
+    soundEngine.setBattleMusicVolume(BGM_VOLUME_LEVELS[bgmVolumeLevel]);
+  }, [bgmVolumeLevel]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.speechVoiceMode, speechVoiceMode);
+  }, [speechVoiceMode]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.speechRatePercent, speechRatePercent.toString());
+  }, [speechRatePercent]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      setSpeechVoices([]);
+      return;
+    }
+
+    const synth = window.speechSynthesis;
+    const loadVoices = () => {
+      try {
+        const voices = synth.getVoices();
+        const englishVoices = voices.filter(voice => voice.lang.toLowerCase().startsWith('en'));
+        setSpeechVoices(englishVoices.length > 0 ? englishVoices : voices);
+      } catch (error) {
+        console.error('Failed to load speech voices:', error);
+        setSpeechVoices([]);
+      }
+    };
+
+    loadVoices();
+
+    if (typeof synth.addEventListener === 'function') {
+      synth.addEventListener('voiceschanged', loadVoices);
+      return () => synth.removeEventListener('voiceschanged', loadVoices);
+    }
+
+    const previousHandler = synth.onvoiceschanged;
+    synth.onvoiceschanged = loadVoices;
+    return () => {
+      synth.onvoiceschanged = previousHandler ?? null;
+    };
   }, []);
 
   useEffect(() => {
@@ -707,9 +833,17 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState]);
 
+  const speakWithSettings = (text: string) => {
+      const selectedVoice = resolveSpeechVoice(speechVoices, speechVoiceMode);
+      speakText(text, {
+          voiceURI: selectedVoice?.voiceURI,
+          rate: speechRatePercent / 100,
+      });
+  };
+
   const speakCurrentQuestion = () => {
       if (!gameState.currentQuestion.text) return;
-      speakText(gameState.currentQuestion.text);
+      speakWithSettings(gameState.currentQuestion.text);
       setTimeout(() => inputRef.current?.focus(), 10);
   };
 
@@ -871,7 +1005,7 @@ export default function App() {
     soundEngine.stopBattleMusic();
     soundEngine.startBattleMusic(
       getBattleMusicPath(mode, inputMode, startingMonster?.type === 'boss'),
-      startingMonster?.type === 'boss' ? 0.187 : 0.153
+      BGM_VOLUME_LEVELS[bgmVolumeLevel]
     );
     let question: Question;
     if (mode === 'weakness') {
@@ -1015,8 +1149,8 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (gameState.screen === 'battle' && gameState.inputMode !== 'text-only' && gameState.monsterHp > 0) speakText(gameState.currentQuestion.text);
-  }, [gameState.currentQuestion, gameState.screen]);
+    if (gameState.screen === 'battle' && gameState.inputMode !== 'text-only' && gameState.monsterHp > 0) speakWithSettings(gameState.currentQuestion.text);
+  }, [gameState.currentQuestion, gameState.screen, gameState.inputMode, gameState.monsterHp, speechVoices, speechVoiceMode, speechRatePercent]);
 
   // --- Screens ---
   const ScreenContainer = ({ children, className = "" }: any) => (
@@ -1180,7 +1314,7 @@ export default function App() {
                      return (
                        <div key={`${q.text}-${idx}`} className={`flex items-center justify-between p-3 rounded-lg border transition-colors group ${isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
                          <div className="flex items-center gap-4">
-                           <button onClick={() => speakText(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
+                           <button onClick={() => speakWithSettings(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
                            <div className="flex items-center gap-3">
                              <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span>
                              {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
@@ -1194,6 +1328,72 @@ export default function App() {
            </div>
         </div>
         <style>{`.custom-scrollbar::-webkit-scrollbar { width: 8px; } .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }`}</style>
+      </ScreenContainer>
+    );
+  }
+
+  if (gameState.screen === 'settings') {
+    return (
+      <ScreenContainer className="bg-slate-900">
+        <div className="max-w-3xl w-full p-4">
+          <div className="flex justify-between items-center mb-6">
+            <GameButton size="sm" variant="outline" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))}>&larr; タイトルへ</GameButton>
+            <h2 className="text-2xl font-bold text-blue-300 flex items-center gap-2"><Volume2 /> ゲーム設定</h2>
+          </div>
+          <Box title="BGM Volume" className="w-full">
+            <div className="space-y-6">
+              <p className="text-slate-300 text-sm">バトル中のBGM音量を選べます。`Off` にするとBGMを再生しません。</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {['Off', '1', '2', '3', '4', '5'].map((label, index) => (
+                  <button
+                    key={label}
+                    onClick={() => setBgmVolumeLevel(index)}
+                    className={`rounded-xl border-2 px-4 py-4 font-bold transition-all ${bgmVolumeLevel === index ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 text-sm text-slate-300">
+                現在の設定: <span className="font-black text-white">{['Off', '1', '2', '3', '4', '5'][bgmVolumeLevel]}</span>
+              </div>
+            </div>
+          </Box>
+          <Box title="English Voice" className="w-full mt-6">
+            <div className="space-y-6">
+              <p className="text-slate-300 text-sm">アメリカ英語・イギリス英語の男女4種類と、ランダム切り替えから選べます。利用できる音声はブラウザやOSによって変わるため、近い候補を自動で選びます。</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {SPEECH_VOICE_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setSpeechVoiceMode(option.id)}
+                    className={`rounded-xl border-2 px-4 py-4 text-left transition-all ${speechVoiceMode === option.id ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400 hover:bg-slate-700'}`}
+                  >
+                    <div className="font-bold">{option.label}</div>
+                    <div className={`text-xs mt-1 ${speechVoiceMode === option.id ? 'text-blue-100' : 'text-slate-400'}`}>{option.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Box>
+          <Box title="Speech Speed" className="w-full mt-6">
+            <div className="space-y-6">
+              <p className="text-slate-300 text-sm">英語読み上げのスピードを 50%〜200% の範囲で調整できます。</p>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                step="5"
+                value={speechRatePercent}
+                onChange={(e) => setSpeechRatePercent(parseInt(e.target.value, 10))}
+                className="w-full accent-blue-500"
+              />
+              <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 text-sm text-slate-300">
+                現在の設定: <span className="font-black text-white">{speechRatePercent}%</span>
+              </div>
+            </div>
+          </Box>
+        </div>
       </ScreenContainer>
     );
   }
@@ -1225,11 +1425,12 @@ export default function App() {
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: 'Eiken5', screen: 'level-select' }))} className="w-full" size="lg" variant="primary">英検 5級 (Grade 5)</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: 'Eiken4', screen: 'level-select' }))} className="w-full" size="lg" variant="secondary">英検 4級 (Grade 4)</GameButton>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-8">
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'monster-book' }))} variant="outline" className="px-2"><BookOpen size={20} /> 図鑑</GameButton>
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'rank-list' }))} variant="outline" className="px-2 text-yellow-300 border-yellow-700/50 hover:border-yellow-400"><Crown size={20} /> 称号</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'score-view' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Records</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'question-list' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Word List</GameButton>
+                        <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'settings' }))} variant="outline" className="px-2 border-slate-600 text-slate-300"><Volume2 size={16} /> ゲーム設定</GameButton>
                         <GameButton onClick={() => setShowHelp(true)} variant="outline" className="px-2 border-slate-600 text-slate-300"><AlertCircle size={16} /> ヘルプ</GameButton>
                     </div>
                     <div className="mt-4 flex justify-center">
