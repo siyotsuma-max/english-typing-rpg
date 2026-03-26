@@ -342,7 +342,12 @@ const getStrictLocaleVoice = (voices: SpeechSynthesisVoice[], mode: Exclude<Spee
     }
   }
 
-  return null;
+  const fallbackCandidates = localeVoices
+    .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
+    .sort((a, b) => b.score - a.score)
+    .map(entry => entry.voice);
+
+  return fallbackCandidates[0] ?? null;
 };
 
 const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): ResolvedSpeechConfig => {
