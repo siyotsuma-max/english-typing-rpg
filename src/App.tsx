@@ -175,8 +175,8 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
 ];
 const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel'];
 const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
-const US_VOICE_HINTS = ['en-us', 'us', 'american', 'google us english', 'samantha', 'zira', 'ava', 'allison'];
-const UK_VOICE_HINTS = ['en-gb', 'uk', 'british', 'england', 'great britain', 'google uk english', 'hazel', 'libby', 'sonia'];
+const US_VOICE_HINTS = ['en-us', 'us', 'american', 'united states'];
+const UK_VOICE_HINTS = ['en-gb', 'uk', 'british', 'england', 'great britain', 'united kingdom'];
 
 const NORMAL_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
@@ -232,6 +232,14 @@ const matchesVoiceHint = (voice: SpeechSynthesisVoice, hints: string[]) => {
   return hints.some(hint => normalized.includes(hint));
 };
 
+const isEnglishVoice = (voice: SpeechSynthesisVoice) => voice.lang.toLowerCase().startsWith('en');
+
+const matchesVoiceLocale = (voice: SpeechSynthesisVoice, locale: 'en-us' | 'en-gb') => {
+  const lang = voice.lang.toLowerCase();
+  const localeHints = locale === 'en-us' ? US_VOICE_HINTS : UK_VOICE_HINTS;
+  return lang.startsWith(locale) || matchesVoiceHint(voice, localeHints);
+};
+
 const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
   const isFemaleMode = mode.endsWith('female');
@@ -263,7 +271,7 @@ const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoi
   }
 
   if (matchesVoiceHint(voice, oppositeHints)) {
-    score -= 80;
+    score -= 120;
   }
 
   if (voice.default) {
@@ -274,9 +282,36 @@ const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoi
 };
 
 const getVoicesForSpeechMode = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
-  return [...voices]
+  const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
+  const isFemaleMode = mode.endsWith('female');
+  const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+
+  const englishVoices = voices.filter(isEnglishVoice);
+  const tiers = [
+    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale) && matchesVoiceHint(voice, preferredHints) && !matchesVoiceHint(voice, oppositeHints),
+    (voice: SpeechSynthesisVoice) => matchesVoiceHint(voice, preferredHints) && !matchesVoiceHint(voice, oppositeHints),
+    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale) && matchesVoiceHint(voice, preferredHints),
+    (voice: SpeechSynthesisVoice) => matchesVoiceHint(voice, preferredHints),
+    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale) && !matchesVoiceHint(voice, oppositeHints),
+    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale),
+    (voice: SpeechSynthesisVoice) => !matchesVoiceHint(voice, oppositeHints),
+  ];
+
+  for (const tier of tiers) {
+    const candidates = englishVoices
+      .filter(tier)
+      .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
+      .sort((a, b) => b.score - a.score)
+      .map(entry => entry.voice);
+
+    if (candidates.length > 0) {
+      return candidates;
+    }
+  }
+
+  return [...englishVoices]
     .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
-    .filter(entry => entry.score > -1_000)
     .sort((a, b) => b.score - a.score)
     .map(entry => entry.voice);
 };
