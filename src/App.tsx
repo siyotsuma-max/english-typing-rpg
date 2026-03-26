@@ -314,39 +314,35 @@ const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoi
   return score;
 };
 
-const getVoicesForSpeechMode = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
+const getStrictLocaleVoice = (voices: SpeechSynthesisVoice[], mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const locale = mode.startsWith('us_') ? 'en-us' : 'en-gb';
   const isFemaleMode = mode.endsWith('female');
   const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
   const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  const localeVoices = voices.filter(voice => matchesVoiceLocale(voice, locale));
 
-  const englishVoices = voices.filter(isEnglishVoice);
+  if (localeVoices.length === 0) {
+    return null;
+  }
+
   const tiers = [
-    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale) && matchesVoiceHint(voice, preferredHints) && !matchesVoiceHint(voice, oppositeHints),
     (voice: SpeechSynthesisVoice) => matchesVoiceHint(voice, preferredHints) && !matchesVoiceHint(voice, oppositeHints),
-    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale) && matchesVoiceHint(voice, preferredHints),
     (voice: SpeechSynthesisVoice) => matchesVoiceHint(voice, preferredHints),
-    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale) && !matchesVoiceHint(voice, oppositeHints),
-    (voice: SpeechSynthesisVoice) => matchesVoiceLocale(voice, locale),
-    (voice: SpeechSynthesisVoice) => !matchesVoiceHint(voice, oppositeHints),
   ];
 
   for (const tier of tiers) {
-    const candidates = englishVoices
+    const candidates = localeVoices
       .filter(tier)
       .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
       .sort((a, b) => b.score - a.score)
       .map(entry => entry.voice);
 
     if (candidates.length > 0) {
-      return candidates;
+      return candidates[0];
     }
   }
 
-  return [...englishVoices]
-    .map(voice => ({ voice, score: getVoiceMatchScore(voice, mode) }))
-    .sort((a, b) => b.score - a.score)
-    .map(entry => entry.voice);
+  return null;
 };
 
 const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): ResolvedSpeechConfig => {
@@ -355,14 +351,11 @@ const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMo
     : mode;
 
   const lang = getSpeechLocale(resolvedMode);
-  const candidates = getVoicesForSpeechMode(voices, resolvedMode);
-  const locale = normalizeVoiceLang(lang) as 'en-us' | 'en-gb';
-  const localeCandidates = candidates.filter(voice => matchesVoiceLocale(voice, locale));
 
   return {
     mode: resolvedMode,
     lang,
-    voice: localeCandidates[0] ?? candidates[0] ?? null,
+    voice: getStrictLocaleVoice(voices, resolvedMode),
   };
 };
 
