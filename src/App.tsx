@@ -152,13 +152,30 @@ const getMonsterBattleDialogue = (
   return monster.dialogueStart;
 };
 
-const getBattleMusicPath = (mode: Mode, inputMode: InputMode, isBoss: boolean): string => {
-  if (isBoss) return '/sound/EnglishTyping006.mp3';
-  if (mode === 'weakness') return '/sound/EnglishTyping005.mp3';
-  if (mode === 'guide') return '/sound/EnglishTyping001.mp3';
-  if (mode === 'challenge' && inputMode === 'voice-text') return '/sound/EnglishTyping002.mp3';
-  if (mode === 'challenge' && inputMode === 'voice-only') return '/sound/EnglishTyping003.mp3';
-  return '/sound/EnglishTyping004.mp3';
+const SOUND_BASE_PATH = `${import.meta.env.BASE_URL}sound/`;
+
+const NORMAL_BATTLE_TRACKS = [
+  `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
+  `${SOUND_BASE_PATH}EnglishTyping002.mp3`,
+  `${SOUND_BASE_PATH}EnglishTyping003.mp3`,
+  `${SOUND_BASE_PATH}EnglishTyping004.mp3`,
+];
+
+const BOSS_BATTLE_TRACKS = [
+  `${SOUND_BASE_PATH}EnglishTyping005.mp3`,
+  `${SOUND_BASE_PATH}EnglishTyping006.mp3`,
+];
+
+let lastBattleMusicPath = '';
+
+const getBattleMusicPath = (_mode: Mode, _inputMode: InputMode, isBoss: boolean): string => {
+  const candidates = isBoss ? BOSS_BATTLE_TRACKS : NORMAL_BATTLE_TRACKS;
+  const availableTracks = candidates.length > 1
+    ? candidates.filter(track => track !== lastBattleMusicPath)
+    : candidates;
+  const nextTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)];
+  lastBattleMusicPath = nextTrack;
+  return nextTrack;
 };
 
 const speakText = (text: string) => {
@@ -335,19 +352,33 @@ class SoundEngine {
   startBattleMusic(src: string, volume: number = 0.18) {
     if (this.currentBattleMusicSrc === src && this.battleMusic) {
       this.battleMusic.volume = volume;
-      void this.battleMusic.play().catch(() => {});
+      void this.battleMusic.play().catch((error) => {
+        console.error('Battle music replay failed:', src, error);
+      });
       return;
     }
 
     this.stopBattleMusic();
 
-    const audio = new Audio(src);
+    const audio = new Audio();
     audio.loop = true;
-    audio.preload = 'none';
+    audio.preload = 'auto';
     audio.volume = volume;
+    audio.src = src;
+    audio.addEventListener('error', () => {
+      console.error('Battle music failed to load:', src, audio.error);
+    });
+    audio.addEventListener('canplaythrough', () => {
+      void audio.play().catch((error) => {
+        console.error('Battle music play after load failed:', src, error);
+      });
+    }, { once: true });
     this.battleMusic = audio;
     this.currentBattleMusicSrc = src;
-    void audio.play().catch(() => {});
+    audio.load();
+    void audio.play().catch((error) => {
+      console.error('Battle music initial play failed:', src, error);
+    });
   }
 
   stopBattleMusic() {
@@ -840,7 +871,7 @@ export default function App() {
     soundEngine.stopBattleMusic();
     soundEngine.startBattleMusic(
       getBattleMusicPath(mode, inputMode, startingMonster?.type === 'boss'),
-      startingMonster?.type === 'boss' ? 0.22 : 0.18
+      startingMonster?.type === 'boss' ? 0.187 : 0.153
     );
     let question: Question;
     if (mode === 'weakness') {
