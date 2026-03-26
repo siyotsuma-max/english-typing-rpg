@@ -1475,6 +1475,17 @@ export default function App() {
     </div>
   );
 
+  const selectedSpeechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
+  const selectedSpeechLocale = normalizeVoiceLang(selectedSpeechConfig.lang);
+  const speechDebugCandidates = speechVoices
+    .filter(voice => matchesVoiceLocale(voice, selectedSpeechLocale as 'en-us' | 'en-gb'))
+    .map(voice => ({
+      voice,
+      score: getVoiceMatchScore(voice, selectedSpeechConfig.mode),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
   if (gameState.screen === 'rank-list') {
       const allMonsterIds = Object.values(MONSTERS).flatMap(lvl => [...lvl.guide, ...lvl.challenge]).map(m => m.id);
       const uniqueDefeatedIds = new Set(gameState.defeatedMonsterIds.map(key => extractMonsterId(key)));
@@ -1681,6 +1692,31 @@ export default function App() {
                     <div className={`text-xs mt-1 ${speechVoiceMode === option.id ? 'text-blue-100' : 'text-slate-400'}`}>{SPEECH_VOICE_COPY[option.id].description}</div>
                   </button>
                 ))}
+              </div>
+              <div className="rounded-xl border border-cyan-500/30 bg-slate-950/70 p-4 text-xs text-slate-300">
+                <div className="font-bold text-cyan-300">Voice Debug</div>
+                <div className="mt-2">Selected Mode: <span className="font-mono text-white">{selectedSpeechConfig.mode}</span></div>
+                <div>Requested Lang: <span className="font-mono text-white">{selectedSpeechConfig.lang}</span></div>
+                <div>
+                  Active Voice:
+                  <span className="ml-2 font-mono text-white">
+                    {selectedSpeechConfig.voice ? `${selectedSpeechConfig.voice.name} (${selectedSpeechConfig.voice.lang})` : 'none'}
+                  </span>
+                </div>
+                <div className="mt-3 text-cyan-200">Top locale candidates</div>
+                <div className="mt-2 space-y-1">
+                  {speechDebugCandidates.length > 0 ? speechDebugCandidates.map(({ voice, score }) => (
+                    <div key={voice.voiceURI} className="rounded border border-slate-700 bg-slate-900/70 px-3 py-2">
+                      <span className="font-mono text-white">{voice.name}</span>
+                      <span className="ml-2 text-slate-400">({voice.lang})</span>
+                      <span className="ml-2 text-cyan-300">score: {score}</span>
+                    </div>
+                  )) : (
+                    <div className="rounded border border-slate-700 bg-slate-900/70 px-3 py-2 text-slate-400">
+                      No locale-matching voices found.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Box>
