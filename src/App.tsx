@@ -173,8 +173,10 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_female', label: '英語 女性', description: 'イギリス英語の女性音声' },
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
-const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel', 'google us english', 'google uk english female'];
+const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel'];
 const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
+const US_VOICE_HINTS = ['en-us', 'us', 'american', 'google us english', 'samantha', 'zira', 'ava', 'allison'];
+const UK_VOICE_HINTS = ['en-gb', 'uk', 'british', 'england', 'great britain', 'google uk english', 'hazel', 'libby', 'sonia'];
 
 const NORMAL_BATTLE_TRACKS = [
   `${SOUND_BASE_PATH}EnglishTyping001.mp3`,
@@ -235,15 +237,25 @@ const getVoiceMatchScore = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoi
   const isFemaleMode = mode.endsWith('female');
   const preferredHints = isFemaleMode ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
   const oppositeHints = isFemaleMode ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  const preferredLocaleHints = locale === 'en-us' ? US_VOICE_HINTS : UK_VOICE_HINTS;
+  const oppositeLocaleHints = locale === 'en-us' ? UK_VOICE_HINTS : US_VOICE_HINTS;
   const lang = voice.lang.toLowerCase();
 
   if (!lang.startsWith('en')) return -1_000;
 
   let score = 0;
   if (lang.startsWith(locale)) {
-    score += 100;
+    score += 140;
   } else {
-    score += 40;
+    score += 10;
+  }
+
+  if (matchesVoiceHint(voice, preferredLocaleHints)) {
+    score += 45;
+  }
+
+  if (matchesVoiceHint(voice, oppositeLocaleHints)) {
+    score -= 55;
   }
 
   if (matchesVoiceHint(voice, preferredHints)) {
