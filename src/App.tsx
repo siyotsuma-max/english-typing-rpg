@@ -39,12 +39,19 @@ interface BattleLogItem {
 type WeakQuestionStat = {
   missCount: number;
   lastMissedAt: number;
+  consecutiveCorrect: number;
 };
 
 type QuestionPoolState = {
   order: number[];
   cursor: number;
   lastIndex: number | null;
+};
+
+type ReviewQueueEntry = {
+  question: Question;
+  remainingQuestions: number;
+  missCount: number;
 };
 
 type ResolvedSpeechConfig = {
@@ -86,21 +93,27 @@ interface GameState {
   battleStartKeystrokes: number;
 }
 
+type DailyProgress = {
+  date: string;
+  questionCount: number;
+};
+
 // --- Rank System ---
 interface RankData { threshold: number; title: string; color: string; }
 
 const GUIDE_TARGET_COUNT = 3;
-const CHALLENGE_TARGET_COUNT = 3;
+const LISTENING_TRAINING_TARGET_COUNT = 5;
 const NORMAL_TARGET_COUNT = 5;
 const HARD_TARGET_COUNT = 7;
+const REVIEW_REAPPEAR_DELAY = 5;
+const LISTENING_TRAINING_HP_MULTIPLIER = 1.2;
+const LISTENING_TRAINING_DAMAGE_MULTIPLIER = 0.28;
 
 const getGuideTargetCount = (difficulty: Difficulty, level: Level) => (
   difficulty === 'Eiken5' && level === 1 ? 5 : GUIDE_TARGET_COUNT
 );
 
-const getListeningTargetCount = (difficulty: Difficulty, level: Level) => (
-  difficulty === 'Eiken5' && level === 1 ? 5 : CHALLENGE_TARGET_COUNT
-);
+const getListeningTargetCount = (_difficulty: Difficulty, _level: Level) => LISTENING_TRAINING_TARGET_COUNT;
 
 const RANKS: RankData[] = [
     { threshold: 0, title: "見習いチャレンジャー", color: "text-slate-400" },
@@ -487,6 +500,7 @@ class SoundEngine {
   private ambienceOscillators: OscillatorNode[] = [];
   private ambienceGain: GainNode | null = null;
   private battleMusic: HTMLAudioElement | null = null;
+  private battleMusicElements = new Set<HTMLAudioElement>();
   private currentBattleMusicSrc = '';
   private battleMusicRequestId = 0;
   private previewMusic: HTMLAudioElement | null = null;
@@ -649,6 +663,7 @@ class SoundEngine {
     audio.preload = 'auto';
     audio.volume = volume;
     audio.src = src;
+    this.battleMusicElements.add(audio);
     audio.addEventListener('error', () => {
       console.error('Battle music failed to load:', src, audio.error);
     });
@@ -667,16 +682,19 @@ class SoundEngine {
     });
   }
 
+  private disposeBattleMusicElement(audio: HTMLAudioElement) {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.removeAttribute('src');
+    audio.load();
+    this.battleMusicElements.delete(audio);
+  }
+
   stopBattleMusic() {
     this.battleMusicRequestId += 1;
-    if (!this.battleMusic) {
-      this.currentBattleMusicSrc = '';
-      return;
+    if (this.battleMusicElements.size > 0) {
+      this.battleMusicElements.forEach(audio => this.disposeBattleMusicElement(audio));
     }
-    this.battleMusic.pause();
-    this.battleMusic.currentTime = 0;
-    this.battleMusic.removeAttribute('src');
-    this.battleMusic.load();
     this.battleMusic = null;
     this.currentBattleMusicSrc = '';
   }
@@ -733,6 +751,8 @@ const STORAGE_KEYS = {
   maxKeystrokes: 'etyping_max_keystrokes',
   weakQuestions: 'etyping_weak_questions',
   weakQuestionStats: 'etyping_weak_question_stats',
+  reviewQueue: 'etyping_review_queue',
+  dailyProgress: 'etyping_daily_progress',
   bgmVolumeLevel: 'etyping_bgm_volume_level',
   speechVoiceMode: 'etyping_speech_voice_mode',
   speechRatePercent: 'etyping_speech_rate_percent',
@@ -747,6 +767,44 @@ const safeLoadJson = <T,>(key: string, fallback: T): T => {
     return fallback;
   }
 };
+
+const getTodayKey = () => new Intl.DateTimeFormat('sv-SE', {
+  timeZone: 'Asia/Tokyo',
+}).format(new Date());
+
+const createDailyProgress = (date: string = getTodayKey()): DailyProgress => ({
+  date,
+  questionCount: 0,
+});
+
+const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
+  missCount: 0,
+  lastMissedAt: 0,
+  consecutiveCorrect: 0,
+});
+
+const normalizeWeakQuestionStats = (stats: Record<string, WeakQuestionStat>) => (
+  Object.fromEntries(
+    Object.entries(stats).map(([key, value]) => [
+      key,
+      {
+        missCount: Number.isFinite(value?.missCount) ? value.missCount : 0,
+        lastMissedAt: Number.isFinite(value?.lastMissedAt) ? value.lastMissedAt : 0,
+        consecutiveCorrect: Number.isFinite(value?.consecutiveCorrect) ? value.consecutiveCorrect : 0,
+      },
+    ])
+  ) as Record<string, WeakQuestionStat>
+);
+
+const normalizeReviewQueue = (entries: ReviewQueueEntry[] | unknown) => (
+  (Array.isArray(entries) ? entries : [])
+    .filter(entry => entry?.question?.text && entry?.question?.translation)
+    .map(entry => ({
+      question: entry.question,
+      remainingQuestions: Number.isFinite(entry.remainingQuestions) ? Math.max(0, entry.remainingQuestions) : 0,
+      missCount: Number.isFinite(entry.missCount) ? Math.max(1, entry.missCount) : 1,
+    }))
+);
 
 // --- Rich Monster Avatar Component (SVG) ---
 const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: MonsterType, color: string, emotion?: 'normal' | 'damage' | 'win', size?: number }) => {
@@ -950,6 +1008,7 @@ export default function App() {
   const [maxKeystrokes, setMaxKeystrokes] = useState<number>(0);
   const [weakQuestions, setWeakQuestions] = useState<Question[]>([]); 
   const [weakQuestionStats, setWeakQuestionStats] = useState<Record<string, WeakQuestionStat>>({});
+  const [dailyProgress, setDailyProgress] = useState<DailyProgress>(createDailyProgress());
   const [bgmVolumeLevel, setBgmVolumeLevel] = useState<number>(3);
   const [speechVoices, setSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [speechVoiceMode, setSpeechVoiceMode] = useState<SpeechVoiceMode>('us_female');
@@ -965,15 +1024,29 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [lastSolvedTranslation, setLastSolvedTranslation] = useState<string | null>(null);
+  const [showFinalBossIntro, setShowFinalBossIntro] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechPreviewTimeoutRef = useRef<number | null>(null);
   const questionPoolRef = useRef<Record<string, QuestionPoolState>>({});
+  const reviewQueueRef = useRef<ReviewQueueEntry[]>([]);
+  const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
+  const shownFinalBossIntroKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     const defeatedMonsterIds = safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []);
     const savedScores = safeLoadJson<Record<string, number>>(STORAGE_KEYS.bestScores, {});
     const savedWeak = safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []);
-    const savedWeakStats = safeLoadJson<Record<string, WeakQuestionStat>>(STORAGE_KEYS.weakQuestionStats, {});
+    const savedWeakStats = normalizeWeakQuestionStats(safeLoadJson<Record<string, WeakQuestionStat>>(STORAGE_KEYS.weakQuestionStats, {}));
+    const savedReviewQueue = normalizeReviewQueue(safeLoadJson<ReviewQueueEntry[]>(STORAGE_KEYS.reviewQueue, []));
+    const savedDailyProgress = safeLoadJson<DailyProgress>(STORAGE_KEYS.dailyProgress, createDailyProgress());
+    const todayKey = getTodayKey();
+    const isNewDay = savedDailyProgress.date !== todayKey;
+    const normalizedReviewQueue = isNewDay
+      ? savedReviewQueue.map(entry => ({ ...entry, remainingQuestions: 0 }))
+      : savedReviewQueue;
+    const normalizedDailyProgress = savedDailyProgress.date === todayKey
+      ? savedDailyProgress
+      : createDailyProgress(todayKey);
 
     if (defeatedMonsterIds.length > 0) {
       setGameState(prev => ({ ...prev, defeatedMonsterIds }));
@@ -991,6 +1064,10 @@ export default function App() {
     }
     setWeakQuestions(savedWeak);
     setWeakQuestionStats(savedWeakStats);
+    reviewQueueRef.current = normalizedReviewQueue;
+    localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(normalizedReviewQueue));
+    setDailyProgress(normalizedDailyProgress);
+    localStorage.setItem(STORAGE_KEYS.dailyProgress, JSON.stringify(normalizedDailyProgress));
 
     const savedBgmVolumeLevel = localStorage.getItem(STORAGE_KEYS.bgmVolumeLevel);
     if (savedBgmVolumeLevel) {
@@ -1094,6 +1171,42 @@ export default function App() {
   useEffect(() => {
     if (gameState.screen === 'battle') inputRef.current?.focus();
   }, [gameState.screen, gameState.currentQuestion]);
+
+  useEffect(() => {
+    if (gameState.screen !== 'battle') {
+      setShowFinalBossIntro(false);
+      return;
+    }
+
+    const isFinalMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 1;
+    if (!isFinalMonster) return;
+
+    const introKey = [
+      gameState.selectedDifficulty,
+      gameState.selectedLevel,
+      gameState.mode,
+      gameState.inputMode,
+      gameState.currentMonsterIndex,
+    ].join(':');
+
+    if (shownFinalBossIntroKeyRef.current === introKey) return;
+    shownFinalBossIntroKeyRef.current = introKey;
+    setShowFinalBossIntro(true);
+
+    const timer = window.setTimeout(() => {
+      setShowFinalBossIntro(false);
+    }, 950);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    gameState.screen,
+    gameState.currentMonsterIndex,
+    gameState.totalMonstersInStage,
+    gameState.selectedDifficulty,
+    gameState.selectedLevel,
+    gameState.mode,
+    gameState.inputMode,
+  ]);
 
   useEffect(() => {
     if (gameState.screen !== 'battle') {
@@ -1241,21 +1354,70 @@ export default function App() {
       recordWeakQuestionStats(newMissed);
   };
 
+  const incrementDailyQuestionCount = () => {
+    const todayKey = getTodayKey();
+    setDailyProgress(prev => {
+      const base = prev.date === todayKey ? prev : createDailyProgress(todayKey);
+      const nextProgress = {
+        ...base,
+        questionCount: base.questionCount + 1,
+      };
+      localStorage.setItem(STORAGE_KEYS.dailyProgress, JSON.stringify(nextProgress));
+      return nextProgress;
+    });
+  };
+
+  const persistReviewQueue = () => {
+    localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(reviewQueueRef.current));
+  };
+
+  const getReviewDelay = (missCount: number) => {
+    if (missCount <= 1) return REVIEW_REAPPEAR_DELAY;
+    if (missCount === 2) return 3;
+    return 1;
+  };
+
   const recordWeakQuestionStats = (questionsToRecord: Question[]) => {
       if (questionsToRecord.length === 0) return;
       const timestamp = Date.now();
       setWeakQuestionStats(prev => {
         const nextStats = { ...prev };
         questionsToRecord.forEach(question => {
-          const current = nextStats[question.text] ?? { missCount: 0, lastMissedAt: 0 };
+          const current = nextStats[question.text] ?? getDefaultWeakQuestionStat();
           nextStats[question.text] = {
             missCount: current.missCount + 1,
             lastMissedAt: timestamp,
+            consecutiveCorrect: 0,
           };
         });
         localStorage.setItem(STORAGE_KEYS.weakQuestionStats, JSON.stringify(nextStats));
         return nextStats;
       });
+  };
+
+  const recordWeakQuestionSuccess = (question: Question) => {
+    const current = weakQuestionStats[question.text] ?? getDefaultWeakQuestionStat();
+    const nextStats = {
+      ...weakQuestionStats,
+      [question.text]: {
+        ...current,
+        consecutiveCorrect: current.consecutiveCorrect + 1,
+      },
+    };
+
+    setWeakQuestionStats(nextStats);
+    localStorage.setItem(STORAGE_KEYS.weakQuestionStats, JSON.stringify(nextStats));
+
+    const isMastered = nextStats[question.text].consecutiveCorrect >= 2;
+    if (!isMastered) return false;
+
+    if (weakQuestions.some(q => q.text === question.text)) {
+      const updatedWeak = weakQuestions.filter(q => q.text !== question.text);
+      setWeakQuestions(updatedWeak);
+      localStorage.setItem(STORAGE_KEYS.weakQuestions, JSON.stringify(updatedWeak));
+    }
+
+    return true;
   };
 
   const handleResetHistory = () => {
@@ -1268,6 +1430,9 @@ export default function App() {
     setMaxKeystrokes(0);
     setWeakQuestions([]);
     setWeakQuestionStats({});
+    setDailyProgress(createDailyProgress());
+    reviewQueueRef.current = [];
+    activeReviewEntryRef.current = null;
     setShowResetConfirm(false);
     setGameState(prev => ({
       ...prev,
@@ -1330,6 +1495,7 @@ export default function App() {
     let totalStageMonsters = 0;
 
     sessionWeakQuestionsRef.current = reviewQuestions && reviewQuestions.length > 0 ? reviewQuestions : null;
+    activeReviewEntryRef.current = null;
 
     const getOrderedStageIndices = (list: Monster[], countToSelect: number, rangeLimit: number) => {
         const pool = list.slice(0, rangeLimit);
@@ -1366,9 +1532,9 @@ export default function App() {
     }
 
     let startStep = 0;
-    // For Fixed Order modes (Normal/Hard), resume from first undefeated if available
-    // But allow replay from start if all cleared.
-    if (mode === 'challenge' && inputMode !== 'voice-text') {
+    // For challenge modes, resume from the first undefeated monster if available.
+    // If all are defeated, start from the beginning for replay.
+    if (mode === 'challenge') {
          for (let i = 0; i < indices.length; i++) {
             const uniqueKey = getUniqueKey(mode, inputMode, selectedList[indices[i]].id);
             if (!gameState.defeatedMonsterIds.includes(uniqueKey)) {
@@ -1389,6 +1555,10 @@ export default function App() {
     const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
     const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
     const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
+    const hpMultiplier = mode === 'challenge' && inputMode === 'voice-text'
+      ? LISTENING_TRAINING_HP_MULTIPLIER
+      : 1;
+    const startingMonsterHp = Math.round(startingMonster.baseHp * hpMultiplier);
     const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
     if (!startingMonster) return;
@@ -1401,18 +1571,20 @@ export default function App() {
     const activeReviewQuestions = sessionWeakQuestionsRef.current;
     if (activeReviewQuestions && activeReviewQuestions.length > 0) {
         question = activeReviewQuestions[Math.floor(Math.random() * activeReviewQuestions.length)];
+        activeReviewEntryRef.current = null;
     } else if (mode === 'weakness') {
         const activeWeakQuestions = weakQuestions;
         if (activeWeakQuestions.length > 0) { question = activeWeakQuestions[Math.floor(Math.random() * activeWeakQuestions.length)]; } 
         else { question = { text: "No Weakness", translation: "苦手なし" }; }
+        activeReviewEntryRef.current = null;
     } else {
-        question = getRandomQuestion(diff, level, null);
+        question = getNextBattleQuestion(diff, level, null);
     }
 
     setGameState(prev => ({
       ...prev, screen: 'battle', selectedDifficulty: diff, selectedLevel: level, mode: mode, inputMode: inputMode,
       currentMonsterIndex: safeStepIndex, currentMonsterList: monsterList, challengeModeIndices: safeIndices,
-      monsterHp: startingMonster.baseHp, maxMonsterHp: startingMonster.baseHp, score: currentScore, combo: 0,
+      monsterHp: startingMonsterHp, maxMonsterHp: startingMonsterHp, score: currentScore, combo: 0,
       currentQuestion: question, userInput: "", startTime: null, history: [], questionCount: 1, maxQuestions: 10,
       battleResult: null, totalMonstersInStage: totalMonsters, isNewRecord: false, missCount: 0,
       totalKeystrokes: currentKeystrokes, hintLength: 0, currentBattleMissedQuestions: [],
@@ -1474,35 +1646,108 @@ export default function App() {
     return getNextQuestionFromPool(diff, level);
   };
 
+  const decrementReviewQueueTimers = () => {
+    if (reviewQueueRef.current.length === 0) return;
+    reviewQueueRef.current = reviewQueueRef.current.map(entry => ({
+      ...entry,
+      remainingQuestions: Math.max(0, entry.remainingQuestions - 1),
+    }));
+    persistReviewQueue();
+  };
+
+  const scheduleQuestionReview = (question: Question, baseMissCount: number = 0) => {
+    const existingIndex = reviewQueueRef.current.findIndex(entry => entry.question.text === question.text);
+    const nextMissCount = Math.max(
+      existingIndex >= 0 ? reviewQueueRef.current[existingIndex].missCount + 1 : 0,
+      baseMissCount + 1,
+    );
+    const nextEntry: ReviewQueueEntry = {
+      question,
+      remainingQuestions: getReviewDelay(nextMissCount),
+      missCount: nextMissCount,
+    };
+
+    if (existingIndex >= 0) {
+      reviewQueueRef.current[existingIndex] = nextEntry;
+    } else {
+      reviewQueueRef.current.push(nextEntry);
+    }
+
+    persistReviewQueue();
+  };
+
+  const rescheduleReviewQuestionAfterSuccess = (entry: ReviewQueueEntry) => {
+    reviewQueueRef.current.push({
+      ...entry,
+      remainingQuestions: getReviewDelay(entry.missCount),
+    });
+    persistReviewQueue();
+  };
+
+  const getDueReviewQuestion = (currentQ: Question | null): ReviewQueueEntry | null => {
+    const dueIndex = reviewQueueRef.current.findIndex(entry => (
+      entry.remainingQuestions <= 0
+      && (!currentQ || entry.question.text !== currentQ.text)
+    ));
+
+    if (dueIndex < 0) return null;
+
+    const [entry] = reviewQueueRef.current.splice(dueIndex, 1);
+    persistReviewQueue();
+    return entry ?? null;
+  };
+
+  const getNextBattleQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
+    const reviewEntry = getDueReviewQuestion(currentQ);
+    activeReviewEntryRef.current = reviewEntry;
+    if (reviewEntry) return reviewEntry.question;
+    activeReviewEntryRef.current = null;
+    return getRandomQuestion(diff, level, currentQ);
+  };
+
   const handleSkip = () => {
     advanceGame(0, 0, true, 0);
     inputRef.current?.focus();
   };
 
   const advanceGame = (damage: number, speed: number, skipped: boolean, addedChars: number) => {
+    incrementDailyQuestionCount();
+    decrementReviewQueueTimers();
+
     let nextHp = skipped ? gameState.monsterHp : Math.max(0, gameState.monsterHp - damage);
     let isMonsterDefeated = !skipped && nextHp <= 0;
     const currentScore = gameState.score + damage;
     const nextKeystrokes = gameState.totalKeystrokes + addedChars;
     const newHistory = [...gameState.history, { damage, speed }];
+    const activeReviewEntry = activeReviewEntryRef.current;
+    let masteredCurrentQuestion = false;
 
     let newMissedQs = [...gameState.currentBattleMissedQuestions];
     if (gameState.missCount > 0 && !newMissedQs.some(q => q.text === gameState.currentQuestion.text)) { newMissedQs.push(gameState.currentQuestion); }
+    if (gameState.mode !== 'weakness' && gameState.missCount > 0) {
+      scheduleQuestionReview(gameState.currentQuestion, activeReviewEntry?.missCount ?? 0);
+    } else if (activeReviewEntry && gameState.missCount === 0) {
+      masteredCurrentQuestion = recordWeakQuestionSuccess(gameState.currentQuestion);
+      if (!masteredCurrentQuestion) {
+        rescheduleReviewQuestionAfterSuccess(activeReviewEntry);
+      }
+    }
     
     let remainingWeakQuestions = weakQuestions;
     let remainingSessionQuestions = sessionWeakQuestionsRef.current;
     const hadSessionReview = remainingSessionQuestions !== null;
     if (gameState.missCount === 0) {
+        if (!activeReviewEntry && remainingWeakQuestions.some(q => q.text === gameState.currentQuestion.text)) {
+            masteredCurrentQuestion = recordWeakQuestionSuccess(gameState.currentQuestion);
+        }
+
         if (remainingSessionQuestions?.some(q => q.text === gameState.currentQuestion.text)) {
             remainingSessionQuestions = remainingSessionQuestions.filter(q => q.text !== gameState.currentQuestion.text);
             sessionWeakQuestionsRef.current = remainingSessionQuestions;
         }
 
-        if (remainingWeakQuestions.some(q => q.text === gameState.currentQuestion.text)) {
-            const updatedWeak = remainingWeakQuestions.filter(q => q.text !== gameState.currentQuestion.text);
-            remainingWeakQuestions = updatedWeak;
-            setWeakQuestions(updatedWeak);
-            localStorage.setItem(STORAGE_KEYS.weakQuestions, JSON.stringify(updatedWeak));
+        if (masteredCurrentQuestion && remainingWeakQuestions.some(q => q.text === gameState.currentQuestion.text)) {
+            remainingWeakQuestions = remainingWeakQuestions.filter(q => q.text !== gameState.currentQuestion.text);
         }
     }
 
@@ -1559,7 +1804,7 @@ export default function App() {
     if (activeRemainingQuestions.length > 0) {
       nextQ = activeRemainingQuestions[Math.floor(Math.random() * activeRemainingQuestions.length)];
     } else {
-      nextQ = getRandomQuestion(gameState.selectedDifficulty, gameState.selectedLevel, gameState.currentQuestion);
+      nextQ = getNextBattleQuestion(gameState.selectedDifficulty, gameState.selectedLevel, gameState.currentQuestion);
     }
     
     setGameState(prev => ({
@@ -1579,6 +1824,9 @@ export default function App() {
     const speedMultiplier = getSpeedMultiplier(charsPerSec);
     let finalDamage = Math.floor(baseDamage * speedMultiplier);
     if (gameState.mode === 'guide') finalDamage = Math.floor(finalDamage * 0.3);
+    if (gameState.mode === 'challenge' && gameState.inputMode === 'voice-text') {
+      finalDamage = Math.floor(finalDamage * LISTENING_TRAINING_DAMAGE_MULTIPLIER);
+    }
     if (gameState.missCount > 0) { finalDamage = Math.max(1, Math.floor(finalDamage * 0.5)); }
     const willDefeatMonster = gameState.monsterHp - finalDamage <= 0;
     if (!willDefeatMonster) {
@@ -2035,6 +2283,8 @@ export default function App() {
     const totalMonsters = allMonsterIds.length;
     const rank = getRankData(totalDefeated);
     const weakCount = weakQuestions.length;
+    const todayQuestionCount = dailyProgress.date === getTodayKey() ? dailyProgress.questionCount : 0;
+    const reviewQueueCount = reviewQueueRef.current.length;
 
     return (
       <ScreenContainer>
@@ -2077,6 +2327,8 @@ export default function App() {
                 </div>
                 <div className="mb-8 flex flex-col md:flex-row gap-4 w-full justify-center">
                      <div className="flex items-center gap-2 bg-gradient-to-r from-red-900 to-slate-900 border border-yellow-500/50 px-6 py-3 rounded-full text-yellow-300 shadow-[0_0_20px_rgba(234,179,8,0.3)] backdrop-blur-sm"><Trophy size={20} className="text-yellow-400" /><span className="font-bold text-lg tracking-wide">撃破数: <span className="text-white text-xl mx-1">{totalDefeated}</span> / {totalMonsters}</span></div>
+                     <div className="flex items-center gap-2 bg-slate-800/80 px-6 py-3 rounded-full text-emerald-300 shadow-md border border-emerald-500/40"><Target size={20} className="text-emerald-400" /><span className="font-bold text-sm">今日の問題数 <span className="text-white font-mono text-xl mx-1">{todayQuestionCount}</span> 問</span></div>
+                     <div className="flex items-center gap-2 bg-slate-800/80 px-5 py-3 rounded-full text-amber-300 shadow-md border border-amber-500/40"><RotateCcw size={18} className="text-amber-400" /><span className="font-bold text-sm">復習待ち <span className="text-white font-mono text-lg mx-1">{reviewQueueCount}</span> 件</span></div>
                      <div className="flex items-center gap-2 bg-slate-800/80 px-6 py-3 rounded-full text-blue-300 shadow-md border border-slate-600"><Keyboard size={20} className="text-blue-400" /><span className="font-bold text-sm">最高入力: <span className="text-white font-mono text-xl mx-1">{maxKeystrokes}</span></span></div>
                      <div className="text-sm font-bold bg-black/50 px-6 py-3 rounded-full border border-slate-600 flex items-center gap-2"><Medal size={20} className={rank.color} /><span className={rank.color}>{rank.title}</span></div>
                 </div>
@@ -2155,6 +2407,10 @@ export default function App() {
     const monstersObj = MONSTERS[gameState.selectedLevel];
     const guideTargetCount = getGuideTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
     const listeningTargetCount = getListeningTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
+    const guideFinalMonsterName = monstersObj.guide[guideTargetCount - 1]?.name ?? '???';
+    const listeningFinalMonsterName = monstersObj.guide[listeningTargetCount - 1]?.name ?? '???';
+    const normalFinalMonsterName = monstersObj.challenge[NORMAL_TARGET_COUNT - 1]?.name ?? '???';
+    const hardFinalMonsterName = monstersObj.challenge[HARD_TARGET_COUNT - 1]?.name ?? '???';
     
     // Helper to check progress against the LIMITED target count
     const getModeProgress = (list: Monster[], mode: Mode, inputMode: InputMode, targetCount: number) => {
@@ -2182,6 +2438,7 @@ export default function App() {
                 <div className="space-y-4 flex-1">
                     <button onClick={() => startGame(gameState.selectedDifficulty, gameState.selectedLevel, 'guide', 'voice-text')} className={`w-full text-left p-4 rounded-lg transition-all group relative overflow-hidden ${guideStatus.isComplete ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-blue-900/20 border border-blue-700/30 hover:bg-blue-800/40 hover:border-blue-500'}`}>
                         {guideStatus.isComplete && <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-bl">MASTERED</div>}
+                        {!guideStatus.isComplete && <div className="absolute top-0 right-0 bg-slate-950/80 text-blue-200 text-[10px] font-black px-2 py-0.5 rounded-bl border-l border-b border-blue-400/30">FINAL: {guideFinalMonsterName}</div>}
                         <div className="flex justify-between items-center mb-1">
                             <span className={`font-bold ${guideStatus.isComplete ? 'text-yellow-200' : 'text-blue-100 group-hover:text-white'}`}>🛡️ Basic Training / 基礎練習</span>
                             {!guideStatus.isComplete && <span className="text-[10px] bg-blue-900 text-blue-300 px-2 py-0.5 rounded">基礎練習</span>}
@@ -2194,6 +2451,7 @@ export default function App() {
 
                     <button onClick={() => startGame(gameState.selectedDifficulty, gameState.selectedLevel, 'challenge', 'voice-text')} className={`w-full text-left p-4 rounded-lg transition-all group relative overflow-hidden ${easyStatus.isComplete ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-indigo-900/20 border border-indigo-700/30 hover:bg-indigo-800/40 hover:border-indigo-500'}`}>
                         {easyStatus.isComplete && <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-bl">MASTERED</div>}
+                        {!easyStatus.isComplete && <div className="absolute top-0 right-0 bg-slate-950/80 text-indigo-200 text-[10px] font-black px-2 py-0.5 rounded-bl border-l border-b border-indigo-400/30">FINAL: {listeningFinalMonsterName}</div>}
                         <div className="flex justify-between items-center mb-1">
                             <span className={`font-bold ${easyStatus.isComplete ? 'text-yellow-200' : 'text-indigo-100 group-hover:text-white'}`}>🔊 Listening Training / リスニング練習</span>
                             {!easyStatus.isComplete && <span className="text-[10px] bg-indigo-900 text-indigo-300 px-2 py-0.5 rounded">リスニング</span>}
@@ -2211,6 +2469,7 @@ export default function App() {
                 <div className="space-y-4 flex-1">
                     <button onClick={() => startGame(gameState.selectedDifficulty, gameState.selectedLevel, 'challenge', 'voice-only')} className={`w-full text-left p-4 rounded-lg transition-all group relative overflow-hidden ${normalStatus.isComplete ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-orange-900/20 border border-orange-700/30 hover:bg-orange-800/40 hover:border-orange-500'}`}>
                         {normalStatus.isComplete && <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-bl">MASTERED</div>}
+                        {!normalStatus.isComplete && <div className="absolute top-0 right-0 bg-slate-950/80 text-orange-200 text-[10px] font-black px-2 py-0.5 rounded-bl border-l border-b border-orange-400/30">FINAL: {normalFinalMonsterName}</div>}
                         <div className="flex justify-between items-center mb-1">
                             <span className={`font-bold ${normalStatus.isComplete ? 'text-yellow-200' : 'text-orange-100 group-hover:text-white'}`}>👂 Listening Battle / 音声バトル</span>
                             {!normalStatus.isComplete && <span className="text-[10px] bg-orange-900 text-orange-300 px-2 py-0.5 rounded">音声</span>}
@@ -2222,10 +2481,11 @@ export default function App() {
                     </button>
 
                     <button onClick={() => startGame(gameState.selectedDifficulty, gameState.selectedLevel, 'challenge', 'text-only')} className={`w-full text-left p-4 rounded-lg transition-all group relative overflow-hidden ${hardStatus.isComplete ? 'bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border-2 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)]' : 'bg-gradient-to-r from-red-900/40 to-slate-900/40 border border-red-500/50 hover:border-red-400 hover:shadow-[0_0_15px_rgba(220,38,38,0.3)]'}`}>
-                         {hardStatus.isComplete ? 
+                        {hardStatus.isComplete ? 
                             <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded-bl">MASTERED</div>
                             : <div className="absolute -top-2 -right-2 text-2xl animate-bounce">👑</div>
                          }
+                        {!hardStatus.isComplete && <div className="absolute top-0 right-8 bg-slate-950/80 text-red-200 text-[10px] font-black px-2 py-0.5 rounded-bl border-l border-b border-red-400/30">FINAL: {hardFinalMonsterName}</div>}
                         <div className="flex justify-between items-center mb-1">
                             <span className={`font-bold text-lg ${hardStatus.isComplete ? 'text-yellow-200' : 'text-red-100 group-hover:text-white'}`}>🦸 Translation Battle / 和訳バトル</span>
                             {!hardStatus.isComplete && <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded font-bold">和訳</span>}
@@ -2290,6 +2550,17 @@ export default function App() {
 
     return (
       <ScreenContainer className={isBoss ? "bg-red-950" : "bg-slate-900"}>
+        {showFinalBossIntro && (
+          <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
+            <div className="absolute inset-0 animate-[finalBossFlash_520ms_ease-out_forwards] bg-white" />
+            <div className="absolute inset-0 flex items-center justify-center px-4">
+              <div className="animate-[finalBossReveal_900ms_ease-out_forwards] rounded-2xl border border-red-400/60 bg-slate-950/78 px-8 py-5 text-center shadow-[0_0_40px_rgba(248,113,113,0.35)]">
+                <p className="text-xs font-black tracking-[0.45em] text-red-200">WARNING</p>
+                <p className="mt-3 text-3xl font-black tracking-[0.18em] text-white md:text-5xl">ラスボス出現！</p>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="w-full bg-slate-900/80 border-b border-slate-700 p-2 z-20 flex justify-between items-center shadow-md">
              <GameButton size="sm" variant="ghost" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))} className="text-slate-400 text-xs py-1"><Home size={16} /> EXIT</GameButton>
              <div className="flex gap-4">
@@ -2357,7 +2628,7 @@ export default function App() {
             </div>
              <div className="mt-2 text-center"><span className="text-slate-500 text-[10px] uppercase tracking-widest border border-slate-700 px-2 py-0.5 rounded bg-slate-900">Type the spell to attack</span></div>
         </div>
-        <style>{`@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } } .animate-shake { animation: shake 0.3s ease-in-out; } .animate-bounce-slow { animation: bounce 2s infinite; }`}</style>
+        <style>{`@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } } .animate-shake { animation: shake 0.3s ease-in-out; } .animate-bounce-slow { animation: bounce 2s infinite; } @keyframes finalBossFlash { 0% { opacity: 0; } 12% { opacity: 0.96; } 100% { opacity: 0; } } @keyframes finalBossReveal { 0% { opacity: 0; transform: scale(0.88); } 18% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.04); } }`}</style>
       </ScreenContainer>
     );
   }
