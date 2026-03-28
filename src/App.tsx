@@ -49,6 +49,8 @@ type QuestionPoolState = {
 };
 
 type ReviewQueueEntry = {
+  difficulty: Difficulty;
+  level: Level;
   question: Question;
   remainingQuestions: number;
   missCount: number;
@@ -207,6 +209,8 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
 const NON_RANDOM_SPEECH_VOICE_MODES: Exclude<SpeechVoiceMode, 'random'>[] = ['us_female', 'us_male', 'uk_female', 'uk_male'];
+const DIFFICULTIES: Difficulty[] = ['Eiken5', 'Eiken4'];
+const LEVELS: Level[] = [1, 2, 3];
 const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel', 'aria', 'jenny', 'joanna', 'salli', 'ivy', 'ruth', 'amy'];
 const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'nathan', 'joey', 'roger', 'steffan', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
 const US_VOICE_HINTS = ['en-us', 'us', 'american', 'united states'];
@@ -233,6 +237,16 @@ const DEFEAT_EFFECT_TRACKS = [
 const BOSS_DEFEAT_EFFECT_TRACKS = [
   `${EFFECT_SOUND_BASE_PATH}effectsound-boss01.mp3`,
   `${EFFECT_SOUND_BASE_PATH}effectsound-boss02.mp3`,
+];
+const BOSS_COME_OUT_EFFECT_TRACKS = [
+  `${EFFECT_SOUND_BASE_PATH}effectsound-boss-come-out-01.mp3`,
+  `${EFFECT_SOUND_BASE_PATH}effectsound-boss-come-out-02.mp3`,
+  `${EFFECT_SOUND_BASE_PATH}effectsound-boss-come-out-03.mp3`,
+  `${EFFECT_SOUND_BASE_PATH}effectsound-boss-come-out-04.mp3`,
+];
+const LOSE_EFFECT_TRACKS = [
+  `${EFFECT_SOUND_BASE_PATH}effectsound-lose01.mp3`,
+  `${EFFECT_SOUND_BASE_PATH}effectsound-lose02.mp3`,
 ];
 const EFFECT_SOUND_VOLUME = 0.45;
 
@@ -501,12 +515,15 @@ class SoundEngine {
   private ambienceGain: GainNode | null = null;
   private battleMusic: HTMLAudioElement | null = null;
   private battleMusicElements = new Set<HTMLAudioElement>();
+  private effectAudioElements = new Set<HTMLAudioElement>();
   private currentBattleMusicSrc = '';
   private battleMusicRequestId = 0;
   private previewMusic: HTMLAudioElement | null = null;
   private previewMusicTimeout: number | null = null;
   private lastDefeatEffectSrc = '';
   private lastBossDefeatEffectSrc = '';
+  private lastLoseEffectSrc = '';
+  private lastBossComeOutEffectSrc = '';
 
   constructor() {
     try {
@@ -567,7 +584,11 @@ class SoundEngine {
     osc.stop(this.ctx.currentTime + 0.3);
   }
 
-  private playRandomEffect(tracks: string[], volume: number, lastSrcKey: 'lastDefeatEffectSrc' | 'lastBossDefeatEffectSrc') {
+  private playRandomEffect(
+    tracks: string[],
+    volume: number,
+    lastSrcKey: 'lastDefeatEffectSrc' | 'lastBossDefeatEffectSrc' | 'lastLoseEffectSrc' | 'lastBossComeOutEffectSrc',
+  ) {
     if (tracks.length === 0) return;
     const availableTracks = tracks.length > 1
       ? tracks.filter(track => track !== this[lastSrcKey])
@@ -577,11 +598,21 @@ class SoundEngine {
     const audio = new Audio(selectedTrack);
     audio.preload = 'auto';
     audio.volume = volume;
+    this.effectAudioElements.add(audio);
+    const releaseAudio = () => {
+      audio.pause();
+      audio.currentTime = 0;
+      this.effectAudioElements.delete(audio);
+    };
+    audio.addEventListener('ended', releaseAudio, { once: true });
     audio.addEventListener('error', () => {
       console.error('Effect sound failed to load:', selectedTrack, audio.error);
+      releaseAudio();
     });
+    audio.load();
     void audio.play().catch((error) => {
       console.error('Effect sound play failed:', selectedTrack, error);
+      releaseAudio();
     });
   }
 
@@ -594,8 +625,11 @@ class SoundEngine {
   }
 
   playFail() {
-    if (!this.ctx) return;
-    [300, 200, 100].forEach((freq, i) => setTimeout(() => this.playTone(freq, 'sawtooth', 0.6, 0.1), i * 200));
+    this.playRandomEffect(LOSE_EFFECT_TRACKS, EFFECT_SOUND_VOLUME, 'lastLoseEffectSrc');
+  }
+
+  playBossComeOut() {
+    this.playRandomEffect(BOSS_COME_OUT_EFFECT_TRACKS, EFFECT_SOUND_VOLUME, 'lastBossComeOutEffectSrc');
   }
   
   playNewRecord() {
@@ -777,6 +811,21 @@ const createDailyProgress = (date: string = getTodayKey()): DailyProgress => ({
   questionCount: 0,
 });
 
+const getReviewScopeKey = (difficulty: Difficulty, level: Level) => `${difficulty}:${level}`;
+
+const resolveLegacyReviewScope = (question: Question): { difficulty: Difficulty; level: Level } | null => {
+  const matches = DIFFICULTIES.flatMap(difficulty => (
+    LEVELS.flatMap(level => {
+      const hasMatch = (QUESTIONS[difficulty]?.[level] ?? []).some(candidate => (
+        candidate.text === question.text && candidate.translation === question.translation
+      ));
+      return hasMatch ? [{ difficulty, level }] : [];
+    })
+  ));
+
+  return matches.length === 1 ? matches[0] : null;
+};
+
 const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
   missCount: 0,
   lastMissedAt: 0,
@@ -798,12 +847,25 @@ const normalizeWeakQuestionStats = (stats: Record<string, WeakQuestionStat>) => 
 
 const normalizeReviewQueue = (entries: ReviewQueueEntry[] | unknown) => (
   (Array.isArray(entries) ? entries : [])
-    .filter(entry => entry?.question?.text && entry?.question?.translation)
-    .map(entry => ({
-      question: entry.question,
-      remainingQuestions: Number.isFinite(entry.remainingQuestions) ? Math.max(0, entry.remainingQuestions) : 0,
-      missCount: Number.isFinite(entry.missCount) ? Math.max(1, entry.missCount) : 1,
-    }))
+    .map(entry => {
+      if (!entry?.question?.text || !entry?.question?.translation) return null;
+
+      const resolvedScope =
+        (DIFFICULTIES.includes(entry.difficulty) && LEVELS.includes(entry.level))
+          ? { difficulty: entry.difficulty as Difficulty, level: entry.level as Level }
+          : resolveLegacyReviewScope(entry.question);
+
+      if (!resolvedScope) return null;
+
+      return {
+        difficulty: resolvedScope.difficulty,
+        level: resolvedScope.level,
+        question: entry.question,
+        remainingQuestions: Number.isFinite(entry.remainingQuestions) ? Math.max(0, entry.remainingQuestions) : 0,
+        missCount: Number.isFinite(entry.missCount) ? Math.max(1, entry.missCount) : 1,
+      };
+    })
+    .filter((entry): entry is ReviewQueueEntry => entry !== null)
 );
 
 // --- Rich Monster Avatar Component (SVG) ---
@@ -1191,6 +1253,7 @@ export default function App() {
 
     if (shownFinalBossIntroKeyRef.current === introKey) return;
     shownFinalBossIntroKeyRef.current = introKey;
+    soundEngine.playBossComeOut();
     setShowFinalBossIntro(true);
 
     const timer = window.setTimeout(() => {
@@ -1656,12 +1719,19 @@ export default function App() {
   };
 
   const scheduleQuestionReview = (question: Question, baseMissCount: number = 0) => {
-    const existingIndex = reviewQueueRef.current.findIndex(entry => entry.question.text === question.text);
+    const reviewScopeKey = getReviewScopeKey(gameState.selectedDifficulty, gameState.selectedLevel);
+    const existingIndex = reviewQueueRef.current.findIndex(entry => (
+      getReviewScopeKey(entry.difficulty, entry.level) === reviewScopeKey
+      && entry.question.text === question.text
+      && entry.question.translation === question.translation
+    ));
     const nextMissCount = Math.max(
       existingIndex >= 0 ? reviewQueueRef.current[existingIndex].missCount + 1 : 0,
       baseMissCount + 1,
     );
     const nextEntry: ReviewQueueEntry = {
+      difficulty: gameState.selectedDifficulty,
+      level: gameState.selectedLevel,
       question,
       remainingQuestions: getReviewDelay(nextMissCount),
       missCount: nextMissCount,
@@ -1684,10 +1754,15 @@ export default function App() {
     persistReviewQueue();
   };
 
-  const getDueReviewQuestion = (currentQ: Question | null): ReviewQueueEntry | null => {
+  const getDueReviewQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): ReviewQueueEntry | null => {
+    const reviewScopeKey = getReviewScopeKey(diff, level);
     const dueIndex = reviewQueueRef.current.findIndex(entry => (
-      entry.remainingQuestions <= 0
-      && (!currentQ || entry.question.text !== currentQ.text)
+      getReviewScopeKey(entry.difficulty, entry.level) === reviewScopeKey
+      && entry.remainingQuestions <= 0
+      && (!currentQ || (
+        entry.question.text !== currentQ.text
+        || entry.question.translation !== currentQ.translation
+      ))
     ));
 
     if (dueIndex < 0) return null;
@@ -1698,7 +1773,7 @@ export default function App() {
   };
 
   const getNextBattleQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
-    const reviewEntry = getDueReviewQuestion(currentQ);
+    const reviewEntry = getDueReviewQuestion(diff, level, currentQ);
     activeReviewEntryRef.current = reviewEntry;
     if (reviewEntry) return reviewEntry.question;
     activeReviewEntryRef.current = null;
