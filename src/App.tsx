@@ -158,8 +158,22 @@ const getUniqueKey = (
   return `${difficulty}:${level}:${mode}:${inputMode}:${monsterId}`;
 };
 
-const getLegacyUniqueKey = (mode: Mode, inputMode: InputMode, monsterId: string) => (
-  `${mode}:${inputMode}:${monsterId}`
+const isScopedDefeatedMonsterKey = (value: string) => {
+  const parts = value.split(':');
+  if (parts.length !== 5) return false;
+
+  const [difficulty, level, mode, inputMode, monsterId] = parts;
+  if (!DIFFICULTIES.includes(difficulty as Difficulty)) return false;
+  if (!getAvailableLevels(difficulty as Difficulty).includes(Number(level) as Level)) return false;
+  if (!['guide', 'challenge', 'weakness'].includes(mode)) return false;
+  if (!['voice-text', 'text-only', 'voice-only'].includes(inputMode)) return false;
+  return monsterId.length > 0;
+};
+
+const normalizeDefeatedMonsterIds = (ids: string[] | unknown) => (
+  Array.from(new Set((Array.isArray(ids) ? ids : []).filter((id): id is string => (
+    typeof id === 'string' && isScopedDefeatedMonsterKey(id)
+  ))))
 );
 
 const matchesDefeatedMonster = (
@@ -171,8 +185,7 @@ const matchesDefeatedMonster = (
   monsterId: string
 ) => {
   const scopedKey = getUniqueKey(difficulty, level, mode, inputMode, monsterId);
-  const legacyKey = getLegacyUniqueKey(mode, inputMode, monsterId);
-  return defeatedMonsterIds.includes(scopedKey) || defeatedMonsterIds.includes(legacyKey);
+  return defeatedMonsterIds.includes(scopedKey);
 };
 
 const extractMonsterId = (uniqueKey: string) => {
@@ -1343,7 +1356,7 @@ export default function App() {
   }, [gameState.selectedDifficulty, gameState.selectedLevel]);
 
   useEffect(() => {
-    const defeatedMonsterIds = safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []);
+    const defeatedMonsterIds = normalizeDefeatedMonsterIds(safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []));
     const savedScores = safeLoadJson<Record<string, number>>(STORAGE_KEYS.bestScores, {});
     const savedWeak = safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []);
     const savedWeakStats = normalizeWeakQuestionStats(safeLoadJson<Record<string, WeakQuestionStat>>(STORAGE_KEYS.weakQuestionStats, {}));
@@ -1361,6 +1374,7 @@ export default function App() {
     if (defeatedMonsterIds.length > 0) {
       setGameState(prev => ({ ...prev, defeatedMonsterIds }));
     }
+    localStorage.setItem(STORAGE_KEYS.defeatedMonsters, JSON.stringify(defeatedMonsterIds));
     setBestScores(savedScores);
 
     const savedMaxK = localStorage.getItem(STORAGE_KEYS.maxKeystrokes);
