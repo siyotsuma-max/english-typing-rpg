@@ -59,7 +59,7 @@
       },
       {
         "text": "travel",
-        "translation": "旅行"
+        "translation": "旅行すること"
       },
       {
         "text": "tour",
@@ -207,11 +207,11 @@
       },
       {
         "text": "college",
-        "translation": "大学"
+        "translation": "大学（college）"
       },
       {
         "text": "university",
-        "translation": "大学"
+        "translation": "総合大学"
       },
       {
         "text": "course",
@@ -259,7 +259,7 @@
       },
       {
         "text": "trip",
-        "translation": "旅行"
+        "translation": "旅行、旅"
       },
       {
         "text": "fishing",
@@ -443,7 +443,7 @@
       },
       {
         "text": "see",
-        "translation": "見る"
+        "translation": "見る、会う"
       },
       {
         "text": "take",
@@ -455,7 +455,7 @@
       },
       {
         "text": "look",
-        "translation": "見る"
+        "translation": "見る、目を向ける"
       },
       {
         "text": "meet",
@@ -463,7 +463,7 @@
       },
       {
         "text": "talk",
-        "translation": "話す"
+        "translation": "話す、会話する"
       },
       {
         "text": "say",
@@ -475,7 +475,7 @@
       },
       {
         "text": "speak",
-        "translation": "話す"
+        "translation": "話す、言葉を話す"
       },
       {
         "text": "listen",
@@ -503,7 +503,7 @@
       },
       {
         "text": "wake",
-        "translation": "目を覚ます"
+        "translation": "目を覚ます（wake）"
       },
       {
         "text": "work",
@@ -779,7 +779,7 @@
       },
       {
         "text": "on",
-        "translation": "の上に"
+        "translation": "〜の上に接して"
       },
       {
         "text": "of",
@@ -803,7 +803,7 @@
       },
       {
         "text": "over",
-        "translation": "の上に"
+        "translation": "〜の上方に、〜をこえて"
       },
       {
         "text": "around",
@@ -815,7 +815,7 @@
       },
       {
         "text": "between",
-        "translation": "の間に"
+        "translation": "〜の間に（2つの間）"
       },
       {
         "text": "until",
@@ -843,7 +843,7 @@
       },
       {
         "text": "will",
-        "translation": "だろう"
+        "translation": "〜だろう、〜するつもりだ"
       },
       {
         "text": "may",
@@ -859,7 +859,7 @@
       },
       {
         "text": "would",
-        "translation": "だろう"
+        "translation": "〜だろうに、〜でしょう"
       },
       {
         "text": "must",
@@ -1395,7 +1395,7 @@
       },
       {
         "text": "during",
-        "translation": "の間に"
+        "translation": "〜の間に（期間中）"
       },
       {
         "text": "shall",
@@ -1489,7 +1489,7 @@
       },
       {
         "text": "wake up",
-        "translation": "目を覚ます"
+        "translation": "目を覚ます、起きる"
       },
       {
         "text": "take a trip",
@@ -1987,11 +1987,11 @@
       },
       {
         "text": "What happened?",
-        "translation": "どうしたのですか。"
+        "translation": "何が起こったのですか。"
       },
       {
         "text": "What's wrong?",
-        "translation": "どうしたのですか。"
+        "translation": "どこか具合が悪いのですか。"
       },
       {
         "text": "I can't find my car key.",
@@ -2103,7 +2103,7 @@
       },
       {
         "text": "Not at all.",
-        "translation": "どういたしまして。"
+        "translation": "とんでもないです。"
       },
       {
         "text": "Thank you for your help.",

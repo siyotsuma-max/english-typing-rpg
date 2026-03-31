@@ -399,7 +399,7 @@
       },
       {
         "text": "bathroom",
-        "translation": "浴室"
+        "translation": "浴室、バスルーム"
       },
       {
         "text": "bedroom",
@@ -439,7 +439,7 @@
       },
       {
         "text": "station",
-        "translation": "駅"
+        "translation": "駅（一般）"
       },
       {
         "text": "airport",
@@ -451,7 +451,7 @@
       },
       {
         "text": "bookstore",
-        "translation": "本屋"
+        "translation": "書店"
       },
       {
         "text": "supermarket",
@@ -771,7 +771,7 @@
       },
       {
         "text": "moon",
-        "translation": "月"
+        "translation": "月（天体）"
       },
       {
         "text": "cloud",
@@ -1131,11 +1131,11 @@
       },
       {
         "text": "time",
-        "translation": "時間"
+        "translation": "時間、時刻"
       },
       {
         "text": "hour",
-        "translation": "時間"
+        "translation": "1時間"
       },
       {
         "text": "minute",
@@ -1175,7 +1175,7 @@
       },
       {
         "text": "month",
-        "translation": "月"
+        "translation": "月（ひと月）"
       },
       {
         "text": "year",
@@ -1587,11 +1587,11 @@
       },
       {
         "text": "little",
-        "translation": "小さい"
+        "translation": "小さい、少しの"
       },
       {
         "text": "large",
-        "translation": "大きい"
+        "translation": "大きい（large）"
       },
       {
         "text": "fat",
@@ -1635,11 +1635,11 @@
       },
       {
         "text": "great",
-        "translation": "素晴らしい"
+        "translation": "すばらしい、すごい"
       },
       {
         "text": "wonderful",
-        "translation": "素晴らしい"
+        "translation": "すばらしい、驚くほどよい"
       },
       {
         "text": "beautiful",
@@ -1647,7 +1647,7 @@
       },
       {
         "text": "pretty",
-        "translation": "かわいい"
+        "translation": "かわいい、きれいな"
       },
       {
         "text": "cute",
@@ -1687,11 +1687,11 @@
       },
       {
         "text": "fine",
-        "translation": "元気な"
+        "translation": "元気な、具合のよい"
       },
       {
         "text": "well",
-        "translation": "元気な"
+        "translation": "元気で、健康で"
       },
       {
         "text": "busy",
@@ -1867,7 +1867,7 @@
       },
       {
         "text": "so",
-        "translation": "とても"
+        "translation": "とても、そのように"
       },
       {
         "text": "too",
@@ -1899,7 +1899,7 @@
       },
       {
         "text": "every",
-        "translation": "すべての"
+        "translation": "あらゆる、毎〜"
       },
       {
         "text": "each",
@@ -1963,7 +1963,7 @@
       },
       {
         "text": "too",
-        "translation": "〜もまた"
+        "translation": "〜もまた、〜も"
       },
       {
         "text": "either",
@@ -2021,7 +2021,7 @@
       },
       {
         "text": "come home",
-        "translation": "家に帰る"
+        "translation": "家に帰ってくる"
       },
       {
         "text": "look at",
@@ -2153,7 +2153,7 @@
       },
       {
         "text": "train station",
-        "translation": "駅"
+        "translation": "鉄道の駅"
       },
       {
         "text": "traffic light",
@@ -2169,7 +2169,7 @@
       },
       {
         "text": "book shop",
-        "translation": "本屋"
+        "translation": "本屋（shop）"
       },
       {
         "text": "flower shop",
@@ -2225,7 +2225,7 @@
       },
       {
         "text": "bath room",
-        "translation": "浴室"
+        "translation": "浴室、風呂場"
       },
       {
         "text": "music room",
@@ -2361,7 +2361,7 @@
       },
       {
         "text": "go home",
-        "translation": "家に帰る"
+        "translation": "家へ帰る"
       },
       {
         "text": "go to the park",

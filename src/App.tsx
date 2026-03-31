@@ -22,6 +22,7 @@ interface Monster {
   baseHp: number; 
   dialogueStart: string;
   dialogueDefeat: string;
+  battleDialogues?: Partial<Record<MonsterDialogueState, string[]>>;
   theme: string;
 }
 
@@ -100,6 +101,8 @@ type DailyProgress = {
   questionCount: number;
 };
 
+type MonsterDialogueState = 'start' | 'combo' | 'desperate' | 'damaged' | 'taunt' | 'defeat';
+
 // --- Rank System ---
 interface RankData { threshold: number; title: string; color: string; }
 
@@ -137,8 +140,31 @@ const getRankData = (defeatedCount: number): RankData => {
     return sortedRanks.find(r => defeatedCount >= r.threshold) || RANKS[0];
 };
 
-const getUniqueKey = (mode: Mode, inputMode: InputMode, monsterId: string) => {
-    return `${mode}:${inputMode}:${monsterId}`;
+const getUniqueKey = (
+  difficulty: Difficulty,
+  level: Level,
+  mode: Mode,
+  inputMode: InputMode,
+  monsterId: string
+) => {
+  return `${difficulty}:${level}:${mode}:${inputMode}:${monsterId}`;
+};
+
+const getLegacyUniqueKey = (mode: Mode, inputMode: InputMode, monsterId: string) => (
+  `${mode}:${inputMode}:${monsterId}`
+);
+
+const matchesDefeatedMonster = (
+  defeatedMonsterIds: string[],
+  difficulty: Difficulty,
+  level: Level,
+  mode: Mode,
+  inputMode: InputMode,
+  monsterId: string
+) => {
+  const scopedKey = getUniqueKey(difficulty, level, mode, inputMode, monsterId);
+  const legacyKey = getLegacyUniqueKey(mode, inputMode, monsterId);
+  return defeatedMonsterIds.includes(scopedKey) || defeatedMonsterIds.includes(legacyKey);
 };
 
 const extractMonsterId = (uniqueKey: string) => {
@@ -197,6 +223,176 @@ const getMonsterBattleDialogue = (
   }
 
   return monster.dialogueStart;
+};
+
+const hashString = (value: string) => {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) - hash) + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+};
+
+const pickSeededLine = (lines: string[], seed: string) => {
+  if (lines.length === 0) return '';
+  return lines[hashString(seed) % lines.length];
+};
+
+const uniqueLines = (lines: string[]) => Array.from(new Set(lines.filter(Boolean)));
+
+const getTypeSpecificDialogues = (monster: Monster, state: MonsterDialogueState): string[] => {
+  const typeLines: Record<MonsterType, Partial<Record<MonsterDialogueState, string[]>>> = {
+    slime: {
+      start: ['今日のコンディションは半熟です。', 'ぷるぷる代表として負けられません。'],
+      damaged: ['揺らすな揺らすな、中身が寄る〜！', 'いまの一撃で三層に分かれた！'],
+      desperate: ['もうスライムというより、こぼれそうなゼリー...', '体積は減ってもプライドは増量中...！'],
+    },
+    beast: {
+      start: ['ガオー！ と言いたいけど今日はのどが乾いてる。', '勢いだけで来た。作戦は途中で考える！'],
+      damaged: ['うおっ、野生の勘が外れた！', 'いまのは毛並みにひびくやつ！'],
+      desperate: ['足はふらつくが、見栄はまだ立っている！', '負けそうなので迫力だけ2割増しでいきます。'],
+    },
+    wing: {
+      start: ['上空から失礼します。着地は未定です。', '飛べるけど方向音痴、それが空の流儀。'],
+      damaged: ['羽がっ、羽が言うことを聞かない！', '今の一発で飛行プランが乱気流！'],
+      desperate: ['高度が下がる、テンションも下がる...', 'このままだと徒歩帰宅コースです...'],
+    },
+    ghost: {
+      start: ['ひゅ〜どろろ。効果音だけは一流です。', '背後を取る予定でしたが、今ちょっと迷ってます。'],
+      damaged: ['ひゃっ、透ける透ける！', '驚かす側なのに、今ので私が驚いた！'],
+      desperate: ['消えそうで消えない、しぶとい未練です...', '成仏の予約、まだキャンセルできますか？'],
+    },
+    robot: {
+      start: ['起動完了。なお説明書は紛失しました。', 'ロックオン完了。たぶん合ってます。'],
+      damaged: ['エラー発生。つよい、かなりつよい。', '装甲に傷。メンタルにも傷。'],
+      desperate: ['出力低下...ですが見た目は平静を維持。', '警告。かっこよく負ける準備が始まりました。'],
+    },
+    boss: {
+      start: ['余裕の登場だ。BGMだけ先に盛り上がっている。', '我こそは強敵。たぶん演出込みで。'],
+      combo: ['その連打、反則では？ 反則じゃないのか...', '待て待て、その勢いだと私の威厳が追いつかん！'],
+      damaged: ['くっ...今のは演出ではなく本当に痛い。', 'よろめいてなどいない。床が近づいただけだ。'],
+      desperate: ['ここまで来るとは...脚本にない展開だぞ！', 'まだ終わらん...終わらんが、息は上がっている。'],
+      taunt: ['手元が乱れているぞ。余裕がないのはお互い様だがな。', '集中が切れたか？ こちらは最初から切れ気味だ。'],
+      defeat: ['見事だ...今日は威厳を置いて帰る。', '敗北を認めよう。拍手は小さめで頼む...。'],
+    },
+    object: {
+      start: ['物なのにやる気だけは生きている。', '転がってきた。本人にも理由はよくわからない。'],
+      damaged: ['あっ、そこは耐久試験の範囲外です！', 'きしむきしむ、でも一応まだ現役！'],
+      desperate: ['部品が外れそう。気合いで留めています。', '形を保つので精一杯、でも登場料は返しません。'],
+    },
+  };
+
+  return typeLines[monster.type][state] ?? [];
+};
+
+const getDefaultMonsterDialoguePool = (monster: Monster, state: MonsterDialogueState): string[] => {
+  const genericLines: Record<MonsterDialogueState, string[]> = {
+    start: [
+      monster.dialogueStart,
+      `${monster.name}が現れた。たぶん本人も少し緊張している。`,
+      `${monster.name}「勝負の前に深呼吸。ふー、ふー、まだ長い！」`,
+      `${monster.name}「タイピングで勝つ。できればスマートに！」`,
+      `${monster.name}「今日はいい感じ。根拠はない！」`,
+      `${monster.name}「負けたら帰り道で反省会します...」`,
+      `${monster.name}「やる気だけ先に来ました！」`,
+      `${monster.name}「本日の作戦名は『なんとかする』です！」`,
+      `${monster.name}「勝負だ！ でもちょっと手加減してもいいよ？」`,
+      `${monster.name}が吹き出しのネタを温めながら迫ってくる。`,
+    ],
+    combo: [
+      `${monster.name}「そのコンボ、指にエンジン積んでる？」`,
+      `${monster.name}「速い速い！ こっちは気持ちしか追いつかない！」`,
+      `${monster.name}「待って、今ので三回くらい心が折れかけた！」`,
+      `${monster.name}「そのテンポ、メトロノームが転職するレベル！」`,
+      `${monster.name}「連続ヒット！？ こちらの言い訳が間に合わない！」`,
+      `${monster.name}「押されてる！ でも口だけは元気です！」`,
+      `${monster.name}「ちょっと本気がすぎませんこと！？」`,
+      `${monster.name}「その勢い、もはやタイピングという名の天気！」`,
+    ],
+    desperate: [
+      `${monster.name}「まだだ...まだセリフの在庫はある...！」`,
+      `${monster.name}「ここで倒れたらオチがつかない！」`,
+      `${monster.name}「ピンチです。顔には出てないつもりです！」`,
+      `${monster.name}「ふらついているが、ボケる余力は残っている！」`,
+      `${monster.name}「あと一歩...いや半歩くらいで危ない！」`,
+      `${monster.name}「もうだめかも...いや、だめでも言い切らん！」`,
+      `${monster.name}「この場を乗り切ったら甘いものを食べる！」`,
+      `${monster.name}「根性で立ってる。物理法則とは相談中！」`,
+    ],
+    damaged: [
+      `${monster.name}「いまの一撃、ちゃんと効くやつじゃん！」`,
+      `${monster.name}「痛っ！ 今のは笑って流せない！」`,
+      `${monster.name}「見た目より本気だね！？ それ困る！」`,
+      `${monster.name}「ちょっと待って、心の準備がまだ！」`,
+      `${monster.name}「その速さ、反省する暇もくれない！」`,
+      `${monster.name}「うぐっ...今ので顔芸が一段階進んだ！」`,
+      `${monster.name}「さすがに今のはノーカウントにしない？」`,
+      `${monster.name}「痛い！ でもリアクションは100点を狙う！」`,
+    ],
+    taunt: [
+      `${monster.name}「おやおや、指が迷子かな？」`,
+      `${monster.name}「あせるとミスが増える。経験者は語る！」`,
+      `${monster.name}「リズムが崩れてるぞ。こっちは最初から崩れてるが！」`,
+      `${monster.name}「その打ち間違い、ちょっと親近感あるね！」`,
+      `${monster.name}「落ち着いて！ 私まで落ち着いちゃうから！」`,
+      `${monster.name}「手が止まった？ じゃあ今のうちに威張っとく！」`,
+      `${monster.name}「集中、集中。私に言われたくはないだろうけど！」`,
+      `${monster.name}「ミスが続くと、こちらの調子まで乗ってしまう！」`,
+    ],
+    defeat: [
+      monster.dialogueDefeat,
+      `${monster.name}「負けました...でも最後のリアクションは良かったはず。」`,
+      `${monster.name}「完敗です。拍手より先に回復がほしい...。」`,
+      `${monster.name}「次はもっと面白いセリフを持って戻る！」`,
+      `${monster.name}「やられた〜！ でもちょっといい勝負だったよね？」`,
+      `${monster.name}「今日は君が主役。私は字幕で十分です...。」`,
+      `${monster.name}「くっ、敗北！ せめて転び方だけでも美しく...！」`,
+      `${monster.name}「まいった。帰って吹き出し会議を開きます。」`,
+    ],
+  };
+
+  return uniqueLines([
+    ...genericLines[state],
+    ...getTypeSpecificDialogues(monster, state),
+    ...(monster.battleDialogues?.[state] ?? []),
+  ]);
+};
+
+const getMonsterDialoguePool = (monster: Monster, state: MonsterDialogueState) => {
+  const pool = getDefaultMonsterDialoguePool(monster, state);
+  if (pool.length > 0) return pool;
+  return state === 'defeat' ? [monster.dialogueDefeat] : [monster.dialogueStart];
+};
+
+const getBattleBubbleDialogue = (
+  monster: Monster,
+  options: {
+    isDefeated: boolean;
+    isDamaged: boolean;
+    hpRate: number;
+    combo: number;
+    missCount: number;
+  }
+): string => {
+  let state: MonsterDialogueState = 'start';
+  const legacyFallback = getMonsterBattleDialogue(monster, options);
+
+  if (options.isDefeated) {
+    state = 'defeat';
+  } else if (options.combo >= 3) {
+    state = 'combo';
+  } else if (options.hpRate <= 0.2) {
+    state = 'desperate';
+  } else if (options.isDamaged) {
+    state = 'damaged';
+  } else if (options.missCount >= 2) {
+    state = 'taunt';
+  }
+
+  const hpBucket = Math.max(0, Math.min(10, Math.floor(options.hpRate * 10)));
+  const seed = `${monster.id}:${state}:${options.combo}:${options.missCount}:${hpBucket}`;
+  return pickSeededLine(getMonsterDialoguePool(monster, state), seed) || legacyFallback;
 };
 
 const SOUND_BASE_PATH = `${import.meta.env.BASE_URL}sound/`;
@@ -520,6 +716,7 @@ class SoundEngine {
   private battleMusicRequestId = 0;
   private previewMusic: HTMLAudioElement | null = null;
   private previewMusicTimeout: number | null = null;
+  private previewMusicRequestId = 0;
   private lastDefeatEffectSrc = '';
   private lastBossDefeatEffectSrc = '';
   private lastLoseEffectSrc = '';
@@ -698,15 +895,15 @@ class SoundEngine {
     audio.volume = volume;
     audio.src = src;
     this.battleMusicElements.add(audio);
-    audio.addEventListener('error', () => {
+    audio.onerror = () => {
       console.error('Battle music failed to load:', src, audio.error);
-    });
-    audio.addEventListener('canplaythrough', () => {
+    };
+    audio.oncanplaythrough = () => {
       if (this.battleMusic !== audio || this.battleMusicRequestId !== requestId) return;
       void audio.play().catch((error) => {
         console.error('Battle music play after load failed:', src, error);
       });
-    }, { once: true });
+    };
     this.battleMusic = audio;
     this.currentBattleMusicSrc = src;
     audio.load();
@@ -717,6 +914,8 @@ class SoundEngine {
   }
 
   private disposeBattleMusicElement(audio: HTMLAudioElement) {
+    audio.oncanplaythrough = null;
+    audio.onerror = null;
     audio.pause();
     audio.currentTime = 0;
     audio.removeAttribute('src');
@@ -740,20 +939,22 @@ class SoundEngine {
 
   playBattleMusicPreview(src: string, volume: number = 0.18, durationMs: number = 2200) {
     this.stopBattleMusicPreview();
+    const requestId = ++this.previewMusicRequestId;
 
     const audio = new Audio(src);
     audio.loop = true;
     audio.preload = 'auto';
     audio.volume = volume;
     audio.src = src;
-    audio.addEventListener('error', () => {
+    audio.onerror = () => {
       console.error('Battle music preview failed to load:', src, audio.error);
-    });
-    audio.addEventListener('canplaythrough', () => {
+    };
+    audio.oncanplaythrough = () => {
+      if (this.previewMusic !== audio || this.previewMusicRequestId !== requestId) return;
       void audio.play().catch((error) => {
         console.error('Battle music preview play after load failed:', src, error);
       });
-    }, { once: true });
+    };
 
     this.previewMusic = audio;
     this.previewMusicTimeout = window.setTimeout(() => {
@@ -767,13 +968,18 @@ class SoundEngine {
   }
 
   stopBattleMusicPreview() {
+    this.previewMusicRequestId += 1;
     if (this.previewMusicTimeout !== null) {
       window.clearTimeout(this.previewMusicTimeout);
       this.previewMusicTimeout = null;
     }
     if (!this.previewMusic) return;
+    this.previewMusic.oncanplaythrough = null;
+    this.previewMusic.onerror = null;
     this.previewMusic.pause();
     this.previewMusic.currentTime = 0;
+    this.previewMusic.removeAttribute('src');
+    this.previewMusic.load();
     this.previewMusic = null;
   }
 }
@@ -1398,8 +1604,10 @@ export default function App() {
 
   const saveDefeatedMonster = (monsterId: string) => {
     setGameState(prev => {
-      const uniqueKey = getUniqueKey(prev.mode, prev.inputMode, monsterId);
-      if (prev.defeatedMonsterIds.includes(uniqueKey)) return prev;
+      const uniqueKey = getUniqueKey(prev.selectedDifficulty, prev.selectedLevel, prev.mode, prev.inputMode, monsterId);
+      if (matchesDefeatedMonster(prev.defeatedMonsterIds, prev.selectedDifficulty, prev.selectedLevel, prev.mode, prev.inputMode, monsterId)) {
+        return prev;
+      }
       const newIds = [...prev.defeatedMonsterIds, uniqueKey];
       localStorage.setItem(STORAGE_KEYS.defeatedMonsters, JSON.stringify(newIds));
       return { ...prev, defeatedMonsterIds: newIds };
@@ -1595,18 +1803,21 @@ export default function App() {
     }
 
     let startStep = 0;
-    // For challenge modes, resume from the first undefeated monster if available.
-    // If all are defeated, start from the beginning for replay.
-    if (mode === 'challenge') {
-         for (let i = 0; i < indices.length; i++) {
-            const uniqueKey = getUniqueKey(mode, inputMode, selectedList[indices[i]].id);
-            if (!gameState.defeatedMonsterIds.includes(uniqueKey)) {
-                startStep = i;
-                break;
-            }
-        }
-        // If startStep remains 0, it means either none defeated or all defeated.
-        // We want to start from 0 in both cases (Standard start or Replay).
+    // Resume Training/Challenge from the first undefeated monster.
+    // If all target monsters are already defeated, start from the beginning for replay.
+    if (mode === 'guide' || mode === 'challenge') {
+      const nextUndeatedStep = indices.findIndex(monsterIndex => {
+        return !matchesDefeatedMonster(
+          gameState.defeatedMonsterIds,
+          diff,
+          level,
+          mode,
+          inputMode,
+          selectedList[monsterIndex].id
+        );
+      });
+
+      startStep = nextUndeatedStep >= 0 ? nextUndeatedStep : 0;
     }
 
     initBattle(diff, level, mode, inputMode, startStep, indices, selectedList, totalStageMonsters, 0, 0);
@@ -2491,7 +2702,14 @@ export default function App() {
     const getModeProgress = (list: Monster[], mode: Mode, inputMode: InputMode, targetCount: number) => {
         // Only check the monsters within the target range for "Complete" status
         const targetList = list.slice(0, targetCount);
-        const nextMonster = targetList.find(m => !gameState.defeatedMonsterIds.includes(getUniqueKey(mode, inputMode, m.id)));
+        const nextMonster = targetList.find(m => !matchesDefeatedMonster(
+          gameState.defeatedMonsterIds,
+          gameState.selectedDifficulty,
+          gameState.selectedLevel,
+          mode,
+          inputMode,
+          m.id
+        ));
         
         return {
             nextTargetName: nextMonster?.name || null,
@@ -2615,7 +2833,7 @@ export default function App() {
         : 'text-3xl md:text-5xl';
     const questionPanelClass = questionLength > 42 ? 'px-5 md:px-8 py-4 md:py-5' : 'px-4 md:px-6 py-3 md:py-4';
     const questionMinHeightClass = questionLength > 58 ? 'min-h-[4.8em]' : questionLength > 42 ? 'min-h-[3.9em]' : 'min-h-[3em]';
-    const monsterDialogue = getMonsterBattleDialogue(currentMonster, {
+    const monsterDialogue = getBattleBubbleDialogue(currentMonster, {
       isDefeated: gameState.monsterHp <= 0,
       isDamaged: flash,
       hpRate: hpPercent,
