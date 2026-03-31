@@ -1,0 +1,1613 @@
+{
+  "category": "eiken",
+  "series": "gradepre1",
+  "difficultyKey": "EikenPre1",
+  "displayName": "英検準1級",
+  "levels": {
+    "1": [
+      {
+        "text": "abundant",
+        "translation": "(量が)豊富な"
+      },
+      {
+        "text": "accelerate",
+        "translation": "(速度を)速める / 加速する"
+      },
+      {
+        "text": "accommodate",
+        "translation": "(人を)収容する / (事情に)対応する"
+      },
+      {
+        "text": "accompany",
+        "translation": "(人に)同行する / 伴う"
+      },
+      {
+        "text": "accumulate",
+        "translation": "(少しずつ)蓄積する"
+      },
+      {
+        "text": "accurate",
+        "translation": "(事実や情報が)正確な"
+      },
+      {
+        "text": "acknowledge",
+        "translation": "(事実として)認める"
+      },
+      {
+        "text": "acquire",
+        "translation": "(知識や技能を)身につける"
+      },
+      {
+        "text": "adapt",
+        "translation": "(環境に)適応する"
+      },
+      {
+        "text": "adequate",
+        "translation": "(必要な基準を満たして)十分な"
+      },
+      {
+        "text": "adjust",
+        "translation": "(状態に合わせて)調整する"
+      },
+      {
+        "text": "administer",
+        "translation": "(組織や制度を)運営する"
+      },
+      {
+        "text": "advocate",
+        "translation": "(主張や政策を)支持する"
+      },
+      {
+        "text": "affordable",
+        "translation": "(価格が)手ごろな"
+      },
+      {
+        "text": "aggression",
+        "translation": "攻撃性 / 敵意"
+      },
+      {
+        "text": "allocate",
+        "translation": "(予算や資源を)割り当てる"
+      },
+      {
+        "text": "alter",
+        "translation": "(部分的に)変更する"
+      },
+      {
+        "text": "ambitious",
+        "translation": "(大きな目標を持つ)野心的な"
+      },
+      {
+        "text": "analyze",
+        "translation": "(データなどを)分析する"
+      },
+      {
+        "text": "anticipate",
+        "translation": "(先を見こして)予期する"
+      },
+      {
+        "text": "apparent",
+        "translation": "(見たところ)明らかな"
+      },
+      {
+        "text": "appeal",
+        "translation": "(強く)訴える / (人を)ひきつける"
+      },
+      {
+        "text": "appoint",
+        "translation": "(役職に)任命する"
+      },
+      {
+        "text": "appreciate",
+        "translation": "(価値や重要性を)理解する"
+      },
+      {
+        "text": "arbitrary",
+        "translation": "(根拠なく)恣意的な"
+      },
+      {
+        "text": "architecture",
+        "translation": "建築 / 建築様式"
+      },
+      {
+        "text": "assess",
+        "translation": "(価値や状況を)評価する"
+      },
+      {
+        "text": "asset",
+        "translation": "資産 / 強み"
+      },
+      {
+        "text": "assign",
+        "translation": "(仕事や任務を)割り当てる"
+      },
+      {
+        "text": "assist",
+        "translation": "(人を)手助けする"
+      },
+      {
+        "text": "attain",
+        "translation": "(目標を)達成する"
+      },
+      {
+        "text": "attribute",
+        "translation": "(人や物の)属性"
+      },
+      {
+        "text": "authorize",
+        "translation": "(公的に)認可する"
+      },
+      {
+        "text": "autonomous",
+        "translation": "(外部に頼らず)自律した"
+      },
+      {
+        "text": "barrier",
+        "translation": "障壁 / 妨げ"
+      },
+      {
+        "text": "beneficial",
+        "translation": "(役に立って)有益な"
+      },
+      {
+        "text": "bias",
+        "translation": "偏り / 先入観"
+      },
+      {
+        "text": "brief",
+        "translation": "(時間や文章が)簡潔な"
+      },
+      {
+        "text": "capacity",
+        "translation": "容量 / 能力"
+      },
+      {
+        "text": "capture",
+        "translation": "(注意や心を)引きつける / (映像や変化を)捉える"
+      },
+      {
+        "text": "cease",
+        "translation": "(活動を)やめる"
+      },
+      {
+        "text": "challenge",
+        "translation": "課題 / 挑戦"
+      },
+      {
+        "text": "circumstance",
+        "translation": "(その人を取りまく)状況"
+      },
+      {
+        "text": "civil",
+        "translation": "市民の / 民間の"
+      },
+      {
+        "text": "clarify",
+        "translation": "(意味などを)明確にする"
+      },
+      {
+        "text": "collapse",
+        "translation": "(建物や制度が)崩壊する"
+      },
+      {
+        "text": "combine",
+        "translation": "(複数のものを)組み合わせる"
+      },
+      {
+        "text": "commence",
+        "translation": "(公式に)開始する"
+      },
+      {
+        "text": "commit",
+        "translation": "(責任を持って)関わる / (約束を)する"
+      },
+      {
+        "text": "commodity",
+        "translation": "(売買される)商品"
+      },
+      {
+        "text": "compatible",
+        "translation": "(一緒に使えて)両立する"
+      },
+      {
+        "text": "compile",
+        "translation": "(情報を集めて)編集する"
+      },
+      {
+        "text": "complement",
+        "translation": "(不足を)補う / 補完物"
+      },
+      {
+        "text": "component",
+        "translation": "構成要素"
+      },
+      {
+        "text": "comprehensive",
+        "translation": "(広い範囲を含む)包括的な"
+      },
+      {
+        "text": "compromise",
+        "translation": "妥協 / 譲歩"
+      },
+      {
+        "text": "concentrate",
+        "translation": "(意識や力を)集中する"
+      },
+      {
+        "text": "conclude",
+        "translation": "(検討の末に)結論づける"
+      },
+      {
+        "text": "concrete",
+        "translation": "(抽象でなく)具体的な"
+      },
+      {
+        "text": "conduct",
+        "translation": "(調査などを)行う / 行動"
+      },
+      {
+        "text": "confer",
+        "translation": "(称号や権利を)授ける"
+      },
+      {
+        "text": "confine",
+        "translation": "(範囲内に)閉じこめる"
+      },
+      {
+        "text": "confirm",
+        "translation": "(事実を)確認する"
+      },
+      {
+        "text": "conflict",
+        "translation": "対立 / 食い違い"
+      },
+      {
+        "text": "conform",
+        "translation": "(規則や基準に)従う"
+      },
+      {
+        "text": "conservative",
+        "translation": "保守的な"
+      },
+      {
+        "text": "considerable",
+        "translation": "(数量が)かなりの"
+      },
+      {
+        "text": "consistent",
+        "translation": "(方針や態度が)一貫した"
+      },
+      {
+        "text": "constant",
+        "translation": "(途切れず)絶え間ない"
+      },
+      {
+        "text": "construct",
+        "translation": "(建物などを)建設する"
+      },
+      {
+        "text": "consult",
+        "translation": "(専門家に)相談する / 参照する"
+      },
+      {
+        "text": "consume",
+        "translation": "(資源や食料を)消費する"
+      },
+      {
+        "text": "contaminate",
+        "translation": "(水や土壌を)汚染する"
+      },
+      {
+        "text": "contemporary",
+        "translation": "同時代の / 現代の"
+      },
+      {
+        "text": "context",
+        "translation": "(言葉や出来事の)文脈"
+      },
+      {
+        "text": "contradict",
+        "translation": "(主張に)反する / 反論する"
+      },
+      {
+        "text": "contribute",
+        "translation": "(発展などに)貢献する"
+      },
+      {
+        "text": "controversial",
+        "translation": "(意見が分かれて)論争を呼ぶ"
+      },
+      {
+        "text": "convert",
+        "translation": "(別の形に)変える"
+      },
+      {
+        "text": "convince",
+        "translation": "(人を)納得させる"
+      },
+      {
+        "text": "cooperate",
+        "translation": "(相手と)協力する"
+      },
+      {
+        "text": "cope",
+        "translation": "(困難に)うまく対処する"
+      },
+      {
+        "text": "core",
+        "translation": "中心 / 核心"
+      },
+      {
+        "text": "corporate",
+        "translation": "企業の / 法人の"
+      },
+      {
+        "text": "correspond",
+        "translation": "(内容が)対応する"
+      },
+      {
+        "text": "criterion",
+        "translation": "(判断の)基準"
+      },
+      {
+        "text": "crucial",
+        "translation": "(成否を左右するほど)重要な"
+      },
+      {
+        "text": "curb",
+        "translation": "(増加や悪化を)抑える"
+      },
+      {
+        "text": "curious",
+        "translation": "(知りたがって)好奇心の強い"
+      },
+      {
+        "text": "currency",
+        "translation": "通貨 / 通用"
+      },
+      {
+        "text": "decade",
+        "translation": "10年間"
+      },
+      {
+        "text": "decline",
+        "translation": "(数や質が)落ちる"
+      },
+      {
+        "text": "dedicate",
+        "translation": "(目的のために)ささげる"
+      },
+      {
+        "text": "deficit",
+        "translation": "赤字 / 不足"
+      },
+      {
+        "text": "define",
+        "translation": "(意味や範囲を)定義する"
+      },
+      {
+        "text": "delay",
+        "translation": "(時期を)遅らせる"
+      },
+      {
+        "text": "demand",
+        "translation": "需要 / 要求"
+      },
+      {
+        "text": "demonstrate",
+        "translation": "(事実を)示す"
+      },
+      {
+        "text": "dense",
+        "translation": "(人や建物が)密集した"
+      },
+      {
+        "text": "deny",
+        "translation": "(事実や要求を)否定する"
+      },
+      {
+        "text": "depart",
+        "translation": "(場所を)出発する"
+      },
+      {
+        "text": "depend",
+        "translation": "(条件しだいで)決まる"
+      },
+      {
+        "text": "depress",
+        "translation": "(気分を)落ち込ませる / 憂うつにする"
+      },
+      {
+        "text": "derive",
+        "translation": "(別のものから)引き出す"
+      },
+      {
+        "text": "detect",
+        "translation": "(異常や変化を)見つける"
+      },
+      {
+        "text": "deteriorate",
+        "translation": "(状態が)悪化する"
+      },
+      {
+        "text": "devote",
+        "translation": "(時間や労力を)ささげる"
+      },
+      {
+        "text": "diagnose",
+        "translation": "(病気を)診断する"
+      },
+      {
+        "text": "differ",
+        "translation": "(互いに)異なる"
+      },
+      {
+        "text": "diminish",
+        "translation": "(徐々に)減少する"
+      },
+      {
+        "text": "dimension",
+        "translation": "側面 / 次元"
+      },
+      {
+        "text": "discriminate",
+        "translation": "(不当に)差別する"
+      },
+      {
+        "text": "dispute",
+        "translation": "論争 / 異議"
+      },
+      {
+        "text": "distinct",
+        "translation": "(他と)明確に異なる"
+      },
+      {
+        "text": "distribute",
+        "translation": "(広く)配布する"
+      },
+      {
+        "text": "diverse",
+        "translation": "(種類が)多様な"
+      },
+      {
+        "text": "domestic",
+        "translation": "(外国でなく)国内の"
+      },
+      {
+        "text": "dominant",
+        "translation": "支配的な / 優勢な"
+      },
+      {
+        "text": "donate",
+        "translation": "(金品を)寄付する"
+      },
+      {
+        "text": "durable",
+        "translation": "(壊れにくく)長持ちする"
+      },
+      {
+        "text": "economy",
+        "translation": "(社会全体の)経済"
+      },
+      {
+        "text": "efficient",
+        "translation": "(無駄が少なく)効率的な"
+      },
+      {
+        "text": "elaborate",
+        "translation": "(細部まで)入念な / 精巧な"
+      },
+      {
+        "text": "eliminate",
+        "translation": "(不要なものを)排除する"
+      },
+      {
+        "text": "emerge",
+        "translation": "(姿を現して)出てくる"
+      },
+      {
+        "text": "emotion",
+        "translation": "(人の)感情"
+      },
+      {
+        "text": "emphasize",
+        "translation": "(言葉で)強調する"
+      },
+      {
+        "text": "encounter",
+        "translation": "(問題や人に)遭遇する"
+      },
+      {
+        "text": "encourage",
+        "translation": "(人を)励ます"
+      },
+      {
+        "text": "enormous",
+        "translation": "(規模が)莫大な"
+      },
+      {
+        "text": "ensure",
+        "translation": "(確実に)そうさせる"
+      },
+      {
+        "text": "enterprise",
+        "translation": "企業 / 進取の気性"
+      },
+      {
+        "text": "environmental",
+        "translation": "環境の / 環境保護に関する"
+      },
+      {
+        "text": "equivalent",
+        "translation": "同等の / 相当するもの"
+      },
+      {
+        "text": "essential",
+        "translation": "(なくてはならない)不可欠な"
+      },
+      {
+        "text": "estimate",
+        "translation": "(数量や費用を)見積もる"
+      },
+      {
+        "text": "ethical",
+        "translation": "倫理的な / 道徳上の"
+      },
+      {
+        "text": "evaluate",
+        "translation": "(結果や効果を)評価する"
+      },
+      {
+        "text": "eventual",
+        "translation": "(長い過程の末の)最終的な"
+      },
+      {
+        "text": "evident",
+        "translation": "(見て)明白な"
+      },
+      {
+        "text": "evolve",
+        "translation": "(時間をかけて)発展する"
+      },
+      {
+        "text": "exceed",
+        "translation": "(基準や限度を)超える"
+      },
+      {
+        "text": "exclude",
+        "translation": "(対象から)除外する"
+      },
+      {
+        "text": "executive",
+        "translation": "幹部 / 経営陣"
+      },
+      {
+        "text": "exhibit",
+        "translation": "(作品を)展示する / (特徴を)示す"
+      },
+      {
+        "text": "expand",
+        "translation": "(規模を)拡大する"
+      },
+      {
+        "text": "expenditure",
+        "translation": "支出"
+      },
+      {
+        "text": "expert",
+        "translation": "(その分野の)専門家"
+      },
+      {
+        "text": "exploit",
+        "translation": "(利益のために)利用する"
+      },
+      {
+        "text": "expose",
+        "translation": "(危険や批判に)さらす"
+      },
+      {
+        "text": "external",
+        "translation": "(組織の)外部の"
+      },
+      {
+        "text": "extract",
+        "translation": "(情報や成分を)取り出す"
+      },
+      {
+        "text": "factor",
+        "translation": "(結果に影響する)要因"
+      },
+      {
+        "text": "federal",
+        "translation": "(国の)連邦の"
+      },
+      {
+        "text": "fee",
+        "translation": "料金 / 謝礼"
+      },
+      {
+        "text": "finance",
+        "translation": "財政 / 資金調達"
+      },
+      {
+        "text": "flexible",
+        "translation": "(状況に応じて)柔軟な"
+      },
+      {
+        "text": "focus",
+        "translation": "焦点 / 注目点"
+      },
+      {
+        "text": "forbid",
+        "translation": "(規則で)禁じる"
+      },
+      {
+        "text": "forecast",
+        "translation": "予測 / 予報"
+      },
+      {
+        "text": "foster",
+        "translation": "(成長を)促す"
+      },
+      {
+        "text": "fragile",
+        "translation": "(壊れやすく)もろい"
+      },
+      {
+        "text": "framework",
+        "translation": "(考え方の)枠組み"
+      },
+      {
+        "text": "frequent",
+        "translation": "(回数が)頻繁な"
+      },
+      {
+        "text": "frustrate",
+        "translation": "いら立たせる"
+      },
+      {
+        "text": "fund",
+        "translation": "資金 / 基金"
+      },
+      {
+        "text": "furthermore",
+        "translation": "(論を進めて)そのうえ"
+      },
+      {
+        "text": "gender",
+        "translation": "(社会的・生物学的な)性別"
+      },
+      {
+        "text": "generate",
+        "translation": "(新しいものを)生み出す"
+      },
+      {
+        "text": "genuine",
+        "translation": "(偽物でなく)本物の / 真の"
+      },
+      {
+        "text": "grant",
+        "translation": "(要求や権利を)認める / (資金を)交付する"
+      },
+      {
+        "text": "guarantee",
+        "translation": "(結果を)保証する"
+      },
+      {
+        "text": "habitat",
+        "translation": "(動植物の)生息地"
+      },
+      {
+        "text": "harm",
+        "translation": "(相手に)害を与える"
+      },
+      {
+        "text": "hazard",
+        "translation": "危険 / 危険要因"
+      },
+      {
+        "text": "highlight",
+        "translation": "(目立たせて)強調する / 見どころ"
+      },
+      {
+        "text": "hostile",
+        "translation": "(相手に敵意を示す)敵対的な"
+      },
+      {
+        "text": "household",
+        "translation": "世帯 / 家庭"
+      },
+      {
+        "text": "ideal",
+        "translation": "理想的な / 理想の"
+      },
+      {
+        "text": "identify",
+        "translation": "(正体を)特定する"
+      },
+      {
+        "text": "ignore",
+        "translation": "(意図的に)無視する"
+      },
+      {
+        "text": "illustrate",
+        "translation": "(例を挙げて)説明する"
+      },
+      {
+        "text": "immediate",
+        "translation": "(時間を置かず)即時の"
+      },
+      {
+        "text": "impact",
+        "translation": "影響 / 衝撃"
+      },
+      {
+        "text": "impose",
+        "translation": "(規則や負担を)課す"
+      },
+      {
+        "text": "incentive",
+        "translation": "(行動を促す)動機づけ"
+      },
+      {
+        "text": "incident",
+        "translation": "事件 / 出来事"
+      },
+      {
+        "text": "include",
+        "translation": "(一部として)含む"
+      },
+      {
+        "text": "income",
+        "translation": "収入 / 所得"
+      },
+      {
+        "text": "increase",
+        "translation": "増加する"
+      },
+      {
+        "text": "indicate",
+        "translation": "(事実や傾向を)示す"
+      },
+      {
+        "text": "individual",
+        "translation": "個人 / 個々の人"
+      },
+      {
+        "text": "inevitable",
+        "translation": "(避けようがなく)避けられない"
+      },
+      {
+        "text": "infer",
+        "translation": "(情報から)推測する"
+      },
+      {
+        "text": "influence",
+        "translation": "(人の考えや行動に)影響を与える"
+      },
+      {
+        "text": "ingredient",
+        "translation": "(料理や製品の)材料"
+      },
+      {
+        "text": "initial",
+        "translation": "最初の / 初期の"
+      },
+      {
+        "text": "inquiry",
+        "translation": "問い合わせ / 照会"
+      },
+      {
+        "text": "insight",
+        "translation": "洞察 / 見識"
+      },
+      {
+        "text": "insist",
+        "translation": "(強く)主張する"
+      },
+      {
+        "text": "install",
+        "translation": "(設備やソフトを)設置する"
+      },
+      {
+        "text": "institution",
+        "translation": "制度 / 機関"
+      },
+      {
+        "text": "integrate",
+        "translation": "(別々のものを)統合する"
+      },
+      {
+        "text": "intense",
+        "translation": "(程度が)激しい"
+      },
+      {
+        "text": "interact",
+        "translation": "(互いに)相互作用する"
+      },
+      {
+        "text": "internal",
+        "translation": "(組織の)内部の"
+      },
+      {
+        "text": "interpret",
+        "translation": "(意味を)解釈する"
+      },
+      {
+        "text": "interval",
+        "translation": "(時間や距離の)間隔"
+      },
+      {
+        "text": "invest",
+        "translation": "(資金を)投資する"
+      },
+      {
+        "text": "issue",
+        "translation": "(社会的な)問題"
+      },
+      {
+        "text": "journal",
+        "translation": "(研究論文などを載せる)学術誌 / 専門誌"
+      },
+      {
+        "text": "justify",
+        "translation": "(理由を示して)正当化する"
+      },
+      {
+        "text": "labor",
+        "translation": "(肉体・精神の)労働"
+      },
+      {
+        "text": "landscape",
+        "translation": "景観 / 風景"
+      },
+      {
+        "text": "launch",
+        "translation": "(事業や商品を)開始する / 打ち上げる"
+      },
+      {
+        "text": "legal",
+        "translation": "(法律上)合法の"
+      },
+      {
+        "text": "legitimate",
+        "translation": "(法や道理にかなった)正当な"
+      },
+      {
+        "text": "leisure",
+        "translation": "余暇 / 暇"
+      },
+      {
+        "text": "liberal",
+        "translation": "自由主義の / 寛大な"
+      },
+      {
+        "text": "limit",
+        "translation": "(範囲や量を)制限する"
+      },
+      {
+        "text": "localize",
+        "translation": "地域化する"
+      },
+      {
+        "text": "maintain",
+        "translation": "(よい状態を)維持する"
+      },
+      {
+        "text": "majority",
+        "translation": "大多数 / 過半数"
+      },
+      {
+        "text": "manufacture",
+        "translation": "(製品を)製造する"
+      },
+      {
+        "text": "margin",
+        "translation": "差 / 余白"
+      },
+      {
+        "text": "mature",
+        "translation": "(十分に)成熟した"
+      },
+      {
+        "text": "maximum",
+        "translation": "最大の"
+      },
+      {
+        "text": "measure",
+        "translation": "対策 / 測定基準"
+      },
+      {
+        "text": "medical",
+        "translation": "医学の / 医療の"
+      },
+      {
+        "text": "mental",
+        "translation": "精神の / 心の"
+      },
+      {
+        "text": "migrate",
+        "translation": "(別の土地へ)移住する"
+      },
+      {
+        "text": "minimum",
+        "translation": "最小の"
+      },
+      {
+        "text": "minor",
+        "translation": "些細な"
+      },
+      {
+        "text": "monitor",
+        "translation": "(継続して)監視する"
+      },
+      {
+        "text": "mutual",
+        "translation": "相互の / 互いの"
+      },
+      {
+        "text": "narrow",
+        "translation": "狭い / 限定的な"
+      },
+      {
+        "text": "necessary",
+        "translation": "(欠かせず)必要な"
+      },
+      {
+        "text": "neglect",
+        "translation": "(義務を)怠る"
+      },
+      {
+        "text": "negotiate",
+        "translation": "(条件について)交渉する"
+      },
+      {
+        "text": "notable",
+        "translation": "(特に)注目すべき"
+      },
+      {
+        "text": "numerous",
+        "translation": "数多くの / 多数の"
+      },
+      {
+        "text": "objective",
+        "translation": "目的 / 客観的な基準"
+      },
+      {
+        "text": "observe",
+        "translation": "(注意して)観察する"
+      },
+      {
+        "text": "obtain",
+        "translation": "(努力して)得る"
+      },
+      {
+        "text": "occupy",
+        "translation": "(場所や時間を)占める"
+      },
+      {
+        "text": "occur",
+        "translation": "起こる"
+      },
+      {
+        "text": "obstacle",
+        "translation": "障害 / 妨げ"
+      },
+      {
+        "text": "obvious",
+        "translation": "(だれの目にも)明らかな"
+      },
+      {
+        "text": "operate",
+        "translation": "(機械などを)操作する"
+      },
+      {
+        "text": "oppose",
+        "translation": "(案や人に)反対する"
+      },
+      {
+        "text": "ordinary",
+        "translation": "普通の / 平凡な"
+      },
+      {
+        "text": "outcome",
+        "translation": "(最終的な)結果"
+      },
+      {
+        "text": "overall",
+        "translation": "(全体としての)全体的な"
+      },
+      {
+        "text": "participate",
+        "translation": "(活動に)参加する"
+      },
+      {
+        "text": "particular",
+        "translation": "特定の / 特有の"
+      },
+      {
+        "text": "perceive",
+        "translation": "(感覚や理解で)認識する"
+      },
+      {
+        "text": "permanent",
+        "translation": "永続的な / 恒久的な"
+      },
+      {
+        "text": "permit",
+        "translation": "(一般に)許可する"
+      },
+      {
+        "text": "perspective",
+        "translation": "視点 / 見方"
+      },
+      {
+        "text": "phase",
+        "translation": "段階 / 時期"
+      },
+      {
+        "text": "physical",
+        "translation": "身体の / 物理的な"
+      },
+      {
+        "text": "policy",
+        "translation": "(政府や組織の)方針"
+      },
+      {
+        "text": "positive",
+        "translation": "前向きな / 肯定的な"
+      },
+      {
+        "text": "potential",
+        "translation": "(将来の)可能性を持つ"
+      },
+      {
+        "text": "poverty",
+        "translation": "貧困 / 貧しさ"
+      },
+      {
+        "text": "precise",
+        "translation": "(細部まで)正確な"
+      },
+      {
+        "text": "predict",
+        "translation": "(将来を)予測する"
+      },
+      {
+        "text": "preserve",
+        "translation": "(価値あるものを)保護する"
+      },
+      {
+        "text": "primary",
+        "translation": "主要な / 第一の"
+      },
+      {
+        "text": "principle",
+        "translation": "原則 / 信条"
+      },
+      {
+        "text": "priority",
+        "translation": "(先に扱うべき)優先事項"
+      },
+      {
+        "text": "proceed",
+        "translation": "(次の段階へ)進む"
+      },
+      {
+        "text": "process",
+        "translation": "過程 / 処理"
+      },
+      {
+        "text": "professional",
+        "translation": "専門職の / 職業上の"
+      },
+      {
+        "text": "prohibit",
+        "translation": "(規則で)禁止する"
+      },
+      {
+        "text": "promote",
+        "translation": "(普及や成長を)促進する / 昇進させる"
+      },
+      {
+        "text": "prospect",
+        "translation": "見通し / 将来性"
+      },
+      {
+        "text": "protect",
+        "translation": "(危険から)守る"
+      },
+      {
+        "text": "provide",
+        "translation": "(必要なものを)提供する"
+      },
+      {
+        "text": "publish",
+        "translation": "(本や記事を)公表する"
+      },
+      {
+        "text": "purchase",
+        "translation": "(代金を払って)購入する"
+      },
+      {
+        "text": "pursue",
+        "translation": "(目標を)追求する"
+      },
+      {
+        "text": "recover",
+        "translation": "(失ったものを)回復する"
+      },
+      {
+        "text": "reduce",
+        "translation": "(量を)減らす"
+      },
+      {
+        "text": "regard",
+        "translation": "(〜だと)見なす / 尊重"
+      },
+      {
+        "text": "region",
+        "translation": "地域 / 地方"
+      },
+      {
+        "text": "regulate",
+        "translation": "(ルールで)規制する"
+      },
+      {
+        "text": "reinforce",
+        "translation": "(さらに)強化する"
+      },
+      {
+        "text": "reject",
+        "translation": "(提案などを)拒絶する"
+      },
+      {
+        "text": "release",
+        "translation": "(製品や情報を)公開する / 解放する"
+      },
+      {
+        "text": "rely",
+        "translation": "(人や助けに)頼る"
+      },
+      {
+        "text": "remove",
+        "translation": "(その場から)取り除く"
+      },
+      {
+        "text": "require",
+        "translation": "(条件として)必要とする"
+      },
+      {
+        "text": "reserve",
+        "translation": "(あらかじめ)予約する / 予備として取っておく"
+      },
+      {
+        "text": "resist",
+        "translation": "(圧力に)抵抗する"
+      },
+      {
+        "text": "resource",
+        "translation": "資源 / 活用できる手段"
+      },
+      {
+        "text": "restore",
+        "translation": "(元の状態に)回復させる / 修復する"
+      },
+      {
+        "text": "restrict",
+        "translation": "(行動や自由を)制限する"
+      },
+      {
+        "text": "reveal",
+        "translation": "(隠れていたことを)明らかにする / 見せる"
+      },
+      {
+        "text": "rural",
+        "translation": "(都市でなく)地方の"
+      }
+    ],
+    "2": [
+      {
+        "text": "account for",
+        "translation": "(理由を)説明する / (割合を)占める"
+      },
+      {
+        "text": "adhere to",
+        "translation": "(規則や方針に)従う"
+      },
+      {
+        "text": "agree on",
+        "translation": "(案や条件に)合意する"
+      },
+      {
+        "text": "aim at",
+        "translation": "(目標として)目指す / 狙う"
+      },
+      {
+        "text": "allow for",
+        "translation": "(起こりうることを)見込んで考慮する / 余地を見ておく"
+      },
+      {
+        "text": "appeal to",
+        "translation": "(感情に)訴えかける"
+      },
+      {
+        "text": "approve of",
+        "translation": "(考えや行動に)賛成する"
+      },
+      {
+        "text": "be based on",
+        "translation": "(事実や理論に)基づいている"
+      },
+      {
+        "text": "be composed of",
+        "translation": "(要素から)成り立っている"
+      },
+      {
+        "text": "be concerned about",
+        "translation": "(問題を)心配している"
+      },
+      {
+        "text": "be exposed to",
+        "translation": "(危険や影響に)さらされる"
+      },
+      {
+        "text": "be inclined to",
+        "translation": "(ある傾向に)なりがちである"
+      },
+      {
+        "text": "be involved in",
+        "translation": "(事件や活動に)関わっている"
+      },
+      {
+        "text": "break down",
+        "translation": "故障する / 分解する"
+      },
+      {
+        "text": "bring about",
+        "translation": "(変化を)引き起こす"
+      },
+      {
+        "text": "build up",
+        "translation": "(時間をかけて)蓄積する"
+      },
+      {
+        "text": "call for",
+        "translation": "(状況が)必要とする"
+      },
+      {
+        "text": "carry out",
+        "translation": "(計画を)実行する"
+      },
+      {
+        "text": "catch up with",
+        "translation": "(人や流れに)追いつく"
+      },
+      {
+        "text": "come across",
+        "translation": "偶然出会う / ふと見つける"
+      },
+      {
+        "text": "come up with",
+        "translation": "思いつく / 考え出す"
+      },
+      {
+        "text": "comply with",
+        "translation": "(要求や規則に)従う"
+      },
+      {
+        "text": "consist of",
+        "translation": "(要素から)成る"
+      },
+      {
+        "text": "contribute to",
+        "translation": "(発展や原因として)貢献する"
+      },
+      {
+        "text": "cope with",
+        "translation": "(問題や状況に)対処する"
+      },
+      {
+        "text": "cut back on",
+        "translation": "(支出や量を)減らす"
+      },
+      {
+        "text": "deal with",
+        "translation": "(問題を)扱う / 対処する"
+      },
+      {
+        "text": "depend on",
+        "translation": "(条件や人に)依存する"
+      },
+      {
+        "text": "differ from",
+        "translation": "(〜とは)異なる"
+      },
+      {
+        "text": "distinguish A from B",
+        "translation": "AとBを区別する"
+      },
+      {
+        "text": "do away with",
+        "translation": "(制度などを)廃止する"
+      },
+      {
+        "text": "draw attention to",
+        "translation": "注意を向ける / 問題提起する"
+      },
+      {
+        "text": "drop out of",
+        "translation": "(学校などを)中退する"
+      },
+      {
+        "text": "engage in",
+        "translation": "(活動に)従事する"
+      },
+      {
+        "text": "figure out",
+        "translation": "理解する / 解決する"
+      },
+      {
+        "text": "fill in",
+        "translation": "(用紙に)記入する"
+      },
+      {
+        "text": "focus on",
+        "translation": "(一点に)集中する / 重点を置く"
+      },
+      {
+        "text": "gain access to",
+        "translation": "(情報や場所を)利用できるようになる"
+      },
+      {
+        "text": "get rid of",
+        "translation": "(不要なものを)取り除いてなくす"
+      },
+      {
+        "text": "give rise to",
+        "translation": "(問題や変化を)生じさせる"
+      },
+      {
+        "text": "go through",
+        "translation": "経験する / ひと通り確認する"
+      },
+      {
+        "text": "hold back",
+        "translation": "抑える / 引き止める"
+      },
+      {
+        "text": "in accordance with",
+        "translation": "(規則などに)従って"
+      },
+      {
+        "text": "in addition to",
+        "translation": "(〜に)加えて"
+      },
+      {
+        "text": "in charge of",
+        "translation": "(仕事を)担当して"
+      },
+      {
+        "text": "in contrast to",
+        "translation": "(〜とは)対照的に"
+      },
+      {
+        "text": "in favor of",
+        "translation": "(案などに)賛成して"
+      },
+      {
+        "text": "in response to",
+        "translation": "(要請などに)応じて"
+      },
+      {
+        "text": "in terms of",
+        "translation": "(〜の観点で)"
+      },
+      {
+        "text": "keep up with",
+        "translation": "(変化や人に)遅れずについていく"
+      },
+      {
+        "text": "lead to",
+        "translation": "(結果として)つながる"
+      },
+      {
+        "text": "look into",
+        "translation": "調べる / 検討する"
+      },
+      {
+        "text": "make a difference",
+        "translation": "(結果に)変化をもたらす"
+      },
+      {
+        "text": "make up for",
+        "translation": "(損失などを)埋め合わせる"
+      },
+      {
+        "text": "object to",
+        "translation": "(提案などに)反対する"
+      },
+      {
+        "text": "participate in",
+        "translation": "(活動や会合に)参加する"
+      },
+      {
+        "text": "pay attention to",
+        "translation": "(細部に)注意を払う"
+      },
+      {
+        "text": "point out",
+        "translation": "(問題点を)指摘する / 明確に示す"
+      },
+      {
+        "text": "prevent A from B",
+        "translation": "AがBするのを防ぐ"
+      },
+      {
+        "text": "put off",
+        "translation": "(予定を)延期する"
+      },
+      {
+        "text": "recover from",
+        "translation": "(病気や失敗から)回復する"
+      },
+      {
+        "text": "refer to",
+        "translation": "(話題として)言及する / 参照する"
+      },
+      {
+        "text": "rely on",
+        "translation": "(人や支援に)頼る"
+      },
+      {
+        "text": "result in",
+        "translation": "(結果として)〜になる"
+      },
+      {
+        "text": "result from",
+        "translation": "(〜が原因で)生じる"
+      },
+      {
+        "text": "run out of",
+        "translation": "(資源などを)使い果たす"
+      },
+      {
+        "text": "set up",
+        "translation": "(組織を)設立する / (設備を)設置する"
+      },
+      {
+        "text": "show up",
+        "translation": "現れる / 姿を見せる"
+      },
+      {
+        "text": "stand for",
+        "translation": "表す / 支持する"
+      },
+      {
+        "text": "suffer from",
+        "translation": "(病気や問題に)苦しむ"
+      },
+      {
+        "text": "take advantage of",
+        "translation": "(機会を)活用する / 利用する"
+      },
+      {
+        "text": "take care of",
+        "translation": "(人や物の)世話をする"
+      },
+      {
+        "text": "take into account",
+        "translation": "(事情を考えて)考慮に入れる / 計算に入れる"
+      },
+      {
+        "text": "take part in",
+        "translation": "(一員として)参加する"
+      },
+      {
+        "text": "take responsibility for",
+        "translation": "(結果に)責任を負う"
+      },
+      {
+        "text": "turn down",
+        "translation": "断る / 音量などを下げる"
+      },
+      {
+        "text": "turn out",
+        "translation": "判明する / 結果的に〜になる"
+      },
+      {
+        "text": "work on",
+        "translation": "(課題に)取り組む / 働きかける"
+      },
+      {
+        "text": "be aware of",
+        "translation": "(事実に)気づいている"
+      },
+      {
+        "text": "bear in mind",
+        "translation": "(重要点を)心に留める"
+      },
+      {
+        "text": "by means of",
+        "translation": "(手段として)〜によって"
+      },
+      {
+        "text": "face criticism",
+        "translation": "批判に直面する / 批判を受ける"
+      },
+      {
+        "text": "gain popularity",
+        "translation": "(広く)人気を得る"
+      },
+      {
+        "text": "have an impact on",
+        "translation": "(結果や社会に)影響を及ぼす"
+      },
+      {
+        "text": "keep track of",
+        "translation": "(変化や記録を)追う"
+      },
+      {
+        "text": "meet a deadline",
+        "translation": "(仕事を)締め切りに間に合わせる"
+      },
+      {
+        "text": "on behalf of",
+        "translation": "(人や組織を)代表して"
+      },
+      {
+        "text": "play a role in",
+        "translation": "(物事に)役割を果たす"
+      },
+      {
+        "text": "pose a threat to",
+        "translation": "(安全などへの)脅威となる"
+      },
+      {
+        "text": "raise awareness of",
+        "translation": "(問題への)意識を高める"
+      },
+      {
+        "text": "reach a conclusion",
+        "translation": "(考えた末に)結論に達する"
+      },
+      {
+        "text": "under pressure",
+        "translation": "重圧の中で / 追い詰められて"
+      },
+      {
+        "text": "with regard to",
+        "translation": "(話題に)関して"
+      },
+      {
+        "text": "at first glance",
+        "translation": "(ぱっと見て)一見したところ"
+      },
+      {
+        "text": "for the sake of",
+        "translation": "(利益や目的の)ために"
+      },
+      {
+        "text": "in the long run",
+        "translation": "(短期でなく)長期的には"
+      },
+      {
+        "text": "on the verge of",
+        "translation": "〜しそうで / 〜の瀬戸際で"
+      },
+      {
+        "text": "out of date",
+        "translation": "時代遅れの / 期限切れの"
+      },
+      {
+        "text": "take effect",
+        "translation": "効力を生じる / 発効する"
+      },
+      {
+        "text": "with the exception of",
+        "translation": "(一部を)除いて"
+      }
+    ],
+    "3": []
+  }
+}

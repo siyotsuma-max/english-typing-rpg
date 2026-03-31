@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, Sword, Shield, Trophy, Home, SkipForward, Zap, ArrowRight, RotateCcw, BookOpen, Star, Lock, Flame, Skull, ClipboardList, Crown, Target, Medal, Keyboard, AlertCircle, Brain, CheckCircle2, FastForward, LayoutGrid, LogOut } from 'lucide-react';
 import { QUESTIONS } from './data/questions';
+import { getQuestionExample } from './data/questionExamples';
 
 // --- Types & Interfaces ---
 
-type Difficulty = 'Eiken5' | 'Eiken4';
+type Difficulty = 'Eiken5' | 'Eiken4' | 'EikenPre1';
 type Level = 1 | 2 | 3;
 type Mode = 'guide' | 'challenge' | 'weakness'; 
 type InputMode = 'voice-text' | 'text-only' | 'voice-only';
@@ -111,8 +112,15 @@ const LISTENING_TRAINING_TARGET_COUNT = 5;
 const NORMAL_TARGET_COUNT = 5;
 const HARD_TARGET_COUNT = 7;
 const REVIEW_REAPPEAR_DELAY = 5;
+const REVIEW_RATE_WINDOW_SIZE = 5;
+const REVIEW_RATE_MAX_IN_WINDOW = 3;
 const LISTENING_TRAINING_HP_MULTIPLIER = 1.2;
 const LISTENING_TRAINING_DAMAGE_MULTIPLIER = 0.28;
+const DIFFICULTY_HP_MULTIPLIERS: Record<Difficulty, number> = {
+  Eiken5: 1,
+  Eiken4: 1,
+  EikenPre1: 1.35,
+};
 
 const getGuideTargetCount = (difficulty: Difficulty, level: Level) => (
   difficulty === 'Eiken5' && level === 1 ? 5 : GUIDE_TARGET_COUNT
@@ -405,8 +413,34 @@ const SPEECH_VOICE_OPTIONS: { id: SpeechVoiceMode; label: string; description: s
   { id: 'uk_male', label: '英語 男性', description: 'イギリス英語の男性音声' },
 ];
 const NON_RANDOM_SPEECH_VOICE_MODES: Exclude<SpeechVoiceMode, 'random'>[] = ['us_female', 'us_male', 'uk_female', 'uk_male'];
-const DIFFICULTIES: Difficulty[] = ['Eiken5', 'Eiken4'];
+const DIFFICULTIES: Difficulty[] = ['Eiken5', 'Eiken4', 'EikenPre1'];
 const LEVELS: Level[] = [1, 2, 3];
+const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  Eiken5: '英検5級',
+  Eiken4: '英検4級',
+  EikenPre1: '英検準1級',
+};
+const DIFFICULTY_GRADE_LABELS: Record<Difficulty, string> = {
+  Eiken5: '英検 5級 (Grade 5)',
+  Eiken4: '英検 4級 (Grade 4)',
+  EikenPre1: '英検 準1級 (Grade Pre-1)',
+};
+const DIFFICULTY_SCORE_TAB_ACTIVE_CLASSES: Record<Difficulty, string> = {
+  Eiken5: 'bg-blue-600 border-blue-400 text-white',
+  Eiken4: 'bg-purple-600 border-purple-400 text-white',
+  EikenPre1: 'bg-emerald-600 border-emerald-400 text-white',
+};
+const DIFFICULTY_BUTTON_VARIANTS: Record<Difficulty, 'primary' | 'secondary' | 'warning'> = {
+  Eiken5: 'primary',
+  Eiken4: 'secondary',
+  EikenPre1: 'warning',
+};
+const getAvailableLevels = (difficulty: Difficulty): Level[] => (
+  difficulty === 'EikenPre1' ? [1, 2] : LEVELS
+);
+const getSafeLevelForDifficulty = (difficulty: Difficulty, level: Level): Level => (
+  getAvailableLevels(difficulty).includes(level) ? level : getAvailableLevels(difficulty)[0]
+);
 const FEMALE_VOICE_HINTS = ['female', 'woman', 'samantha', 'victoria', 'zira', 'ava', 'emma', 'susan', 'karen', 'moira', 'serena', 'libby', 'sonia', 'allison', 'anna', 'kathy', 'alice', 'fiona', 'sara', 'hazel', 'aria', 'jenny', 'joanna', 'salli', 'ivy', 'ruth', 'amy'];
 const MALE_VOICE_HINTS = ['male', 'man', 'david', 'mark', 'daniel', 'alex', 'fred', 'tom', 'aaron', 'guy', 'arthur', 'andrew', 'brian', 'christopher', 'edward', 'george', 'james', 'jason', 'matthew', 'oliver', 'ryan', 'thomas', 'william', 'nathan', 'joey', 'roger', 'steffan', 'google uk english male', 'google us english male', 'microsoft david', 'microsoft mark', 'microsoft guy', 'guy online'];
 const US_VOICE_HINTS = ['en-us', 'us', 'american', 'united states'];
@@ -1021,7 +1055,7 @@ const getReviewScopeKey = (difficulty: Difficulty, level: Level) => `${difficult
 
 const resolveLegacyReviewScope = (question: Question): { difficulty: Difficulty; level: Level } | null => {
   const matches = DIFFICULTIES.flatMap(difficulty => (
-    LEVELS.flatMap(level => {
+    getAvailableLevels(difficulty).flatMap(level => {
       const hasMatch = (QUESTIONS[difficulty]?.[level] ?? []).some(candidate => (
         candidate.text === question.text && candidate.translation === question.translation
       ));
@@ -1057,7 +1091,7 @@ const normalizeReviewQueue = (entries: ReviewQueueEntry[] | unknown) => (
       if (!entry?.question?.text || !entry?.question?.translation) return null;
 
       const resolvedScope =
-        (DIFFICULTIES.includes(entry.difficulty) && LEVELS.includes(entry.level))
+        (DIFFICULTIES.includes(entry.difficulty) && getAvailableLevels(entry.difficulty as Difficulty).includes(entry.level as Level))
           ? { difficulty: entry.difficulty as Difficulty, level: entry.level as Level }
           : resolveLegacyReviewScope(entry.question);
 
@@ -1291,14 +1325,22 @@ export default function App() {
   const [weakListSort, setWeakListSort] = useState<'recent' | 'frequent'>('recent');
   const [showHelp, setShowHelp] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [lastSolvedTranslation, setLastSolvedTranslation] = useState<string | null>(null);
+  const [lastSolvedQuestion, setLastSolvedQuestion] = useState<Question | null>(null);
   const [showFinalBossIntro, setShowFinalBossIntro] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechPreviewTimeoutRef = useRef<number | null>(null);
   const questionPoolRef = useRef<Record<string, QuestionPoolState>>({});
   const reviewQueueRef = useRef<ReviewQueueEntry[]>([]);
   const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
+  const recentReviewAppearanceRef = useRef<boolean[]>([]);
   const shownFinalBossIntroKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const safeLevel = getSafeLevelForDifficulty(gameState.selectedDifficulty, gameState.selectedLevel);
+    if (safeLevel !== gameState.selectedLevel) {
+      setGameState(prev => ({ ...prev, selectedLevel: safeLevel }));
+    }
+  }, [gameState.selectedDifficulty, gameState.selectedLevel]);
 
   useEffect(() => {
     const defeatedMonsterIds = safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []);
@@ -1728,7 +1770,7 @@ export default function App() {
       let isNewRecord = false;
 
       if (mode !== 'weakness') {
-        if (finalScore > currentBest) {
+        if (result === 'win' && finalScore > currentBest) {
             isNewRecord = true;
             const newScores = { ...bestScores, [key]: finalScore };
             setBestScores(newScores);
@@ -1824,14 +1866,17 @@ export default function App() {
   };
 
   const initBattle = (diff: Difficulty, level: Level, mode: Mode, inputMode: InputMode, stepIndex: number, indices: number[], monsterList: Monster[], totalMonsters: number, currentScore: number, currentKeystrokes: number) => {
-    setLastSolvedTranslation(null);
+    setLastSolvedQuestion(null);
+    recentReviewAppearanceRef.current = [];
     const safeIndices = indices.length > 0 ? indices : [0];
     const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
     const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
     const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
-    const hpMultiplier = mode === 'challenge' && inputMode === 'voice-text'
+    const modeHpMultiplier = mode === 'challenge' && inputMode === 'voice-text'
       ? LISTENING_TRAINING_HP_MULTIPLIER
       : 1;
+    const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[diff] ?? 1;
+    const hpMultiplier = modeHpMultiplier * difficultyHpMultiplier;
     const startingMonsterHp = Math.round(startingMonster.baseHp * hpMultiplier);
     const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
@@ -1983,7 +2028,25 @@ export default function App() {
     return entry ?? null;
   };
 
+  const canServeReviewQuestion = () => {
+    const nextWindow = [...recentReviewAppearanceRef.current.slice(-(REVIEW_RATE_WINDOW_SIZE - 1)), true];
+    const reviewCount = nextWindow.filter(Boolean).length;
+    return reviewCount <= REVIEW_RATE_MAX_IN_WINDOW;
+  };
+
+  const recordRecentQuestionSource = (wasReviewQuestion: boolean) => {
+    recentReviewAppearanceRef.current = [
+      ...recentReviewAppearanceRef.current.slice(-(REVIEW_RATE_WINDOW_SIZE - 1)),
+      wasReviewQuestion,
+    ];
+  };
+
   const getNextBattleQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
+    if (!canServeReviewQuestion()) {
+      activeReviewEntryRef.current = null;
+      return getRandomQuestion(diff, level, currentQ);
+    }
+
     const reviewEntry = getDueReviewQuestion(diff, level, currentQ);
     activeReviewEntryRef.current = reviewEntry;
     if (reviewEntry) return reviewEntry.question;
@@ -2006,7 +2069,10 @@ export default function App() {
     const nextKeystrokes = gameState.totalKeystrokes + addedChars;
     const newHistory = [...gameState.history, { damage, speed }];
     const activeReviewEntry = activeReviewEntryRef.current;
+    const wasCurrentQuestionReview = !!activeReviewEntry;
     let masteredCurrentQuestion = false;
+
+    recordRecentQuestionSource(wasCurrentQuestionReview);
 
     let newMissedQs = [...gameState.currentBattleMissedQuestions];
     if (gameState.missCount > 0 && !newMissedQs.some(q => q.text === gameState.currentQuestion.text)) { newMissedQs.push(gameState.currentQuestion); }
@@ -2120,9 +2186,7 @@ export default function App() {
     }
     setMonsterShake(true);
     setTimeout(() => setMonsterShake(false), 400); 
-    if (gameState.mode === 'challenge' && gameState.inputMode === 'voice-only') {
-      setLastSolvedTranslation(gameState.currentQuestion.translation);
-    }
+    setLastSolvedQuestion(gameState.currentQuestion);
     advanceGame(finalDamage, charsPerSec, false, charCount);
   };
 
@@ -2227,16 +2291,23 @@ export default function App() {
                     <GameButton size="sm" variant="outline" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))}>&larr; タイトルへ</GameButton>
                     <h2 className="text-2xl font-bold text-yellow-400 flex items-center gap-2"><Trophy /> Best Records</h2>
                 </div>
-                <div className="flex justify-center gap-4 mb-6">
-                   <button onClick={() => setScoreViewDiff('Eiken5')} className={`px-6 py-2 rounded-full font-bold transition-all border-2 ${scoreViewDiff === 'Eiken5' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>英検5級</button>
-                   <button onClick={() => setScoreViewDiff('Eiken4')} className={`px-6 py-2 rounded-full font-bold transition-all border-2 ${scoreViewDiff === 'Eiken4' ? 'bg-purple-600 border-purple-400 text-white' : 'bg-slate-800 border-slate-600 text-slate-400'}`}>英検4級</button>
+                <div className="mb-6 flex flex-wrap justify-center gap-4">
+                   {DIFFICULTIES.map(diff => (
+                     <button
+                       key={diff}
+                       onClick={() => setScoreViewDiff(diff)}
+                       className={`px-6 py-2 rounded-full font-bold transition-all border-2 ${scoreViewDiff === diff ? DIFFICULTY_SCORE_TAB_ACTIVE_CLASSES[diff] : 'bg-slate-800 border-slate-600 text-slate-400'}`}
+                     >
+                       {DIFFICULTY_LABELS[diff]}
+                     </button>
+                   ))}
                 </div>
-                <Box title={`${scoreViewDiff} Records`} className="w-full">
+                <Box title={`${DIFFICULTY_LABELS[scoreViewDiff]} Records`} className="w-full">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead><tr className="border-b-2 border-slate-600 text-slate-400 text-sm uppercase"><th className="p-4">Level</th><th className="p-4 text-center text-blue-300">Training (Guide)</th><th className="p-4 text-center text-red-300">Battle (Challenge)</th></tr></thead>
                             <tbody className="divide-y divide-slate-700">
-                                {[1, 2, 3].map((lvl) => {
+                                {getAvailableLevels(scoreViewDiff).map((lvl) => {
                                     const guideKey = `${scoreViewDiff}_${lvl}_guide`;
                                     const challengeKey = `${scoreViewDiff}_${lvl}_challenge`;
                                     return (<tr key={lvl} className="hover:bg-slate-700/50 transition-colors"><td className="p-4 font-bold text-xl">Level {lvl}</td><td className="p-4 text-center">{bestScores[guideKey] > 0 ? <span className="text-xl font-mono font-bold text-white">{bestScores[guideKey]}</span> : <span className="text-slate-600">-</span>}</td><td className="p-4 text-center">{bestScores[challengeKey] > 0 ? <span className="text-xl font-mono font-bold text-yellow-400">{bestScores[challengeKey]}</span> : <span className="text-slate-600">-</span>}</td></tr>);
@@ -2334,8 +2405,8 @@ export default function App() {
               <h2 className="text-2xl font-bold text-blue-300 flex items-center gap-2"><ClipboardList /> 問題リスト (Word List)</h2>
            </div>
            <div className="flex flex-col md:flex-row gap-4 mb-6 flex-shrink-0">
-               <div className="flex bg-slate-800 p-1 rounded-lg">{(['Eiken5', 'Eiken4'] as Difficulty[]).map(d => (<button key={d} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: d }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedDifficulty === d ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{d === 'Eiken5' ? '英検5級' : '英検4級'}</button>))}</div>
-               <div className="flex bg-slate-800 p-1 rounded-lg">{([1, 2, 3] as Level[]).map(l => (<button key={l} onClick={() => setGameState(prev => ({ ...prev, selectedLevel: l }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedLevel === l ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Level {l}</button>))}</div>
+               <div className="flex flex-wrap bg-slate-800 p-1 rounded-lg">{DIFFICULTIES.map(d => (<button key={d} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: d, selectedLevel: getSafeLevelForDifficulty(d, prev.selectedLevel) }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedDifficulty === d ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{DIFFICULTY_LABELS[d]}</button>))}</div>
+               <div className="flex bg-slate-800 p-1 rounded-lg">{getAvailableLevels(gameState.selectedDifficulty).map(l => (<button key={l} onClick={() => setGameState(prev => ({ ...prev, selectedLevel: l }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedLevel === l ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Level {l}</button>))}</div>
            </div>
            <div className="mb-4 flex-shrink-0">
              <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-900/30 px-4 py-2 text-sm font-bold text-orange-200">
@@ -2426,7 +2497,7 @@ export default function App() {
               </div>
             )}
             <div className="flex-1 min-h-0">
-               <Box className="h-full flex flex-col" title={`${gameState.selectedDifficulty === 'Eiken5' ? '英検5級' : '英検4級'} - Level ${gameState.selectedLevel} (${questions.length} words)`}>
+               <Box className="h-full flex flex-col" title={`${DIFFICULTY_LABELS[gameState.selectedDifficulty]} - Level ${gameState.selectedLevel} (${questions.length} words)`}>
                    <div className="overflow-y-auto pr-2 custom-scrollbar flex-1">{visibleQuestions.length === 0 ? (
                      <div className="flex h-full min-h-[240px] flex-col items-center justify-center rounded-xl border border-slate-700 bg-slate-900/40 px-6 text-center">
                        <AlertCircle size={28} className="mb-3 text-slate-500" />
@@ -2437,18 +2508,27 @@ export default function App() {
                    ) : <div className="grid gap-2 pb-4">{visibleQuestions.map((q, idx) => {
                      const isWeakQuestion = weakQuestionTexts.has(q.text);
                      const stats = weakQuestionStats[q.text];
+                     const example = getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, q);
                      return (
-                       <div key={`${q.text}-${idx}`} className={`flex items-center justify-between p-3 rounded-lg border transition-colors group ${isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
-                         <div className="flex items-center gap-4">
-                           <button onClick={() => speakWithSettings(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
-                           <div className="flex items-center gap-3 flex-wrap">
-                             <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span>
-                             {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
-                             {isWeakQuestion && stats && <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">Miss x{stats.missCount}</span>}
-                             {!isWeakQuestion && stats && <span className="rounded-full border border-slate-500/30 bg-slate-700/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">Past Miss x{stats.missCount}</span>}
+                       <div key={`${q.text}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
+                         <div className="flex items-start justify-between gap-4">
+                           <div className="flex items-center gap-4 min-w-0">
+                             <button onClick={() => speakWithSettings(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
+                             <div className="flex items-center gap-3 flex-wrap min-w-0">
+                               <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span>
+                               {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
+                               {isWeakQuestion && stats && <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">Miss x{stats.missCount}</span>}
+                               {!isWeakQuestion && stats && <span className="rounded-full border border-slate-500/30 bg-slate-700/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">Past Miss x{stats.missCount}</span>}
+                              </div>
                             </div>
-                          </div>
-                         <span className="text-slate-300 font-bold text-sm md:text-base ml-4 text-right flex-shrink-0">{q.translation}</span>
+                           <span className="text-slate-300 font-bold text-sm md:text-base text-right flex-shrink-0">{q.translation}</span>
+                         </div>
+                         {example && (
+                           <div className="mt-3 ml-12 rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
+                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">Example</p>
+                             <p className="mt-1 text-xs md:text-sm text-slate-200">{example}</p>
+                           </div>
+                         )}
                        </div>
                      );
                    })}</div>}</div>
@@ -2620,9 +2700,18 @@ export default function App() {
                 </div>
                 <div className="w-full space-y-4 max-w-4xl">
                      <GameButton onClick={openWeakReviewHub} className={`w-full ${weakCount > 0 ? 'bg-gradient-to-r from-orange-600 to-red-600 border-orange-400 text-white animate-pulse' : 'bg-slate-700 border-slate-500 text-slate-400'}`} size="lg" disabled={weakCount === 0}><div className="flex items-center justify-center gap-2"><Flame size={24} className={weakCount > 0 ? "text-yellow-300" : "text-slate-500"} /><span className="font-bold">{weakCount > 0 ? `苦手復習を開く (Weakness: ${weakCount})` : "苦手な単語はありません"}</span></div></GameButton>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <GameButton onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: 'Eiken5', screen: 'level-select' }))} className="w-full" size="lg" variant="primary">英検 5級 (Grade 5)</GameButton>
-                        <GameButton onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: 'Eiken4', screen: 'level-select' }))} className="w-full" size="lg" variant="secondary">英検 4級 (Grade 4)</GameButton>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        {DIFFICULTIES.map(diff => (
+                          <GameButton
+                            key={diff}
+                            onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: diff, selectedLevel: getSafeLevelForDifficulty(diff, prev.selectedLevel), screen: 'level-select' }))}
+                            className="w-full"
+                            size="lg"
+                            variant={DIFFICULTY_BUTTON_VARIANTS[diff]}
+                          >
+                            {DIFFICULTY_GRADE_LABELS[diff]}
+                          </GameButton>
+                        ))}
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-8">
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'monster-book' }))} variant="outline" className="px-2"><BookOpen size={20} /> 図鑑</GameButton>
@@ -2678,12 +2767,13 @@ export default function App() {
   }
 
   if (gameState.screen === 'level-select') {
+    const availableLevels = getAvailableLevels(gameState.selectedDifficulty);
     return (
       <ScreenContainer className="bg-slate-900">
         <div className="max-w-5xl w-full p-4 mt-10">
           <GameButton size="sm" variant="ghost" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))} className="mb-6 text-slate-400 hover:text-white">&larr; 戻る</GameButton>
           <h2 className="text-3xl font-bold mb-8 text-center text-blue-300 tracking-widest border-b border-slate-700 pb-4">レベルをえらぶ</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">{[1, 2, 3].map((lvl) => (<div key={lvl} className="group bg-slate-800 border-2 border-slate-600 hover:border-blue-400 rounded-xl overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-1"><div className={`h-32 flex items-center justify-center text-6xl bg-gradient-to-br ${lvl===1 ? 'from-blue-900 to-slate-900' : lvl===2 ? 'from-green-900 to-slate-900' : 'from-red-900 to-slate-900'}`}>{lvl === 1 ? '⚔️' : lvl === 2 ? '🛡️' : '📜'}</div><div className="p-6"><h3 className="text-2xl font-bold mb-2 text-white">LEVEL {lvl}</h3><p className="text-slate-400 mb-6 text-sm">{lvl === 1 ? "Short Words (単語)" : lvl === 2 ? "Phrases (熟語)" : "Sentences (文章)"}</p><GameButton className="w-full" variant="outline" onClick={() => setGameState(prev => ({ ...prev, selectedLevel: lvl as Level, screen: 'mode-select' }))}>決定</GameButton></div></div>))}</div>
+          <div className={`grid grid-cols-1 gap-8 ${availableLevels.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>{availableLevels.map((lvl) => (<div key={lvl} className="group bg-slate-800 border-2 border-slate-600 hover:border-blue-400 rounded-xl overflow-hidden transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:-translate-y-1"><div className={`h-32 flex items-center justify-center text-6xl bg-gradient-to-br ${lvl===1 ? 'from-blue-900 to-slate-900' : lvl===2 ? 'from-green-900 to-slate-900' : 'from-red-900 to-slate-900'}`}>{lvl === 1 ? '⚔️' : lvl === 2 ? '🛡️' : '📜'}</div><div className="p-6"><h3 className="text-2xl font-bold mb-2 text-white">LEVEL {lvl}</h3><p className="text-slate-400 mb-6 text-sm">{lvl === 1 ? "Short Words (単語)" : lvl === 2 ? "Phrases (熟語)" : "Sentences (文章)"}</p><GameButton className="w-full" variant="outline" onClick={() => setGameState(prev => ({ ...prev, selectedLevel: lvl as Level, screen: 'mode-select' }))}>決定</GameButton></div></div>))}</div>
         </div>
       </ScreenContainer>
     );
@@ -2817,7 +2907,10 @@ export default function App() {
     const hpPercent = (gameState.monsterHp / gameState.maxMonsterHp) * 100;
     const isBoss = currentMonster.type === 'boss';
     const showJapanese = gameState.inputMode !== 'voice-only';
-    const showPreviousMeaning = gameState.mode === 'challenge' && gameState.inputMode === 'voice-only' && !!lastSolvedTranslation;
+    const previousQuestionExample = lastSolvedQuestion
+      ? getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, lastSolvedQuestion)
+      : null;
+    const showPreviousStudyCard = !!lastSolvedQuestion && !!previousQuestionExample;
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
     const remainingWeakCount = weakQuestions.length;
@@ -2894,11 +2987,6 @@ export default function App() {
                  <button onClick={handleSkip} className="absolute top-2 right-6 text-slate-500 hover:text-white flex items-center gap-1 text-[10px] font-bold transition-colors border border-slate-600 px-2 py-1 rounded hover:bg-slate-700">SKIP <SkipForward size={10} /></button>
                  <div className="text-center mb-2 min-h-[24px]">
                    {showJapanese && <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>}
-                   {showPreviousMeaning && (
-                     <p className="mt-2 text-sm font-bold text-emerald-300 drop-shadow-md">
-                       前の問題の意味: <span className="text-white">{lastSolvedTranslation}</span>
-                     </p>
-                   )}
                  </div>
                  <div className={`relative bg-black/40 rounded-xl border border-slate-700 shadow-inner ${questionPanelClass}`}>
                     <div className="absolute top-1/2 left-3 -translate-y-1/2 z-20">
@@ -2918,6 +3006,20 @@ export default function App() {
                     </div>
                     <input ref={inputRef} type="text" value={gameState.userInput} onChange={handleInput} className="w-full h-full opacity-0 absolute inset-0 cursor-default z-20" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoFocus />
                  </div>
+                 {showPreviousStudyCard && previousQuestionExample && lastSolvedQuestion && (
+                   <div className="mx-auto mt-3 max-w-3xl rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-3 py-2 shadow-[0_0_20px_rgba(16,185,129,0.12)]">
+                     <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-left leading-snug">
+                       <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                         Previous
+                       </span>
+                       <span className="font-mono text-sm font-bold text-white md:text-base">{lastSolvedQuestion.text}</span>
+                       <span className="text-xs font-bold text-emerald-100 md:text-sm">{lastSolvedQuestion.translation}</span>
+                       <span className="hidden text-slate-500 md:inline">|</span>
+                       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Example</span>
+                       <span className="text-xs text-slate-200 md:text-sm">{previousQuestionExample}</span>
+                     </div>
+                   </div>
+                 )}
             </div>
              <div className="mt-2 text-center"><span className="text-slate-500 text-[10px] uppercase tracking-widest border border-slate-700 px-2 py-0.5 rounded bg-slate-900">Type the spell to attack</span></div>
         </div>
@@ -2930,6 +3032,7 @@ export default function App() {
     const isWin = gameState.battleResult === 'win';
     const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
     const defeatedMonster = gameState.currentMonsterList[actualMonsterId];
+    const remainingHpToWin = isWin ? 0 : Math.max(gameState.monsterHp, 0);
     const missedCount = gameState.currentBattleMissedQuestions.length;
     const perfectCount = gameState.battleLog.filter(log => !log.skipped && log.missCount === 0).length;
     const recoveredCount = gameState.battleLog.filter(log => !log.skipped && log.missCount > 0).length;
@@ -2982,6 +3085,11 @@ export default function App() {
                   <div className="mb-2"><Zap size={60} className="text-slate-600 mx-auto" /></div>
                   <h2 className="text-3xl font-black text-slate-400 mb-1">ざんねん...</h2>
                   <p className="text-slate-500 text-sm">にげられてしまった！</p>
+                  <div className="mt-4 rounded-xl border border-red-500/40 bg-red-950/25 p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-300">Remaining HP</p>
+                    <p className="mt-2 text-3xl font-black text-white">{remainingHpToWin}</p>
+                    <p className="mt-2 text-sm text-red-100">あと {remainingHpToWin} HP へらせばクリア！</p>
+                  </div>
                 </>
               )}
               {missedCount > 0 && (
