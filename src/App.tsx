@@ -2998,16 +2998,45 @@ export default function App() {
             </div>
             <div className="w-full bg-slate-800/95 backdrop-blur border-4 border-slate-600 rounded-2xl shadow-xl p-4 md:p-5 mt-4 relative">
                  <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div><div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div><div className="absolute bottom-2 left-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div><div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-slate-600 shadow-inner"></div>
-                 <button onClick={handleSkip} className="absolute top-2 right-6 text-slate-500 hover:text-white flex items-center gap-1 text-[10px] font-bold transition-colors border border-slate-600 px-2 py-1 rounded hover:bg-slate-700">SKIP <SkipForward size={10} /></button>
+                 <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                   <div className="flex flex-wrap items-center gap-2">
+                     <button
+                       type="button"
+                       onClick={() => {
+                         speakCurrentQuestion();
+                         inputRef.current?.focus();
+                       }}
+                       title="音声をもう一度再生 (Right Alt / Right Option)"
+                       aria-label="音声をもう一度再生"
+                       className="inline-flex items-center gap-2 rounded-xl border border-blue-400/40 bg-blue-500/10 px-4 py-2.5 text-sm font-black text-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all hover:border-blue-300 hover:bg-blue-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+                     >
+                       <Volume2 size={20} />
+                       <span>もう一回聞く</span>
+                     </button>
+                     <div className="inline-flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900/80 px-3 py-1.5 text-[11px] font-bold text-slate-200">
+                       <span className="text-slate-400">音声:</span>
+                       <span>ボタン / Right Alt / 右Option</span>
+                     </div>
+                   </div>
+                   <button
+                     type="button"
+                     onClick={handleSkip}
+                     title="この問題をスキップ"
+                     aria-label="この問題をスキップ"
+                     className="inline-flex items-center justify-center gap-2 self-end rounded-xl border border-amber-300/50 bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 text-sm font-black uppercase tracking-[0.18em] text-white shadow-[0_10px_30px_rgba(249,115,22,0.28)] transition-all hover:scale-[1.02] hover:from-amber-400 hover:to-orange-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 md:self-auto"
+                   >
+                     <SkipForward size={18} />
+                     <span>Skip</span>
+                   </button>
+                 </div>
                  <div className="text-center mb-2 min-h-[24px]">
                    {showJapanese && <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>}
                  </div>
-                 <div className={`relative bg-black/40 rounded-xl border border-slate-700 shadow-inner ${questionPanelClass}`}>
-                    <div className="absolute top-1/2 left-3 -translate-y-1/2 z-20">
-                         {/* Button type='button' ensures it doesn't trigger form submits and behavior */}
-                         <button type="button" onClick={() => speakCurrentQuestion()} title="音声を再生 (Right Alt / Right Option)" aria-label="音声を再生" className="relative z-30 text-slate-500 hover:text-blue-400 transition-colors p-2 -ml-2"><Volume2 size={24} /></button>
-                    </div>
-                    <div className={`${questionTextClass} ${questionMinHeightClass} font-mono text-center pointer-events-none select-none tracking-[0.08em] text-slate-600 relative z-10 flex flex-wrap items-center justify-center content-center gap-y-1 break-words pl-10 md:pl-12`}>
+                 <div
+                   className={`relative bg-black/40 rounded-xl border border-slate-700 shadow-inner ${questionPanelClass}`}
+                   onClick={() => inputRef.current?.focus()}
+                 >
+                    <div className={`${questionTextClass} ${questionMinHeightClass} font-mono text-center pointer-events-none select-none tracking-[0.08em] text-slate-600 relative z-20 flex flex-wrap items-center justify-center content-center gap-y-1 break-words px-3 md:px-4`}>
                         {gameState.currentQuestion.text.split('').map((char, index) => {
                             const isTyped = index < gameState.userInput.length;
                             const isCurrent = index === gameState.userInput.length;
@@ -3018,7 +3047,7 @@ export default function App() {
                             return <span key={index} className={className}>{(!isTyped && !isHint && !isAlwaysVisible && isCurrent) ? '_' : (char === ' ' ? '\u00A0' : char)}</span>;
                         })}
                     </div>
-                    <input ref={inputRef} type="text" value={gameState.userInput} onChange={handleInput} className="w-full h-full opacity-0 absolute inset-0 cursor-default z-20" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoFocus />
+                    <input ref={inputRef} type="text" value={gameState.userInput} onChange={handleInput} className="w-full h-full opacity-0 absolute inset-0 cursor-default z-10" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoFocus />
                  </div>
                  {showPreviousStudyCard && previousQuestionExample && lastSolvedQuestion && (
                    <div className="mx-auto mt-3 max-w-3xl rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-3 py-2 shadow-[0_0_20px_rgba(16,185,129,0.12)]">
