@@ -44,6 +44,14 @@ type WeakQuestionStat = {
   consecutiveCorrect: number;
 };
 
+type LearningLevel = 1 | 2 | 3;
+
+type ManualQuestionStatus = {
+  learningLevel: LearningLevel;
+  excluded: boolean;
+  updatedAt: number;
+};
+
 type QuestionPoolState = {
   order: number[];
   cursor: number;
@@ -116,6 +124,7 @@ const REVIEW_RATE_WINDOW_SIZE = 5;
 const REVIEW_RATE_MAX_IN_WINDOW = 3;
 const LISTENING_TRAINING_HP_MULTIPLIER = 1.2;
 const LISTENING_TRAINING_DAMAGE_MULTIPLIER = 0.28;
+const LEARNING_LEVELS: LearningLevel[] = [1, 2, 3];
 const DIFFICULTY_HP_MULTIPLIERS: Record<Difficulty, number> = {
   Eiken5: 1,
   Eiken4: 1,
@@ -1038,6 +1047,7 @@ const STORAGE_KEYS = {
   maxKeystrokes: 'etyping_max_keystrokes',
   weakQuestions: 'etyping_weak_questions',
   weakQuestionStats: 'etyping_weak_question_stats',
+  manualQuestionStatuses: 'etyping_manual_question_statuses',
   reviewQueue: 'etyping_review_queue',
   dailyProgress: 'etyping_daily_progress',
   bgmVolumeLevel: 'etyping_bgm_volume_level',
@@ -1084,6 +1094,31 @@ const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
   lastMissedAt: 0,
   consecutiveCorrect: 0,
 });
+
+const getDefaultManualQuestionStatus = (): ManualQuestionStatus => ({
+  learningLevel: 1,
+  excluded: false,
+  updatedAt: 0,
+});
+
+const normalizeManualQuestionStatuses = (statuses: Record<string, ManualQuestionStatus> | unknown) => (
+  Object.fromEntries(
+    Object.entries(typeof statuses === 'object' && statuses !== null ? statuses : {}).map(([key, value]) => [
+      key,
+      {
+        learningLevel: LEARNING_LEVELS.includes(value?.learningLevel as LearningLevel)
+          ? value.learningLevel as LearningLevel
+          : 1,
+        excluded: !!value?.excluded,
+        updatedAt: Number.isFinite(value?.updatedAt) ? value.updatedAt : 0,
+      },
+    ])
+  ) as Record<string, ManualQuestionStatus>
+);
+
+const getQuestionStatusKey = (difficulty: Difficulty, level: Level, question: Question) => (
+  `${difficulty}:${level}:${question.text}:${question.translation}`
+);
 
 const normalizeWeakQuestionStats = (stats: Record<string, WeakQuestionStat>) => (
   Object.fromEntries(
@@ -1323,6 +1358,7 @@ export default function App() {
   const [maxKeystrokes, setMaxKeystrokes] = useState<number>(0);
   const [weakQuestions, setWeakQuestions] = useState<Question[]>([]); 
   const [weakQuestionStats, setWeakQuestionStats] = useState<Record<string, WeakQuestionStat>>({});
+  const [manualQuestionStatuses, setManualQuestionStatuses] = useState<Record<string, ManualQuestionStatus>>({});
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(createDailyProgress());
   const [bgmVolumeLevel, setBgmVolumeLevel] = useState<number>(3);
   const [speechVoices, setSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -1360,6 +1396,7 @@ export default function App() {
     const savedScores = safeLoadJson<Record<string, number>>(STORAGE_KEYS.bestScores, {});
     const savedWeak = safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []);
     const savedWeakStats = normalizeWeakQuestionStats(safeLoadJson<Record<string, WeakQuestionStat>>(STORAGE_KEYS.weakQuestionStats, {}));
+    const savedManualStatuses = normalizeManualQuestionStatuses(safeLoadJson<Record<string, ManualQuestionStatus>>(STORAGE_KEYS.manualQuestionStatuses, {}));
     const savedReviewQueue = normalizeReviewQueue(safeLoadJson<ReviewQueueEntry[]>(STORAGE_KEYS.reviewQueue, []));
     const savedDailyProgress = safeLoadJson<DailyProgress>(STORAGE_KEYS.dailyProgress, createDailyProgress());
     const todayKey = getTodayKey();
@@ -1388,6 +1425,7 @@ export default function App() {
     }
     setWeakQuestions(savedWeak);
     setWeakQuestionStats(savedWeakStats);
+    setManualQuestionStatuses(savedManualStatuses);
     reviewQueueRef.current = normalizedReviewQueue;
     localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(normalizedReviewQueue));
     setDailyProgress(normalizedDailyProgress);
@@ -1423,6 +1461,52 @@ export default function App() {
     localStorage.setItem(STORAGE_KEYS.bgmVolumeLevel, bgmVolumeLevel.toString());
     soundEngine.setBattleMusicVolume(BGM_VOLUME_LEVELS[bgmVolumeLevel]);
   }, [bgmVolumeLevel]);
+
+  const getManualQuestionStatus = (difficulty: Difficulty, level: Level, question: Question) => (
+    manualQuestionStatuses[getQuestionStatusKey(difficulty, level, question)] ?? getDefaultManualQuestionStatus()
+  );
+
+  const isQuestionExcluded = (difficulty: Difficulty, level: Level, question: Question) => (
+    getManualQuestionStatus(difficulty, level, question).excluded
+  );
+
+  const getScopedPlayableQuestions = (difficulty: Difficulty, level: Level) => (
+    (QUESTIONS[difficulty]?.[level] ?? []).filter(question => !isQuestionExcluded(difficulty, level, question))
+  );
+
+  const getScopedWeakQuestions = (difficulty: Difficulty, level: Level, sourceQuestions: Question[] = weakQuestions) => (
+    sourceQuestions.filter(question => (
+      (QUESTIONS[difficulty]?.[level] ?? []).some(candidate => (
+        candidate.text === question.text && candidate.translation === question.translation
+      ))
+      && !isQuestionExcluded(difficulty, level, question)
+    ))
+  );
+
+  const persistManualQuestionStatuses = (nextStatuses: Record<string, ManualQuestionStatus>) => {
+    localStorage.setItem(STORAGE_KEYS.manualQuestionStatuses, JSON.stringify(nextStatuses));
+  };
+
+  const updateManualQuestionStatus = (
+    difficulty: Difficulty,
+    level: Level,
+    question: Question,
+    updater: (current: ManualQuestionStatus) => ManualQuestionStatus,
+  ) => {
+    const statusKey = getQuestionStatusKey(difficulty, level, question);
+    setManualQuestionStatuses(prev => {
+      const current = prev[statusKey] ?? getDefaultManualQuestionStatus();
+      const nextStatuses = {
+        ...prev,
+        [statusKey]: {
+          ...updater(current),
+          updatedAt: Date.now(),
+        },
+      };
+      persistManualQuestionStatuses(nextStatuses);
+      return nextStatuses;
+    });
+  };
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.speechVoiceMode, speechVoiceMode);
@@ -1757,6 +1841,7 @@ export default function App() {
     setMaxKeystrokes(0);
     setWeakQuestions([]);
     setWeakQuestionStats({});
+    setManualQuestionStatuses({});
     setDailyProgress(createDailyProgress());
     reviewQueueRef.current = [];
     activeReviewEntryRef.current = null;
@@ -1820,8 +1905,16 @@ export default function App() {
     let selectedList: Monster[] = [];
     let indices: number[] = [];
     let totalStageMonsters = 0;
+    const playableQuestions = getScopedPlayableQuestions(diff, level);
 
-    sessionWeakQuestionsRef.current = reviewQuestions && reviewQuestions.length > 0 ? reviewQuestions : null;
+    if (playableQuestions.length === 0) {
+      alert("この範囲で出題できる問題がありません。除外を見直してください。");
+      return;
+    }
+
+    sessionWeakQuestionsRef.current = reviewQuestions && reviewQuestions.length > 0
+      ? reviewQuestions.filter(question => !isQuestionExcluded(diff, level, question))
+      : null;
     activeReviewEntryRef.current = null;
 
     const getOrderedStageIndices = (list: Monster[], countToSelect: number, rangeLimit: number) => {
@@ -1834,7 +1927,7 @@ export default function App() {
       indices = getOrderedStageIndices(selectedList, guideTargetCount, guideTargetCount); 
       totalStageMonsters = guideTargetCount;
     } else if (mode === 'weakness') {
-        const activeWeakQuestions = sessionWeakQuestionsRef.current ?? weakQuestions;
+        const activeWeakQuestions = sessionWeakQuestionsRef.current ?? getScopedWeakQuestions(diff, level);
         if (activeWeakQuestions.length === 0) { alert("まだ苦手な単語がありません！"); return; }
         selectedList = monstersObj.guide; 
         const count = Math.min(activeWeakQuestions.length, 10);
@@ -1906,7 +1999,7 @@ export default function App() {
         question = activeReviewQuestions[Math.floor(Math.random() * activeReviewQuestions.length)];
         activeReviewEntryRef.current = null;
     } else if (mode === 'weakness') {
-        const activeWeakQuestions = weakQuestions;
+        const activeWeakQuestions = getScopedWeakQuestions(diff, level);
         if (activeWeakQuestions.length > 0) { question = activeWeakQuestions[Math.floor(Math.random() * activeWeakQuestions.length)]; } 
         else { question = { text: "No Weakness", translation: "苦手なし" }; }
         activeReviewEntryRef.current = null;
@@ -1979,6 +2072,22 @@ export default function App() {
     return getNextQuestionFromPool(diff, level);
   };
 
+  const getPlayableRandomQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
+    const list = getScopedPlayableQuestions(diff, level);
+    if (list.length === 0) return { text: "No Data", translation: "出題できる問題がありません" };
+
+    for (let attempt = 0; attempt < Math.max(list.length * 2, 2); attempt += 1) {
+      const nextQ = getRandomQuestion(diff, level, currentQ);
+      if (!isQuestionExcluded(diff, level, nextQ)) return nextQ;
+    }
+
+    return list.find(question => (
+      !currentQ
+      || question.text !== currentQ.text
+      || question.translation !== currentQ.translation
+    )) ?? list[0];
+  };
+
   const decrementReviewQueueTimers = () => {
     if (reviewQueueRef.current.length === 0) return;
     reviewQueueRef.current = reviewQueueRef.current.map(entry => ({
@@ -1989,6 +2098,7 @@ export default function App() {
   };
 
   const scheduleQuestionReview = (question: Question, baseMissCount: number = 0) => {
+    if (isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, question)) return;
     const reviewScopeKey = getReviewScopeKey(gameState.selectedDifficulty, gameState.selectedLevel);
     const existingIndex = reviewQueueRef.current.findIndex(entry => (
       getReviewScopeKey(entry.difficulty, entry.level) === reviewScopeKey
@@ -2017,6 +2127,7 @@ export default function App() {
   };
 
   const rescheduleReviewQuestionAfterSuccess = (entry: ReviewQueueEntry) => {
+    if (isQuestionExcluded(entry.difficulty, entry.level, entry.question)) return;
     reviewQueueRef.current.push({
       ...entry,
       remainingQuestions: getReviewDelay(entry.missCount),
@@ -2026,20 +2137,23 @@ export default function App() {
 
   const getDueReviewQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): ReviewQueueEntry | null => {
     const reviewScopeKey = getReviewScopeKey(diff, level);
-    const dueIndex = reviewQueueRef.current.findIndex(entry => (
-      getReviewScopeKey(entry.difficulty, entry.level) === reviewScopeKey
-      && entry.remainingQuestions <= 0
-      && (!currentQ || (
-        entry.question.text !== currentQ.text
-        || entry.question.translation !== currentQ.translation
-      ))
-    ));
+    for (let index = 0; index < reviewQueueRef.current.length; index += 1) {
+      const entry = reviewQueueRef.current[index];
+      if (getReviewScopeKey(entry.difficulty, entry.level) !== reviewScopeKey) continue;
+      if (entry.remainingQuestions > 0) continue;
+      if (isQuestionExcluded(entry.difficulty, entry.level, entry.question)) {
+        reviewQueueRef.current.splice(index, 1);
+        persistReviewQueue();
+        return getDueReviewQuestion(diff, level, currentQ);
+      }
+      if (currentQ && entry.question.text === currentQ.text && entry.question.translation === currentQ.translation) continue;
 
-    if (dueIndex < 0) return null;
+      reviewQueueRef.current.splice(index, 1);
+      persistReviewQueue();
+      return entry;
+    }
 
-    const [entry] = reviewQueueRef.current.splice(dueIndex, 1);
-    persistReviewQueue();
-    return entry ?? null;
+    return null;
   };
 
   const canServeReviewQuestion = () => {
@@ -2058,14 +2172,14 @@ export default function App() {
   const getNextBattleQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
     if (!canServeReviewQuestion()) {
       activeReviewEntryRef.current = null;
-      return getRandomQuestion(diff, level, currentQ);
+      return getPlayableRandomQuestion(diff, level, currentQ);
     }
 
     const reviewEntry = getDueReviewQuestion(diff, level, currentQ);
     activeReviewEntryRef.current = reviewEntry;
     if (reviewEntry) return reviewEntry.question;
     activeReviewEntryRef.current = null;
-    return getRandomQuestion(diff, level, currentQ);
+    return getPlayableRandomQuestion(diff, level, currentQ);
   };
 
   const handleSkip = () => {
@@ -2378,8 +2492,13 @@ export default function App() {
   if (gameState.screen === 'question-list') {
     const questions = QUESTIONS[gameState.selectedDifficulty][gameState.selectedLevel] || [];
     const weakQuestionTexts = new Set(weakQuestions.map(q => q.text));
-    const weakCountInView = questions.filter(q => weakQuestionTexts.has(q.text)).length;
-    const weakQuestionsInView = questions.filter(q => weakQuestionTexts.has(q.text));
+    const playableQuestions = questions.filter(q => !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
+    const excludedQuestions = questions.filter(q => isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
+    const weakQuestionsInView = questions.filter(q => weakQuestionTexts.has(q.text) && !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
+    const weakCountInView = weakQuestionsInView.length;
+    const manualReviewQuestions = playableQuestions.filter(q => getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q).learningLevel < 3);
+    const manualStudyCount = playableQuestions.filter(q => getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q).learningLevel === 1).length;
+    const manualCautionCount = playableQuestions.filter(q => getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q).learningLevel === 2).length;
     const sortedWeakQuestions = [...weakQuestionsInView].sort((a, b) => {
       const aStats = weakQuestionStats[a.text] ?? { missCount: 0, lastMissedAt: 0 };
       const bStats = weakQuestionStats[b.text] ?? { missCount: 0, lastMissedAt: 0 };
@@ -2400,10 +2519,16 @@ export default function App() {
       .sort((a, b) => ((weakQuestionStats[b.text]?.missCount ?? 0) - (weakQuestionStats[a.text]?.missCount ?? 0)) || ((weakQuestionStats[b.text]?.lastMissedAt ?? 0) - (weakQuestionStats[a.text]?.lastMissedAt ?? 0)))
       .slice(0, 10);
     const reviewTargetQuestions = questionListFilter === 'weak' ? visibleQuestions : weakQuestionsInView;
+    const manualReviewSamples = manualReviewQuestions.slice(0, 5).map(q => q.text).join(' / ');
 
     const startReviewFromList = (mode: Mode, inputMode: InputMode) => {
       if (reviewTargetQuestions.length === 0) return;
       startGame(gameState.selectedDifficulty, gameState.selectedLevel, mode, inputMode, reviewTargetQuestions);
+    };
+
+    const startManualReview = (mode: Mode, inputMode: InputMode) => {
+      if (manualReviewQuestions.length === 0) return;
+      startGame(gameState.selectedDifficulty, gameState.selectedLevel, mode, inputMode, manualReviewQuestions);
     };
 
     const startTopMissReview = (mode: Mode, inputMode: InputMode) => {
@@ -2427,6 +2552,20 @@ export default function App() {
                <AlertCircle size={16} className="text-orange-300" />
                この一覧の苦手語: {weakCountInView}件
              </div>
+             <div className="mt-3 flex flex-wrap gap-3">
+               <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/30 bg-sky-950/20 px-4 py-2 text-sm font-bold text-sky-200">
+                 <BookOpen size={16} className="text-sky-300" />
+                 学習中 {manualStudyCount}件
+               </div>
+               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-950/20 px-4 py-2 text-sm font-bold text-emerald-200">
+                 <CheckCircle2 size={16} className="text-emerald-300" />
+                 もう少し {manualCautionCount}件
+               </div>
+               <div className="inline-flex items-center gap-2 rounded-full border border-slate-500/40 bg-slate-800/80 px-4 py-2 text-sm font-bold text-slate-300">
+                 <Shield size={16} className="text-slate-400" />
+                 除外 {excludedQuestions.length}件
+               </div>
+             </div>
            </div>
             <div className="mb-4 flex-shrink-0">
               <div className="flex flex-wrap gap-3">
@@ -2440,6 +2579,31 @@ export default function App() {
                     <button onClick={() => setWeakListSort('frequent')} className={`px-4 py-2 rounded-md text-sm font-bold transition-colors ${weakListSort === 'frequent' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>回数順</button>
                   </div>
                 )}
+              </div>
+            </div>
+            <div className="mb-4 flex-shrink-0 rounded-xl border border-sky-500/30 bg-sky-950/20 p-4">
+              <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-sm font-bold text-sky-200">自分で決めた学習メモから復習する</p>
+                  <p className="mt-1 text-xs text-slate-400">学習中と「もう少し」にした単語をまとめて復習できます。苦手判定はこれまで通りゲーム側でも続き、除外した単語だけここから外れます。</p>
+                </div>
+                <div className="text-xs text-slate-300">
+                  {manualReviewQuestions.length > 0 ? manualReviewSamples : 'まだありません'}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <GameButton onClick={() => startManualReview('guide', 'voice-text')} size="sm" variant="outline" className="border-blue-500/40 text-blue-200 hover:bg-blue-900/20" disabled={manualReviewQuestions.length === 0}>
+                  <Brain size={16} className="mr-1" /> Basic Training復習
+                </GameButton>
+                <GameButton onClick={() => startManualReview('challenge', 'voice-text')} size="sm" variant="outline" className="border-indigo-500/40 text-indigo-200 hover:bg-indigo-900/20" disabled={manualReviewQuestions.length === 0}>
+                  <Volume2 size={16} className="mr-1" /> Listening Training復習
+                </GameButton>
+                <GameButton onClick={() => startManualReview('challenge', 'voice-only')} size="sm" variant="outline" className="border-orange-500/40 text-orange-200 hover:bg-orange-900/20" disabled={manualReviewQuestions.length === 0}>
+                  <Sword size={16} className="mr-1" /> Listening Battle復習
+                </GameButton>
+                <GameButton onClick={() => startManualReview('challenge', 'text-only')} size="sm" className="bg-sky-600 border-sky-400 text-white hover:bg-sky-500" disabled={manualReviewQuestions.length === 0}>
+                  <Flame size={16} className="mr-1" /> Translation Battle復習
+                </GameButton>
               </div>
             </div>
             {questionListFilter === 'weak' && (
@@ -2522,20 +2686,44 @@ export default function App() {
                    ) : <div className="grid gap-2 pb-4">{visibleQuestions.map((q, idx) => {
                      const isWeakQuestion = weakQuestionTexts.has(q.text);
                      const stats = weakQuestionStats[q.text];
+                     const manualStatus = getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q);
+                     const learningLabel = manualStatus.learningLevel === 1 ? '学習中' : manualStatus.learningLevel === 2 ? 'もう少し' : '安定';
                      const example = getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, q);
                      return (
-                       <div key={`${q.text}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
+                       <div key={`${q.text}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${manualStatus.excluded ? 'bg-slate-950/80 border-slate-600 opacity-85' : isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
                          <div className="flex items-start justify-between gap-4">
                            <div className="flex items-center gap-4 min-w-0">
                              <button onClick={() => speakWithSettings(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
                              <div className="flex items-center gap-3 flex-wrap min-w-0">
                                <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span>
+                               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${manualStatus.learningLevel === 1 ? 'border border-sky-400/40 bg-sky-500/15 text-sky-200' : manualStatus.learningLevel === 2 ? 'border border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border border-violet-400/40 bg-violet-500/10 text-violet-200'}`}>
+                                 学習度 {manualStatus.learningLevel} {learningLabel}
+                               </span>
+                               {manualStatus.excluded && <span className="rounded-full border border-slate-400/40 bg-slate-700/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-200">除外中</span>}
                                {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
                                {isWeakQuestion && stats && <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">Miss x{stats.missCount}</span>}
                                {!isWeakQuestion && stats && <span className="rounded-full border border-slate-500/30 bg-slate-700/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">Past Miss x{stats.missCount}</span>}
                               </div>
                             </div>
                            <span className="text-slate-300 font-bold text-sm md:text-base text-right flex-shrink-0">{q.translation}</span>
+                         </div>
+                         <div className="mt-3 ml-12 flex flex-wrap items-center gap-2">
+                           <span className="text-[11px] font-bold text-slate-400">自分の学習度</span>
+                           {LEARNING_LEVELS.map(level => (
+                             <button
+                               key={level}
+                               onClick={() => updateManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q, current => ({ ...current, learningLevel: level }))}
+                               className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.learningLevel === level ? level === 1 ? 'border-sky-300 bg-sky-500/20 text-sky-100' : level === 2 ? 'border-emerald-300 bg-emerald-500/20 text-emerald-100' : 'border-violet-300 bg-violet-500/20 text-violet-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                             >
+                               {level === 1 ? '1 学習中' : level === 2 ? '2 もう少し' : '3 安定'}
+                             </button>
+                           ))}
+                           <button
+                             onClick={() => updateManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q, current => ({ ...current, excluded: !current.excluded }))}
+                             className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.excluded ? 'border-slate-300 bg-slate-200 text-slate-900' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                           >
+                             {manualStatus.excluded ? '除外を解除' : '除外する'}
+                           </button>
                          </div>
                          {example && (
                            <div className="mt-3 ml-12 rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
@@ -2662,7 +2850,12 @@ export default function App() {
     const totalDefeated = [...uniqueDefeatedIds].filter(id => allMonsterIds.includes(id)).length;
     const totalMonsters = allMonsterIds.length;
     const rank = getRankData(totalDefeated);
-    const weakCount = weakQuestions.length;
+    const selectedQuestions = QUESTIONS[gameState.selectedDifficulty]?.[gameState.selectedLevel] ?? [];
+    const selectedWeakTexts = new Set(weakQuestions.map(q => q.text));
+    const weakCount = selectedQuestions.filter(question => (
+      selectedWeakTexts.has(question.text)
+      && !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, question)
+    )).length;
     const todayQuestionCount = dailyProgress.date === getTodayKey() ? dailyProgress.questionCount : 0;
     const reviewQueueCount = reviewQueueRef.current.length;
 
@@ -2927,7 +3120,7 @@ export default function App() {
     const showPreviousStudyCard = !!lastSolvedQuestion && !!previousQuestionExample;
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
-    const remainingWeakCount = weakQuestions.length;
+    const remainingWeakCount = getScopedWeakQuestions(gameState.selectedDifficulty, gameState.selectedLevel).length;
     const isPenultimateMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 2;
     const isFinalMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 1;
     const monsterEmotion = gameState.monsterHp <= 0 ? 'win' : flash ? 'damage' : 'normal';
