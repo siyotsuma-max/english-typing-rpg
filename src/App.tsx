@@ -1784,8 +1784,8 @@ export default function App() {
 
   const getReviewDelay = (missCount: number) => {
     if (missCount <= 1) return REVIEW_REAPPEAR_DELAY;
-    if (missCount === 2) return 3;
-    return 1;
+    if (missCount === 2) return 4;
+    return 3;
   };
 
   const recordWeakQuestionStats = (questionsToRecord: Question[]) => {
@@ -3392,34 +3392,44 @@ export default function App() {
               </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar mb-4 bg-slate-900/50 rounded-lg p-2 border border-slate-700/50 text-left min-h-[180px] max-h-[38vh]">
+          <div className="mb-4 bg-slate-900/50 rounded-lg p-2 border border-slate-700/50 text-left">
              <h3 className="text-slate-400 text-xs font-bold uppercase mb-2 sticky top-0 bg-slate-900/90 p-1 border-b border-slate-700">Battle Review</h3>
              <div className="space-y-1">
-                 {gameState.battleLog.map((log, idx) => (
-                     <div key={idx} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800 border border-slate-700 text-xs">
-                         <div className="flex min-w-0 flex-1 items-start gap-3">
-                             <button onClick={() => speakWithSettings(log.question.text)} className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-slate-400 transition-colors hover:bg-blue-600 hover:text-white">
-                               <Volume2 size={14} />
-                             </button>
-                             <div className="min-w-0 flex-1">
-                                 <span className="block font-mono text-blue-200 font-bold break-all">{log.question.text}</span>
-                                 <span className="block text-slate-500">{log.question.translation}</span>
-                             </div>
+                 {gameState.battleLog.map((log, idx) => {
+                     const example = getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, log.question);
+                     return (
+                       <div key={idx} className="rounded bg-slate-800 p-2 text-xs border border-slate-700">
+                         <div className="flex items-center justify-between gap-3">
+                           <div className="flex min-w-0 flex-1 items-start gap-3">
+                               <button onClick={() => speakWithSettings(log.question.text)} className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-900 text-slate-400 transition-colors hover:bg-blue-600 hover:text-white">
+                                 <Volume2 size={14} />
+                               </button>
+                               <div className="min-w-0 flex-1">
+                                   <span className="block font-mono text-blue-200 font-bold break-all">{log.question.text}</span>
+                                   <span className="block text-slate-500">{log.question.translation}</span>
+                               </div>
+                           </div>
+                           <div className="flex items-center flex-shrink-0">
+                               {log.skipped ? 
+                                  <span className="text-slate-500 flex items-center gap-1"><FastForward size={14}/> Skip</span> :
+                                  log.missCount === 0 ? 
+                                  <span className="text-green-400 flex items-center gap-1"><CheckCircle2 size={14}/> Perfect</span> :
+                                  <span className="text-yellow-500 flex items-center gap-1"><AlertCircle size={14}/> Miss x{log.missCount}</span>
+                               }
+                           </div>
                          </div>
-                         <div className="flex items-center flex-shrink-0">
-                             {log.skipped ? 
-                                <span className="text-slate-500 flex items-center gap-1"><FastForward size={14}/> Skip</span> :
-                                log.missCount === 0 ? 
-                                <span className="text-green-400 flex items-center gap-1"><CheckCircle2 size={14}/> Perfect</span> :
-                                <span className="text-yellow-500 flex items-center gap-1"><AlertCircle size={14}/> Miss x{log.missCount}</span>
-                             }
-                         </div>
-                     </div>
-                 ))}
+                         {example && (
+                           <div className="mt-2 ml-11 rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
+                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">Example</p>
+                             <p className="mt-1 text-xs text-slate-200">{example}</p>
+                           </div>
+                         )}
+                       </div>
+                     );
+                 })}
              </div>
           </div>
         </Box>
-        <style>{`.custom-scrollbar::-webkit-scrollbar { width: 6px; } .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); } .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }`}</style>
       </ScreenContainer>
     );
   }
