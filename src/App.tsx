@@ -1984,6 +1984,8 @@ export default function App() {
   };
 
   const handleGameEnd = (result: BattleResult, finalScore: number, history: any[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], playWinSound: boolean = true) => {
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
       const key = `${diff}_${level}_${mode}`;
       const currentBest = bestScores[key] || 0;
       let isNewRecord = false;
@@ -2108,6 +2110,7 @@ export default function App() {
     const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
     if (!startingMonster) return;
+    soundEngine.stopBattleAmbience();
     soundEngine.stopBattleMusic();
     soundEngine.startBattleMusic(
       getBattleMusicPath(mode, inputMode, useBossBattleMusic),
@@ -3408,7 +3411,18 @@ export default function App() {
           </div>
         )}
         <div className="w-full bg-slate-900/80 border-b border-slate-700 p-2 z-20 flex justify-between items-center shadow-md">
-             <GameButton size="sm" variant="ghost" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))} className="text-slate-400 text-xs py-1"><Home size={16} /> EXIT</GameButton>
+             <GameButton
+               size="sm"
+               variant="ghost"
+               onClick={() => {
+                 soundEngine.stopBattleAmbience();
+                 soundEngine.stopBattleMusic();
+                 setGameState(prev => ({ ...prev, screen: 'title' }));
+               }}
+               className="text-slate-400 text-xs py-1"
+             >
+               <Home size={16} /> EXIT
+             </GameButton>
              <div className="flex gap-4">
                <div className="bg-black/50 border border-slate-600 px-3 py-1 rounded-full text-slate-300 text-xs font-mono flex items-center gap-2"><Trophy size={14} className="text-yellow-500"/> SCORE: {gameState.score}</div>
                {gameState.combo >= 2 && (
@@ -3537,9 +3551,21 @@ export default function App() {
     
     const handleNextMonster = () => initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex + 1, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.score, gameState.totalKeystrokes);
     const handleRetry = () => initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.battleStartScore, gameState.battleStartKeystrokes);
-    const handleBackToMode = () => setGameState(prev => ({ ...prev, screen: 'mode-select' }));
-    const handleBackToLevel = () => setGameState(prev => ({ ...prev, screen: 'level-select' }));
-    const handleBackToTitle = () => setGameState(prev => ({ ...prev, screen: 'title' }));
+    const handleBackToMode = () => {
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
+      setGameState(prev => ({ ...prev, screen: 'mode-select' }));
+    };
+    const handleBackToLevel = () => {
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
+      setGameState(prev => ({ ...prev, screen: 'level-select' }));
+    };
+    const handleBackToTitle = () => {
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
+      setGameState(prev => ({ ...prev, screen: 'title' }));
+    };
     const handleOpenWeakList = () => {
       setQuestionListFilter('weak');
       setGameState(prev => ({ ...prev, screen: 'question-list' }));
