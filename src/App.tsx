@@ -47,9 +47,12 @@ type WeakQuestionStat = {
 type LearningLevel = 1 | 2 | 3;
 
 type ManualQuestionStatus = {
-  learningLevel: LearningLevel;
+  practiceLevel: LearningLevel;
+  battleLevel: LearningLevel;
+  manualOverrideLevel: LearningLevel | null;
   excluded: boolean;
   updatedAt: number;
+  learningLevel?: LearningLevel;
 };
 
 type QuestionPoolState = {
@@ -446,6 +449,11 @@ const DIFFICULTY_GRADE_LABELS: Record<Difficulty, string> = {
   Eiken5: '英検 5級 (Grade 5)',
   Eiken4: '英検 4級 (Grade 4)',
   EikenPre1: '英検 準1級 (Grade Pre-1)',
+};
+const DIFFICULTY_GRADE_SUBLABELS: Record<Difficulty, string> = {
+  Eiken5: 'Grade 5',
+  Eiken4: 'Grade 4',
+  EikenPre1: 'Grade Pre-1',
 };
 const DIFFICULTY_SCORE_TAB_ACTIVE_CLASSES: Record<Difficulty, string> = {
   Eiken5: 'bg-blue-600 border-blue-400 text-white',
@@ -1096,22 +1104,35 @@ const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
 });
 
 const getDefaultManualQuestionStatus = (): ManualQuestionStatus => ({
-  learningLevel: 1,
+  practiceLevel: 1,
+  battleLevel: 1,
+  manualOverrideLevel: null,
   excluded: false,
   updatedAt: 0,
+  learningLevel: 1,
 });
 
 const normalizeManualQuestionStatuses = (statuses: Record<string, ManualQuestionStatus> | unknown) => (
   Object.fromEntries(
     Object.entries(typeof statuses === 'object' && statuses !== null ? statuses : {}).map(([key, value]) => [
       key,
-      {
-        learningLevel: LEARNING_LEVELS.includes(value?.learningLevel as LearningLevel)
-          ? value.learningLevel as LearningLevel
+      withDerivedLearningLevel({
+        practiceLevel: LEARNING_LEVELS.includes(value?.practiceLevel as LearningLevel)
+          ? value.practiceLevel as LearningLevel
+          : LEARNING_LEVELS.includes(value?.learningLevel as LearningLevel)
+            ? value.learningLevel as LearningLevel
+            : 1,
+        battleLevel: LEARNING_LEVELS.includes(value?.battleLevel as LearningLevel)
+          ? value.battleLevel as LearningLevel
           : 1,
+        manualOverrideLevel: value?.manualOverrideLevel === null
+          ? null
+          : LEARNING_LEVELS.includes(value?.manualOverrideLevel as LearningLevel)
+            ? value.manualOverrideLevel as LearningLevel
+            : null,
         excluded: !!value?.excluded,
         updatedAt: Number.isFinite(value?.updatedAt) ? value.updatedAt : 0,
-      },
+      }),
     ])
   ) as Record<string, ManualQuestionStatus>
 );
@@ -1119,6 +1140,15 @@ const normalizeManualQuestionStatuses = (statuses: Record<string, ManualQuestion
 const getQuestionStatusKey = (difficulty: Difficulty, level: Level, question: Question) => (
   `${difficulty}:${level}:${question.text}:${question.translation}`
 );
+
+const getEffectiveLearningLevel = (status: ManualQuestionStatus): LearningLevel => (
+  status.manualOverrideLevel ?? status.battleLevel
+);
+
+const withDerivedLearningLevel = (status: ManualQuestionStatus): ManualQuestionStatus => ({
+  ...status,
+  learningLevel: getEffectiveLearningLevel(status),
+});
 
 const normalizeWeakQuestionStats = (stats: Record<string, WeakQuestionStat>) => (
   Object.fromEntries(
@@ -1474,6 +1504,23 @@ export default function App() {
     (QUESTIONS[difficulty]?.[level] ?? []).filter(question => !isQuestionExcluded(difficulty, level, question))
   );
 
+  const getAutoLearningTrack = (mode: Mode, inputMode: InputMode): 'practice' | 'battle' | null => {
+    if (mode === 'guide' || (mode === 'challenge' && inputMode === 'voice-text')) {
+      return 'practice';
+    }
+    if (mode === 'weakness' || (mode === 'challenge' && (inputMode === 'voice-only' || inputMode === 'text-only'))) {
+      return 'battle';
+    }
+    return null;
+  };
+
+  const getWeightedLearningLevel = (status: ManualQuestionStatus) => {
+    const effectiveLevel = getEffectiveLearningLevel(status);
+    if (effectiveLevel === 1) return 6;
+    if (effectiveLevel === 2) return 3;
+    return 1;
+  };
+
   const getScopedWeakQuestions = (difficulty: Difficulty, level: Level, sourceQuestions: Question[] = weakQuestions) => (
     sourceQuestions.filter(question => (
       (QUESTIONS[difficulty]?.[level] ?? []).some(candidate => (
@@ -1482,6 +1529,79 @@ export default function App() {
       && !isQuestionExcluded(difficulty, level, question)
     ))
   );
+
+  const getScopedLearningSummary = (difficulty: Difficulty, level: Level) => {
+    const questions = QUESTIONS[difficulty]?.[level] ?? [];
+    let learningCount = 0;
+    let cautionCount = 0;
+    let masteredCount = 0;
+    let excludedCount = 0;
+
+    questions.forEach(question => {
+      const status = getManualQuestionStatus(difficulty, level, question);
+      if (status.excluded) {
+        excludedCount += 1;
+        return;
+      }
+
+      const effectiveLevel = getEffectiveLearningLevel(status);
+
+      if (effectiveLevel === 1) {
+        learningCount += 1;
+        return;
+      }
+
+      if (effectiveLevel === 2) {
+        cautionCount += 1;
+        return;
+      }
+
+      masteredCount += 1;
+    });
+
+    return {
+      totalCount: questions.length,
+      playableCount: questions.length - excludedCount,
+      learningCount,
+      cautionCount,
+      masteredCount,
+      excludedCount,
+    };
+  };
+
+  const updateAutoLearningStatus = (
+    difficulty: Difficulty,
+    level: Level,
+    question: Question,
+    outcome: 'success' | 'struggle',
+    mode: Mode,
+    inputMode: InputMode,
+  ) => {
+    const track = getAutoLearningTrack(mode, inputMode);
+    if (!track) return;
+
+    updateManualQuestionStatus(difficulty, level, question, current => {
+      if (track === 'practice') {
+        if (outcome !== 'success') return current;
+        return {
+          ...current,
+          practiceLevel: Math.min(3, current.practiceLevel + 1) as LearningLevel,
+        };
+      }
+
+      if (outcome === 'success') {
+        return {
+          ...current,
+          battleLevel: Math.min(3, current.battleLevel + 1) as LearningLevel,
+        };
+      }
+
+      return {
+        ...current,
+        battleLevel: Math.max(1, current.battleLevel - 1) as LearningLevel,
+      };
+    });
+  };
 
   const persistManualQuestionStatuses = (nextStatuses: Record<string, ManualQuestionStatus>) => {
     localStorage.setItem(STORAGE_KEYS.manualQuestionStatuses, JSON.stringify(nextStatuses));
@@ -1498,10 +1618,10 @@ export default function App() {
       const current = prev[statusKey] ?? getDefaultManualQuestionStatus();
       const nextStatuses = {
         ...prev,
-        [statusKey]: {
+        [statusKey]: withDerivedLearningLevel({
           ...updater(current),
           updatedAt: Date.now(),
-        },
+        }),
       };
       persistManualQuestionStatuses(nextStatuses);
       return nextStatuses;
@@ -1642,15 +1762,15 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [showHelp, showResetConfirm]);
   
-  // Keyboard Support & Right-Control Speech
+  // Keyboard support for replaying question audio
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
         if (gameState.screen === 'battle') {
-            const isRightAltKey =
-                e.code === 'AltRight' ||
-                (e.key === 'Alt' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
+            const isRightCtrlKey =
+                e.code === 'ControlRight' ||
+                (e.key === 'Control' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
 
-            if (isRightAltKey && !e.repeat) {
+            if (isRightCtrlKey && !e.repeat) {
                 e.preventDefault();
                 speakCurrentQuestion();
             }
@@ -2075,17 +2195,19 @@ export default function App() {
   const getPlayableRandomQuestion = (diff: Difficulty, level: Level, currentQ: Question | null): Question => {
     const list = getScopedPlayableQuestions(diff, level);
     if (list.length === 0) return { text: "No Data", translation: "出題できる問題がありません" };
-
-    for (let attempt = 0; attempt < Math.max(list.length * 2, 2); attempt += 1) {
-      const nextQ = getRandomQuestion(diff, level, currentQ);
-      if (!isQuestionExcluded(diff, level, nextQ)) return nextQ;
-    }
-
-    return list.find(question => (
+    const poolFallback = getRandomQuestion(diff, level, currentQ);
+    const candidates = list.filter(question => (
       !currentQ
       || question.text !== currentQ.text
       || question.translation !== currentQ.translation
-    )) ?? list[0];
+    ));
+    const source = candidates.length > 0 ? candidates : list;
+    const weightedList = source.flatMap(question => {
+      const status = getManualQuestionStatus(diff, level, question);
+      return Array.from({ length: getWeightedLearningLevel(status) }, () => question);
+    });
+
+    return weightedList[Math.floor(Math.random() * weightedList.length)] ?? source[0] ?? poolFallback;
   };
 
   const decrementReviewQueueTimers = () => {
@@ -2201,6 +2323,17 @@ export default function App() {
     let masteredCurrentQuestion = false;
 
     recordRecentQuestionSource(wasCurrentQuestionReview);
+
+    if (!skipped) {
+      updateAutoLearningStatus(
+        gameState.selectedDifficulty,
+        gameState.selectedLevel,
+        gameState.currentQuestion,
+        gameState.missCount === 0 ? 'success' : 'struggle',
+        gameState.mode,
+        gameState.inputMode,
+      );
+    }
 
     let newMissedQs = [...gameState.currentBattleMissedQuestions];
     if (gameState.missCount > 0 && !newMissedQs.some(q => q.text === gameState.currentQuestion.text)) { newMissedQs.push(gameState.currentQuestion); }
@@ -2491,14 +2624,15 @@ export default function App() {
 
   if (gameState.screen === 'question-list') {
     const questions = QUESTIONS[gameState.selectedDifficulty][gameState.selectedLevel] || [];
+    const learningSummary = getScopedLearningSummary(gameState.selectedDifficulty, gameState.selectedLevel);
     const weakQuestionTexts = new Set(weakQuestions.map(q => q.text));
     const playableQuestions = questions.filter(q => !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const excludedQuestions = questions.filter(q => isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const weakQuestionsInView = questions.filter(q => weakQuestionTexts.has(q.text) && !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const weakCountInView = weakQuestionsInView.length;
-    const manualReviewQuestions = playableQuestions.filter(q => getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q).learningLevel < 3);
-    const manualStudyCount = playableQuestions.filter(q => getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q).learningLevel === 1).length;
-    const manualCautionCount = playableQuestions.filter(q => getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q).learningLevel === 2).length;
+    const manualReviewQuestions = playableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) < 3);
+    const manualStudyCount = learningSummary.learningCount;
+    const manualCautionCount = learningSummary.cautionCount;
     const sortedWeakQuestions = [...weakQuestionsInView].sort((a, b) => {
       const aStats = weakQuestionStats[a.text] ?? { missCount: 0, lastMissedAt: 0 };
       const bStats = weakQuestionStats[b.text] ?? { missCount: 0, lastMissedAt: 0 };
@@ -2547,7 +2681,49 @@ export default function App() {
                <div className="flex flex-wrap bg-slate-800 p-1 rounded-lg">{DIFFICULTIES.map(d => (<button key={d} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: d, selectedLevel: getSafeLevelForDifficulty(d, prev.selectedLevel) }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedDifficulty === d ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{DIFFICULTY_LABELS[d]}</button>))}</div>
                <div className="flex bg-slate-800 p-1 rounded-lg">{getAvailableLevels(gameState.selectedDifficulty).map(l => (<button key={l} onClick={() => setGameState(prev => ({ ...prev, selectedLevel: l }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedLevel === l ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Level {l}</button>))}</div>
            </div>
-           <div className="mb-4 flex-shrink-0">
+           <div className="mb-4 flex-shrink-0 rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_58%),linear-gradient(145deg,rgba(15,23,42,0.96),rgba(12,18,32,0.92))] p-4 shadow-[0_0_30px_rgba(34,211,238,0.08)]">
+             <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+               <div>
+                 <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-300">Word Progress</p>
+                 <h3 className="mt-1 text-xl font-black text-white">{'\u5b66\u7fd2\u306e\u9032\u307f\u5177\u5408'}</h3>
+               </div>
+               <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-900/30 px-4 py-2 text-sm font-bold text-orange-200">
+                 <AlertCircle size={16} className="text-orange-300" />
+                 {'\u82e6\u624b'} {weakCountInView}{'\u4ef6'}
+               </div>
+             </div>
+             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+               <div className="rounded-2xl border border-sky-400/30 bg-sky-500/12 p-4 shadow-[0_0_24px_rgba(56,189,248,0.12)]">
+                 <div className="flex items-center gap-2 text-sky-200">
+                   <BookOpen size={18} className="text-sky-300" />
+                   <p className="text-[12px] font-black tracking-[0.16em]">{'\u5b66\u7fd2\u4e2d'}</p>
+                 </div>
+                <p className="mt-3 text-4xl font-black leading-none text-white">{learningSummary.learningCount}</p>
+               </div>
+               <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/12 p-4 shadow-[0_0_24px_rgba(52,211,153,0.12)]">
+                 <div className="flex items-center gap-2 text-emerald-200">
+                   <CheckCircle2 size={18} className="text-emerald-300" />
+                   <p className="text-[12px] font-black tracking-[0.16em]">{'\u3082\u3046\u5c11\u3057'}</p>
+                 </div>
+                <p className="mt-3 text-4xl font-black leading-none text-white">{learningSummary.cautionCount}</p>
+               </div>
+               <div className="rounded-2xl border border-violet-400/30 bg-violet-500/12 p-4 shadow-[0_0_28px_rgba(167,139,250,0.16)]">
+                 <div className="flex items-center gap-2 text-violet-200">
+                   <Crown size={18} className="text-violet-300" />
+                   <p className="text-[12px] font-black tracking-[0.16em]">{'\u899a\u3048\u305f'}</p>
+                 </div>
+                <p className="mt-3 bg-gradient-to-r from-violet-100 via-white to-violet-200 bg-clip-text text-4xl font-black leading-none text-transparent">{learningSummary.masteredCount}</p>
+               </div>
+               <div className="rounded-2xl border border-slate-500/40 bg-slate-900/70 p-4 text-slate-300">
+                 <div className="flex items-center gap-2 text-slate-300">
+                   <Shield size={18} className="text-slate-400" />
+                   <p className="text-[12px] font-black tracking-[0.16em]">{'\u9664\u5916\u4e2d'}</p>
+                 </div>
+                <p className="mt-3 text-3xl font-black leading-none text-white">{learningSummary.excludedCount}</p>
+               </div>
+             </div>
+           </div>
+           <div className="mb-4 hidden flex-shrink-0">
              <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/40 bg-orange-900/30 px-4 py-2 text-sm font-bold text-orange-200">
                <AlertCircle size={16} className="text-orange-300" />
                この一覧の苦手語: {weakCountInView}件
@@ -2582,7 +2758,7 @@ export default function App() {
               </div>
             </div>
             <div className="mb-4 flex-shrink-0 rounded-xl border border-sky-500/30 bg-sky-950/20 p-4">
-              <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div className="mb-3 hidden flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
                   <p className="text-sm font-bold text-sky-200">自分で決めた学習メモから復習する</p>
                   <p className="mt-1 text-xs text-slate-400">学習中と「もう少し」にした単語をまとめて復習できます。苦手判定はこれまで通りゲーム側でも続き、除外した単語だけここから外れます。</p>
@@ -2591,7 +2767,16 @@ export default function App() {
                   {manualReviewQuestions.length > 0 ? manualReviewSamples : 'まだありません'}
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <p className="text-sm font-bold text-sky-200">{'\u624b\u52d5\u8a2d\u5b9a\u306e\u5358\u8a9e\u3092\u307e\u3068\u3081\u3066\u5fa9\u7fd2'}</p>
+                  <p className="mt-1 text-xs text-slate-400">{'\u300c\u5b66\u7fd2\u4e2d\u300d\u3068\u300c\u3082\u3046\u5c11\u3057\u300d\u306b\u3057\u305f\u5358\u8a9e\u3092\u307e\u3068\u3081\u3066\u5fa9\u7fd2\u3067\u304d\u307e\u3059\u3002\u82e6\u624b\u5224\u5b9a\u306f\u3053\u308c\u307e\u3067\u901a\u308a\u30b2\u30fc\u30e0\u5074\u3067\u3082\u7d9a\u304d\u3001\u9664\u5916\u3057\u305f\u5358\u8a9e\u3060\u3051\u3053\u3053\u304b\u3089\u5916\u308c\u307e\u3059\u3002'}</p>
+                </div>
+                <div className="text-xs text-slate-300">
+                  {manualReviewQuestions.length > 0 ? manualReviewSamples : '\u307e\u3060\u3042\u308a\u307e\u305b\u3093'}
+                </div>
+              </div>
+              <div className="hidden grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <GameButton onClick={() => startManualReview('guide', 'voice-text')} size="sm" variant="outline" className="border-blue-500/40 text-blue-200 hover:bg-blue-900/20" disabled={manualReviewQuestions.length === 0}>
                   <Brain size={16} className="mr-1" /> Basic Training復習
                 </GameButton>
@@ -2605,6 +2790,20 @@ export default function App() {
                   <Flame size={16} className="mr-1" /> Translation Battle復習
                 </GameButton>
               </div>
+            </div>
+            <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 flex-shrink-0">
+              <GameButton onClick={() => startManualReview('guide', 'voice-text')} size="sm" variant="outline" className="border-blue-500/40 text-blue-200 hover:bg-blue-900/20" disabled={manualReviewQuestions.length === 0}>
+                <Brain size={16} className="mr-1" /> {'Basic Training\u5fa9\u7fd2'}
+              </GameButton>
+              <GameButton onClick={() => startManualReview('challenge', 'voice-text')} size="sm" variant="outline" className="border-indigo-500/40 text-indigo-200 hover:bg-indigo-900/20" disabled={manualReviewQuestions.length === 0}>
+                <Volume2 size={16} className="mr-1" /> {'Listening Training\u5fa9\u7fd2'}
+              </GameButton>
+              <GameButton onClick={() => startManualReview('challenge', 'voice-only')} size="sm" variant="outline" className="border-orange-500/40 text-orange-200 hover:bg-orange-900/20" disabled={manualReviewQuestions.length === 0}>
+                <Sword size={16} className="mr-1" /> {'Listening Battle\u5fa9\u7fd2'}
+              </GameButton>
+              <GameButton onClick={() => startManualReview('challenge', 'text-only')} size="sm" className="bg-sky-600 border-sky-400 text-white hover:bg-sky-500" disabled={manualReviewQuestions.length === 0}>
+                <Flame size={16} className="mr-1" /> {'Translation Battle\u5fa9\u7fd2'}
+              </GameButton>
             </div>
             {questionListFilter === 'weak' && (
               <div className="mb-4 grid gap-4 md:grid-cols-3 flex-shrink-0">
@@ -2687,42 +2886,55 @@ export default function App() {
                      const isWeakQuestion = weakQuestionTexts.has(q.text);
                      const stats = weakQuestionStats[q.text];
                      const manualStatus = getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q);
-                     const learningLabel = manualStatus.learningLevel === 1 ? '学習中' : manualStatus.learningLevel === 2 ? 'もう少し' : '安定';
+                     const learningLabel = manualStatus.learningLevel === 1 ? '学習中' : manualStatus.learningLevel === 2 ? 'もう少し' : '覚えた';
+                     const autoLabel = manualStatus.battleLevel === 1 ? '学習中' : manualStatus.battleLevel === 2 ? 'もう少し' : '覚えた';
+                     const isManualOverrideActive = manualStatus.manualOverrideLevel !== null;
                      const example = getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, q);
                      return (
                        <div key={`${q.text}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${manualStatus.excluded ? 'bg-slate-950/80 border-slate-600 opacity-85' : isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
-                         <div className="flex items-start justify-between gap-4">
-                           <div className="flex items-center gap-4 min-w-0">
+                         <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                           <div className="flex items-start gap-4 min-w-0">
                              <button onClick={() => speakWithSettings(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
-                             <div className="flex items-center gap-3 flex-wrap min-w-0">
+                             <div className="min-w-0">
+                               <div className="flex flex-wrap items-center gap-3">
                                <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{q.text}</span>
-                               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide ${manualStatus.learningLevel === 1 ? 'border border-sky-400/40 bg-sky-500/15 text-sky-200' : manualStatus.learningLevel === 2 ? 'border border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border border-violet-400/40 bg-violet-500/10 text-violet-200'}`}>
-                                 学習度 {manualStatus.learningLevel} {learningLabel}
+                                <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] ${manualStatus.learningLevel === 1 ? 'border border-sky-400/35 bg-sky-500/10 text-sky-100' : manualStatus.learningLevel === 2 ? 'border border-emerald-400/35 bg-emerald-500/10 text-emerald-100' : 'border border-violet-400/35 bg-violet-500/10 text-violet-100'}`}>
+                                 {learningLabel}
                                </span>
-                               {manualStatus.excluded && <span className="rounded-full border border-slate-400/40 bg-slate-700/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-200">除外中</span>}
+                                {manualStatus.manualOverrideLevel !== null && <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-fuchsia-200">{'\u624b\u52d5\u512a\u5148'}</span>}
+                                {manualStatus.excluded && <span className="rounded-full border border-slate-400/40 bg-slate-700/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-200">{'\u9664\u5916\u4e2d'}</span>}
                                {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
                                {isWeakQuestion && stats && <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">Miss x{stats.missCount}</span>}
                                {!isWeakQuestion && stats && <span className="rounded-full border border-slate-500/30 bg-slate-700/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">Past Miss x{stats.missCount}</span>}
                               </div>
+                              <div className="mt-2 flex flex-wrap items-center gap-3">
+                                 <span className={`rounded-2xl border px-4 py-2 text-xl font-black leading-none tracking-[0.08em] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] md:text-2xl ${isManualOverrideActive ? 'border-slate-700 bg-slate-900/60 text-slate-300' : manualStatus.learningLevel === 1 ? 'border-sky-400/30 bg-sky-500/10 text-sky-100' : manualStatus.learningLevel === 2 ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100' : 'border-violet-400/30 bg-violet-500/10 text-violet-100'}`}>
+                                  {learningLabel}
+                                </span>
+                                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${isManualOverrideActive ? 'border-slate-700 bg-slate-900/70 text-slate-400' : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'}`}>
+                                  {'\u81ea\u52d5'}: {autoLabel}
+                                </span>
+                              </div>
+                             </div>
                             </div>
                            <span className="text-slate-300 font-bold text-sm md:text-base text-right flex-shrink-0">{q.translation}</span>
                          </div>
-                         <div className="mt-3 ml-12 flex flex-wrap items-center gap-2">
-                           <span className="text-[11px] font-bold text-slate-400">自分の学習度</span>
+                          <div className="mt-3 ml-12 flex flex-wrap items-center gap-2 md:justify-end">
+                            <span className="text-[11px] font-bold text-slate-400">{'\u624b\u52d5\u8a2d\u5b9a'}</span>
                            {LEARNING_LEVELS.map(level => (
                              <button
                                key={level}
-                               onClick={() => updateManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q, current => ({ ...current, learningLevel: level }))}
-                               className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.learningLevel === level ? level === 1 ? 'border-sky-300 bg-sky-500/20 text-sky-100' : level === 2 ? 'border-emerald-300 bg-emerald-500/20 text-emerald-100' : 'border-violet-300 bg-violet-500/20 text-violet-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                               onClick={() => updateManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q, current => ({ ...current, manualOverrideLevel: current.manualOverrideLevel === level ? null : level }))}
+                               className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.manualOverrideLevel === level ? level === 1 ? 'border-sky-300 bg-sky-500/20 text-sky-100 shadow-[0_0_18px_rgba(56,189,248,0.24)]' : level === 2 ? 'border-emerald-300 bg-emerald-500/20 text-emerald-100 shadow-[0_0_18px_rgba(52,211,153,0.22)]' : 'border-violet-300 bg-violet-500/20 text-violet-100 shadow-[0_0_18px_rgba(167,139,250,0.24)]' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
                              >
-                               {level === 1 ? '1 学習中' : level === 2 ? '2 もう少し' : '3 安定'}
+                                {level === 1 ? '\u5b66\u7fd2\u4e2d' : level === 2 ? '\u3082\u3046\u5c11\u3057' : '\u899a\u3048\u305f'}
                              </button>
                            ))}
                            <button
                              onClick={() => updateManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q, current => ({ ...current, excluded: !current.excluded }))}
                              className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.excluded ? 'border-slate-300 bg-slate-200 text-slate-900' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
                            >
-                             {manualStatus.excluded ? '除外を解除' : '除外する'}
+                              {manualStatus.excluded ? '\u9664\u5916\u3092\u89e3\u9664' : '\u9664\u5916\u3059\u308b'}
                            </button>
                          </div>
                          {example && (
@@ -2912,11 +3124,17 @@ export default function App() {
                           <GameButton
                             key={diff}
                             onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: diff, selectedLevel: getSafeLevelForDifficulty(diff, prev.selectedLevel), screen: 'level-select' }))}
-                            className="w-full"
+                            title={DIFFICULTY_GRADE_LABELS[diff]}
+                            className="w-full min-h-[86px] px-4"
                             size="lg"
                             variant={DIFFICULTY_BUTTON_VARIANTS[diff]}
                           >
-                            {DIFFICULTY_GRADE_LABELS[diff]}
+                            <span className="flex min-w-0 flex-col items-center justify-center leading-tight">
+                              <span className="text-base font-black tracking-[0.04em] md:text-lg">{DIFFICULTY_LABELS[diff]}</span>
+                              <span className="mt-1 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.18em] text-white/80">
+                                {DIFFICULTY_GRADE_SUBLABELS[diff]}
+                              </span>
+                            </span>
                           </GameButton>
                         ))}
                     </div>
@@ -2988,6 +3206,7 @@ export default function App() {
 
   if (gameState.screen === 'mode-select') {
     const monstersObj = MONSTERS[gameState.selectedLevel];
+    const learningSummary = getScopedLearningSummary(gameState.selectedDifficulty, gameState.selectedLevel);
     const guideTargetCount = getGuideTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
     const listeningTargetCount = getListeningTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
     const guideFinalMonsterName = monstersObj.guide[guideTargetCount - 1]?.name ?? '???';
@@ -3022,6 +3241,40 @@ export default function App() {
     return (
       <ScreenContainer className="bg-slate-900 flex items-center justify-center">
         <Box className="max-w-5xl w-full" title="モードをえらぶ">
+          <div className="mb-6 rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_58%),linear-gradient(145deg,rgba(15,23,42,0.98),rgba(12,18,32,0.92))] p-4 shadow-[0_0_30px_rgba(34,211,238,0.1)]">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-300">Learning Progress</p>
+                <h3 className="mt-1 text-xl font-black text-white">{'\u3044\u307e\u306e\u5b66\u7fd2\u72b6\u6cc1'}</h3>
+              </div>
+              <div className="rounded-full border border-cyan-400/25 bg-cyan-950/40 px-4 py-2 text-sm font-bold text-cyan-100">
+                {learningSummary.playableCount}{'\u5358\u8a9e\u4e2d'} {learningSummary.masteredCount}{'\u5358\u8a9e\u304c\u899a\u3048\u305f'}
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-sky-400/30 bg-sky-500/12 p-4 shadow-[0_0_24px_rgba(56,189,248,0.12)]">
+                <div className="flex items-center gap-2 text-sky-200">
+                  <BookOpen size={18} className="text-sky-300" />
+                  <p className="text-[12px] font-black tracking-[0.16em]">{'\u5b66\u7fd2\u4e2d'}</p>
+                </div>
+                <p className="mt-3 text-4xl font-black leading-none text-white">{learningSummary.learningCount}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/12 p-4 shadow-[0_0_24px_rgba(52,211,153,0.12)]">
+                <div className="flex items-center gap-2 text-emerald-200">
+                  <CheckCircle2 size={18} className="text-emerald-300" />
+                  <p className="text-[12px] font-black tracking-[0.16em]">{'\u3082\u3046\u5c11\u3057'}</p>
+                </div>
+                <p className="mt-3 text-4xl font-black leading-none text-white">{learningSummary.cautionCount}</p>
+              </div>
+              <div className="rounded-2xl border border-violet-400/30 bg-violet-500/12 p-4 shadow-[0_0_28px_rgba(167,139,250,0.16)]">
+                <div className="flex items-center gap-2 text-violet-200">
+                  <Crown size={18} className="text-violet-300" />
+                  <p className="text-[12px] font-black tracking-[0.16em]">{'\u899a\u3048\u305f'}</p>
+                </div>
+                <p className="mt-3 bg-gradient-to-r from-violet-100 via-white to-violet-200 bg-clip-text text-4xl font-black leading-none text-transparent">{learningSummary.masteredCount}</p>
+              </div>
+            </div>
+          </div>
           <div className="flex flex-col md:flex-row gap-6">
             <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border-2 border-blue-900/50 flex flex-col">
                 <div className="flex items-center gap-3 mb-6 border-b border-blue-800/50 pb-4"><div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center"><Brain className="text-blue-300" /></div><div><h3 className="text-xl font-bold text-blue-200">TRAINING ZONE</h3><p className="text-xs text-blue-400">まずはここで練習しよう！({guideTargetCount}体)</p></div></div>
@@ -3199,7 +3452,7 @@ export default function App() {
                          speakCurrentQuestion();
                          inputRef.current?.focus();
                        }}
-                       title="音声をもう一度再生 (Right Alt / Right Option)"
+                       title="音声をもう一度再生 (Right Ctrl)"
                        aria-label="音声をもう一度再生"
                        className="inline-flex items-center gap-2 rounded-xl border border-blue-400/40 bg-blue-500/10 px-4 py-2.5 text-sm font-black text-blue-100 shadow-[0_0_20px_rgba(59,130,246,0.15)] transition-all hover:border-blue-300 hover:bg-blue-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
                      >
@@ -3208,7 +3461,7 @@ export default function App() {
                      </button>
                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900/80 px-3 py-1.5 text-[11px] font-bold text-slate-200">
                        <span className="text-slate-400">音声:</span>
-                       <span>ボタン / Right Alt / 右Option</span>
+                       <span>ボタン / Right Ctrl</span>
                      </div>
                    </div>
                    <button
@@ -3266,6 +3519,7 @@ export default function App() {
 
   if (gameState.screen === 'result') {
     const isWin = gameState.battleResult === 'win';
+    const learningSummary = getScopedLearningSummary(gameState.selectedDifficulty, gameState.selectedLevel);
     const actualMonsterId = gameState.challengeModeIndices[gameState.currentMonsterIndex];
     const defeatedMonster = gameState.currentMonsterList[actualMonsterId];
     const remainingHpToWin = isWin ? 0 : Math.max(gameState.monsterHp, 0);
@@ -3354,6 +3608,41 @@ export default function App() {
               <p className="mt-1 text-2xl font-black text-white">{perfectRate}%</p>
             </div>
           </div>
+          </div>
+
+          <div className="mb-4 rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_58%),linear-gradient(145deg,rgba(15,23,42,0.98),rgba(12,18,32,0.92))] p-4 shadow-[0_0_30px_rgba(34,211,238,0.08)]">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="text-left">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-300">Learning Progress</p>
+                <h3 className="mt-1 text-xl font-black text-white">{'\u3053\u3053\u307e\u3067\u306e\u5b66\u7fd2\u72b6\u6cc1'}</h3>
+              </div>
+              <div className="rounded-full border border-cyan-400/25 bg-cyan-950/40 px-4 py-2 text-sm font-bold text-cyan-100">
+                {learningSummary.playableCount}{'\u5358\u8a9e\u4e2d'} {learningSummary.masteredCount}{'\u5358\u8a9e\u304c\u899a\u3048\u305f'}
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-sky-400/30 bg-sky-500/12 p-4 text-left shadow-[0_0_24px_rgba(56,189,248,0.12)]">
+                <div className="flex items-center gap-2 text-sky-200">
+                  <BookOpen size={18} className="text-sky-300" />
+                  <p className="text-[12px] font-black tracking-[0.16em]">{'\u5b66\u7fd2\u4e2d'}</p>
+                </div>
+                <p className="mt-3 text-4xl font-black leading-none text-white">{learningSummary.learningCount}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/12 p-4 text-left shadow-[0_0_24px_rgba(52,211,153,0.12)]">
+                <div className="flex items-center gap-2 text-emerald-200">
+                  <CheckCircle2 size={18} className="text-emerald-300" />
+                  <p className="text-[12px] font-black tracking-[0.16em]">{'\u3082\u3046\u5c11\u3057'}</p>
+                </div>
+                <p className="mt-3 text-4xl font-black leading-none text-white">{learningSummary.cautionCount}</p>
+              </div>
+              <div className="rounded-2xl border border-violet-400/30 bg-violet-500/12 p-4 text-left shadow-[0_0_28px_rgba(167,139,250,0.16)]">
+                <div className="flex items-center gap-2 text-violet-200">
+                  <Crown size={18} className="text-violet-300" />
+                  <p className="text-[12px] font-black tracking-[0.16em]">{'\u899a\u3048\u305f'}</p>
+                </div>
+                <p className="mt-3 bg-gradient-to-r from-violet-100 via-white to-violet-200 bg-clip-text text-4xl font-black leading-none text-transparent">{learningSummary.masteredCount}</p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3 mt-auto flex-shrink-0">
