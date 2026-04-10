@@ -118,15 +118,16 @@ type MonsterDialogueState = 'start' | 'combo' | 'desperate' | 'damaged' | 'taunt
 // --- Rank System ---
 interface RankData { threshold: number; title: string; color: string; }
 
-const GUIDE_TARGET_COUNT = 3;
-const LISTENING_TRAINING_TARGET_COUNT = 5;
-const NORMAL_TARGET_COUNT = 5;
-const HARD_TARGET_COUNT = 7;
+const GUIDE_TARGET_COUNT = 10;
+const LISTENING_TRAINING_TARGET_COUNT = 10;
+const NORMAL_TARGET_COUNT = 10;
+const HARD_TARGET_COUNT = 10;
 const REVIEW_REAPPEAR_DELAY = 5;
 const REVIEW_RATE_WINDOW_SIZE = 5;
 const REVIEW_RATE_MAX_IN_WINDOW = 3;
 const LISTENING_TRAINING_HP_MULTIPLIER = 1.2;
 const LISTENING_TRAINING_DAMAGE_MULTIPLIER = 0.28;
+const GUIDE_DAMAGE_MULTIPLIER = 0.3;
 const LEARNING_LEVELS: LearningLevel[] = [1, 2, 3];
 const DIFFICULTY_HP_MULTIPLIERS: Record<Difficulty, number> = {
   Eiken5: 1,
@@ -134,11 +135,14 @@ const DIFFICULTY_HP_MULTIPLIERS: Record<Difficulty, number> = {
   EikenPre1: 1.35,
 };
 
-const getGuideTargetCount = (difficulty: Difficulty, level: Level) => (
-  difficulty === 'Eiken5' && level === 1 ? 5 : GUIDE_TARGET_COUNT
-);
+const getGuideTargetCount = (_difficulty: Difficulty, _level: Level) => GUIDE_TARGET_COUNT;
 
 const getListeningTargetCount = (_difficulty: Difficulty, _level: Level) => LISTENING_TRAINING_TARGET_COUNT;
+
+const getBattleQuestionLimit = (mode: Mode, monsterHp: number) => {
+  if (mode !== 'guide') return 10;
+  return Math.max(10, Math.min(25, Math.ceil(monsterHp / 35)));
+};
 
 const RANKS: RankData[] = [
     { threshold: 0, title: "見習いチャレンジャー", color: "text-slate-400" },
@@ -256,20 +260,6 @@ const getMonsterBattleDialogue = (
   }
 
   return monster.dialogueStart;
-};
-
-const hashString = (value: string) => {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = ((hash << 5) - hash) + value.charCodeAt(index);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-};
-
-const pickSeededLine = (lines: string[], seed: string) => {
-  if (lines.length === 0) return '';
-  return lines[hashString(seed) % lines.length];
 };
 
 const uniqueLines = (lines: string[]) => Array.from(new Set(lines.filter(Boolean)));
@@ -398,6 +388,8 @@ const getMonsterDialoguePool = (monster: Monster, state: MonsterDialogueState) =
   return state === 'defeat' ? [monster.dialogueDefeat] : [monster.dialogueStart];
 };
 
+void getMonsterDialoguePool;
+
 const getBattleBubbleDialogue = (
   monster: Monster,
   options: {
@@ -408,24 +400,7 @@ const getBattleBubbleDialogue = (
     missCount: number;
   }
 ): string => {
-  let state: MonsterDialogueState = 'start';
-  const legacyFallback = getMonsterBattleDialogue(monster, options);
-
-  if (options.isDefeated) {
-    state = 'defeat';
-  } else if (options.combo >= 3) {
-    state = 'combo';
-  } else if (options.hpRate <= 0.2) {
-    state = 'desperate';
-  } else if (options.isDamaged) {
-    state = 'damaged';
-  } else if (options.missCount >= 2) {
-    state = 'taunt';
-  }
-
-  const hpBucket = Math.max(0, Math.min(10, Math.floor(options.hpRate * 10)));
-  const seed = `${monster.id}:${state}:${options.combo}:${options.missCount}:${hpBucket}`;
-  return pickSeededLine(getMonsterDialoguePool(monster, state), seed) || legacyFallback;
+  return getMonsterBattleDialogue(monster, options);
 };
 
 const SOUND_BASE_PATH = `${import.meta.env.BASE_URL}sound/`;
@@ -1269,6 +1244,9 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
       { id: 'c1_4', name: 'カースド・ゴースト', type: 'ghost', color: '#800080', baseHp: 980, dialogueStart: "呪ってやる...", dialogueDefeat: "成仏します...", theme: "Curse" },
       { id: 'c1_5', name: '鉄壁のガーディアン', type: 'robot', color: '#708090', baseHp: 1150, dialogueStart: "排除シマス。", dialogueDefeat: "システムダウン...", theme: "Steel" },
       { id: 'c1_6', name: 'ギガント・ゴーレム', type: 'object', color: '#8B4513', baseHp: 1350, dialogueStart: "通さん...", dialogueDefeat: "崩れる...", theme: "Earth" },
+      { id: 'c1_8', name: 'ブラッドファング', type: 'beast', color: '#8B0000', baseHp: 1420, dialogueStart: "血の匂いがするな...", dialogueDefeat: "牙が...届かない...", theme: "Fang" },
+      { id: 'c1_9', name: '奈落のレイス', type: 'ghost', color: '#6A5ACD', baseHp: 1480, dialogueStart: "底まで引きずり込む...", dialogueDefeat: "闇が...薄れていく...", theme: "Abyssal" },
+      { id: 'c1_10', name: '獄炎バリスタ', type: 'object', color: '#B22222', baseHp: 1520, dialogueStart: "焼き払う準備はできた", dialogueDefeat: "砲身が...冷えていく...", theme: "Inferno" },
       { id: 'c1_7', name: '魔王ドラゴニス', type: 'boss', color: '#2F4F4F', baseHp: 1550, dialogueStart: "我に挑む愚か者よ", dialogueDefeat: "貴様こそ勇者だ...", theme: "Boss" },
     ]
   },
@@ -1292,6 +1270,9 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
       { id: 'c2_4', name: 'ファントムナイト', type: 'ghost', color: '#2F4F4F', baseHp: 2200, dialogueStart: "剣のサビにしてやる", dialogueDefeat: "見事な剣筋だ...", theme: "Knight" },
       { id: 'c2_5', name: '古代兵器オメガ', type: 'robot', color: '#8B4513', baseHp: 2500, dialogueStart: "排除行動開始。", dialogueDefeat: "機能停止...", theme: "Ancient" },
       { id: 'c2_6', name: 'デス・スコーピオン', type: 'beast', color: '#800000', baseHp: 2800, dialogueStart: "毒針の恐怖...", dialogueDefeat: "解毒完了...", theme: "Venom" },
+      { id: 'c2_8', name: 'ブリザードミラー', type: 'object', color: '#AFEEEE', baseHp: 2860, dialogueStart: "凍てつく自分を見ろ", dialogueDefeat: "ひび割れて...映らない...", theme: "Mirror" },
+      { id: 'c2_9', name: 'ナイトメアクロウ', type: 'wing', color: '#4B0082', baseHp: 2920, dialogueStart: "悪夢を運んでやる", dialogueDefeat: "羽ばたきが...止まる...", theme: "Nightmare" },
+      { id: 'c2_10', name: '深海のジャッジ', type: 'ghost', color: '#1E3A5F', baseHp: 2960, dialogueStart: "沈黙の底へ沈め", dialogueDefeat: "判決は...覆ったか...", theme: "Depth" },
       { id: 'c2_7', name: '冥王ハーデス', type: 'boss', color: '#000000', baseHp: 3000, dialogueStart: "絶望を味わえ", dialogueDefeat: "光が戻るのか...", theme: "Death" },
     ]
   },
@@ -1315,6 +1296,9 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
       { id: 'c3_4', name: 'スペクターロード', type: 'ghost', color: '#FFFafa', baseHp: 3500, dialogueStart: "恐怖せよ", dialogueDefeat: "恐れ入った...", theme: "Fear" },
       { id: 'c3_5', name: '機神タイタン', type: 'robot', color: '#B8860B', baseHp: 4000, dialogueStart: "出力最大！", dialogueDefeat: "エネルギー切れ...", theme: "Titan" },
       { id: 'c3_6', name: 'アビス・ウォーカー', type: 'ghost', color: '#483D8B', baseHp: 4500, dialogueStart: "深淵を覗くか...", dialogueDefeat: "見事だ...", theme: "Abyss" },
+      { id: 'c3_8', name: '断罪のセラフ', type: 'wing', color: '#F5F5DC', baseHp: 4650, dialogueStart: "裁きを始めよう", dialogueDefeat: "天秤が...傾いた...", theme: "Judgement" },
+      { id: 'c3_9', name: '虚無のコロッサス', type: 'object', color: '#696969', baseHp: 4800, dialogueStart: "存在ごと踏み潰す", dialogueDefeat: "巨体が...崩落する...", theme: "Void" },
+      { id: 'c3_10', name: '深紅のキマイラ', type: 'beast', color: '#8B1E3F', baseHp: 4900, dialogueStart: "最後の恐怖を見せてやる", dialogueDefeat: "まだ...届かなかったか...", theme: "Crimson" },
       { id: 'c3_7', name: '終焉のドラゴン', type: 'boss', color: '#8B0000', baseHp: 5000, dialogueStart: "全てを無に還す", dialogueDefeat: "未来を託そう...", theme: "End" },
     ]
   }
@@ -1420,6 +1404,13 @@ export default function App() {
       setGameState(prev => ({ ...prev, selectedLevel: safeLevel }));
     }
   }, [gameState.selectedDifficulty, gameState.selectedLevel]);
+
+  useEffect(() => {
+    const safeBookLevel = getSafeLevelForDifficulty(gameState.selectedDifficulty, bookLevel);
+    if (safeBookLevel !== bookLevel) {
+      setBookLevel(safeBookLevel);
+    }
+  }, [bookLevel, gameState.selectedDifficulty]);
 
   useEffect(() => {
     const defeatedMonsterIds = normalizeDefeatedMonsterIds(safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []));
@@ -2107,6 +2098,7 @@ export default function App() {
     const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[diff] ?? 1;
     const hpMultiplier = modeHpMultiplier * difficultyHpMultiplier;
     const startingMonsterHp = Math.round(startingMonster.baseHp * hpMultiplier);
+    const maxQuestions = getBattleQuestionLimit(mode, startingMonsterHp);
     const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
     if (!startingMonster) return;
@@ -2134,7 +2126,7 @@ export default function App() {
       ...prev, screen: 'battle', selectedDifficulty: diff, selectedLevel: level, mode: mode, inputMode: inputMode,
       currentMonsterIndex: safeStepIndex, currentMonsterList: monsterList, challengeModeIndices: safeIndices,
       monsterHp: startingMonsterHp, maxMonsterHp: startingMonsterHp, score: currentScore, combo: 0,
-      currentQuestion: question, userInput: "", startTime: null, history: [], questionCount: 1, maxQuestions: 10,
+      currentQuestion: question, userInput: "", startTime: null, history: [], questionCount: 1, maxQuestions,
       battleResult: null, totalMonstersInStage: totalMonsters, isNewRecord: false, missCount: 0,
       totalKeystrokes: currentKeystrokes, hintLength: 0, currentBattleMissedQuestions: [],
       battleLog: [],
@@ -2308,6 +2300,7 @@ export default function App() {
   };
 
   const handleSkip = () => {
+    setLastSolvedQuestion(gameState.currentQuestion);
     advanceGame(0, 0, true, 0);
     inputRef.current?.focus();
   };
@@ -2439,7 +2432,7 @@ export default function App() {
     const baseDamage = charCount * 10;
     const speedMultiplier = getSpeedMultiplier(charsPerSec);
     let finalDamage = Math.floor(baseDamage * speedMultiplier);
-    if (gameState.mode === 'guide') finalDamage = Math.floor(finalDamage * 0.3);
+    if (gameState.mode === 'guide') finalDamage = Math.floor(finalDamage * GUIDE_DAMAGE_MULTIPLIER);
     if (gameState.mode === 'challenge' && gameState.inputMode === 'voice-text') {
       finalDamage = Math.floor(finalDamage * LISTENING_TRAINING_DAMAGE_MULTIPLIER);
     }
@@ -2587,11 +2580,25 @@ export default function App() {
 
   if (gameState.screen === 'monster-book') {
     const monstersObj = MONSTERS[bookLevel];
-    const visibleGuideMonsters = monstersObj.guide.slice(0, getGuideTargetCount(gameState.selectedDifficulty, gameState.selectedLevel));
+    const visibleGuideMonsters = monstersObj.guide.slice(0, getGuideTargetCount(gameState.selectedDifficulty, bookLevel));
     const visibleChallengeMonsters = monstersObj.challenge.slice(0, HARD_TARGET_COUNT);
     const allMonsters = [...visibleGuideMonsters, ...visibleChallengeMonsters];
-    const uniqueDefeatedIds = new Set(gameState.defeatedMonsterIds.map(key => extractMonsterId(key)));
-    const totalDefeated = [...uniqueDefeatedIds].filter(id => allMonsters.some(m => m.id === id)).length;
+    const availableBookLevels = getAvailableLevels(gameState.selectedDifficulty);
+    const isMonsterDefeatedInBook = (monsterId: string) => (
+      ['guide', 'challenge'].some(mode => (
+        ['voice-text', 'voice-only', 'text-only'].some(inputMode => (
+          matchesDefeatedMonster(
+            gameState.defeatedMonsterIds,
+            gameState.selectedDifficulty,
+            bookLevel,
+            mode as Mode,
+            inputMode as InputMode,
+            monsterId
+          )
+        ))
+      ))
+    );
+    const totalDefeated = allMonsters.filter(monster => isMonsterDefeatedInBook(monster.id)).length;
     return (
       <ScreenContainer className="bg-slate-900">
         <div className="max-w-6xl w-full p-4">
@@ -2599,23 +2606,24 @@ export default function App() {
               <GameButton size="sm" variant="outline" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))}>&larr; タイトルへ</GameButton>
               <div className="flex items-center gap-2 bg-slate-800 border border-slate-600 px-4 py-2 rounded-full shadow-sm text-yellow-400"><Trophy size={20} /><span className="font-bold">撃破数: {totalDefeated} / {allMonsters.length}</span></div>
            </div>
-           <Box title={`Monster Collection - Level ${bookLevel}`} className="w-full">
-               <div className="flex justify-center gap-4 mb-8">{[1, 2, 3].map((lvl) => (<button key={lvl} onClick={() => setBookLevel(lvl as Level)} className={`px-6 py-2 rounded-full font-bold transition-all border-2 ${bookLevel === lvl ? 'bg-blue-600 border-blue-400 text-white shadow-lg scale-105' : 'bg-slate-700 border-slate-600 text-slate-400 hover:bg-slate-600'}`}>レベル {lvl}</button>))}</div>
+           <Box title={`Monster Collection - ${DIFFICULTY_LABELS[gameState.selectedDifficulty]} - Level ${bookLevel}`} className="w-full">
+               <div className="mb-4 flex flex-wrap justify-center gap-3">{DIFFICULTIES.map((diff) => (<button key={diff} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: diff }))} className={`px-5 py-2 rounded-full font-bold transition-all border-2 ${gameState.selectedDifficulty === diff ? 'bg-blue-600 border-blue-400 text-white shadow-lg scale-105' : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}`}>{DIFFICULTY_LABELS[diff]}</button>))}</div>
+               <div className="flex justify-center gap-4 mb-8">{availableBookLevels.map((lvl) => (<button key={lvl} onClick={() => setBookLevel(lvl as Level)} className={`px-6 py-2 rounded-full font-bold transition-all border-2 ${bookLevel === lvl ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg scale-105' : 'bg-slate-700 border-slate-600 text-slate-400 hover:bg-slate-600'}`}>レベル {lvl}</button>))}</div>
                <div className="mb-8">
                  <h3 className="text-blue-300 font-bold mb-4 flex items-center gap-2 text-xl"><Shield size={20} /> 練習エリア (Training Zone)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {visibleGuideMonsters.map((m) => {
-                      const isDefeated = uniqueDefeatedIds.has(m.id);
-                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
+                      const isDefeated = isMonsterDefeatedInBook(m.id);
+                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
                </div>
                <div>
                  <h3 className="text-red-400 font-bold mb-4 flex items-center gap-2 text-xl"><Skull size={20} /> 危険エリア (Danger Zone)</h3>
-                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {visibleChallengeMonsters.map((m) => {
-                      const isDefeated = uniqueDefeatedIds.has(m.id);
-                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
+                      const isDefeated = isMonsterDefeatedInBook(m.id);
+                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
                </div>
@@ -3373,7 +3381,7 @@ export default function App() {
     const previousQuestionExample = lastSolvedQuestion
       ? getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, lastSolvedQuestion)
       : null;
-    const showPreviousStudyCard = !!lastSolvedQuestion && !!previousQuestionExample;
+    const showPreviousStudyCard = !!lastSolvedQuestion;
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
     const remainingWeakCount = getScopedWeakQuestions(gameState.selectedDifficulty, gameState.selectedLevel).length;
@@ -3509,7 +3517,7 @@ export default function App() {
                     </div>
                     <input ref={inputRef} type="text" value={gameState.userInput} onChange={handleInput} className="w-full h-full opacity-0 absolute inset-0 cursor-default z-10" autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoFocus />
                  </div>
-                 {showPreviousStudyCard && previousQuestionExample && lastSolvedQuestion && (
+                 {showPreviousStudyCard && lastSolvedQuestion && (
                    <div className="mx-auto mt-3 max-w-3xl rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-3 py-2 shadow-[0_0_20px_rgba(16,185,129,0.12)]">
                      <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-left leading-snug">
                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">
@@ -3517,9 +3525,13 @@ export default function App() {
                        </span>
                        <span className="font-mono text-sm font-bold text-white md:text-base">{lastSolvedQuestion.text}</span>
                        <span className="text-xs font-bold text-emerald-100 md:text-sm">{lastSolvedQuestion.translation}</span>
-                       <span className="hidden text-slate-500 md:inline">|</span>
-                       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Example</span>
-                       <span className="text-xs text-slate-200 md:text-sm">{previousQuestionExample}</span>
+                       {previousQuestionExample && (
+                         <>
+                           <span className="hidden text-slate-500 md:inline">|</span>
+                           <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Example</span>
+                           <span className="text-xs text-slate-200 md:text-sm">{previousQuestionExample}</span>
+                         </>
+                       )}
                      </div>
                    </div>
                  )}
