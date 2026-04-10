@@ -27,6 +27,28 @@ interface Monster {
   theme: string;
 }
 
+type MonsterVisualVariant =
+  | 'horns'
+  | 'crown'
+  | 'mask'
+  | 'runes'
+  | 'crystal'
+  | 'mimic'
+  | 'halo'
+  | 'spikes'
+  | 'cape'
+  | 'orbital'
+  | 'sigil'
+  | 'flare';
+
+type MonsterVisualStyle = {
+  primary?: MonsterVisualVariant;
+  secondary?: MonsterVisualVariant;
+  accentColor?: string;
+  eyeColor?: string;
+  silhouette?: 'wyvern' | 'overlord' | 'reaper' | 'apocalypse';
+};
+
 interface Question {
   text: string;
   translation: string;
@@ -138,9 +160,80 @@ const getGuideTargetCount = (_difficulty: Difficulty, _level: Level) => GUIDE_TA
 
 const getListeningTargetCount = (_difficulty: Difficulty, _level: Level) => LISTENING_TRAINING_TARGET_COUNT;
 
-const getBattleQuestionLimit = (mode: Mode, monsterHp: number) => {
+const getBattleDamageMultiplier = (mode: Mode, inputMode: InputMode) => {
+  if (mode === 'guide') return GUIDE_DAMAGE_MULTIPLIER;
+  if (mode === 'challenge' && inputMode === 'voice-text') return LISTENING_TRAINING_DAMAGE_MULTIPLIER;
+  return 1;
+};
+
+const getBattleQuestionLimit = (mode: Mode, inputMode: InputMode, monsterHp: number) => {
   if (mode === 'weakness') return 10;
-  return Math.max(10, Math.min(25, Math.ceil(monsterHp / 35)));
+  const effectiveHp = monsterHp / Math.max(getBattleDamageMultiplier(mode, inputMode), 0.01);
+  return Math.max(10, Math.min(25, Math.ceil(effectiveHp / 35)));
+};
+
+const getBattleTuning = (
+  difficulty: Difficulty,
+  mode: Mode,
+  inputMode: InputMode,
+  baseHp: number
+) => {
+  const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[difficulty] ?? 1;
+  const monsterHp = Math.round(baseHp * difficultyHpMultiplier);
+
+  return {
+    monsterHp,
+    damageMultiplier: getBattleDamageMultiplier(mode, inputMode),
+    maxQuestions: getBattleQuestionLimit(mode, inputMode, monsterHp),
+  };
+};
+
+const MONSTER_BOOK_INPUT_MODES: InputMode[] = ['voice-text', 'voice-only', 'text-only'];
+
+const isMonsterDefeatedForBook = (
+  defeatedMonsterIds: string[],
+  difficulty: Difficulty,
+  level: Level,
+  mode: Extract<Mode, 'guide' | 'challenge'>,
+  monsterId: string
+) => (
+  MONSTER_BOOK_INPUT_MODES.some(inputMode => (
+    matchesDefeatedMonster(defeatedMonsterIds, difficulty, level, mode, inputMode, monsterId)
+  ))
+);
+
+const countDefeatedMonstersForBook = (
+  monsters: Monster[],
+  defeatedMonsterIds: string[],
+  difficulty: Difficulty,
+  level: Level,
+  mode: Extract<Mode, 'guide' | 'challenge'>
+) => (
+  monsters.filter(monster => (
+    isMonsterDefeatedForBook(defeatedMonsterIds, difficulty, level, mode, monster.id)
+  )).length
+);
+
+const getComboLabel = (combo: number) => {
+  if (combo >= 10) return 'Legendary';
+  if (combo >= 7) return 'Blazing';
+  if (combo >= 5) return 'Hot Streak';
+  if (combo >= 3) return 'Combo';
+  return '';
+};
+
+const getBattleQuestionPresentation = (questionText: string) => {
+  const questionLength = questionText.length;
+
+  return {
+    textClass: questionLength > 58
+      ? 'text-xl md:text-3xl'
+      : questionLength > 42
+        ? 'text-2xl md:text-4xl'
+        : 'text-3xl md:text-5xl',
+    panelClass: questionLength > 42 ? 'px-5 md:px-8 py-4 md:py-5' : 'px-4 md:px-6 py-3 md:py-4',
+    minHeightClass: questionLength > 58 ? 'min-h-[4.8em]' : questionLength > 42 ? 'min-h-[3.9em]' : 'min-h-[3em]',
+  };
 };
 
 const RANKS: RankData[] = [
@@ -1160,10 +1253,86 @@ const normalizeReviewQueue = (entries: ReviewQueueEntry[] | unknown) => (
     .filter((entry): entry is ReviewQueueEntry => entry !== null)
 );
 
+const MONSTER_VISUALS: Partial<Record<string, MonsterVisualStyle>> = {
+  m1_5: { primary: 'halo', accentColor: '#FFD1F3' },
+  m1_9: { primary: 'mimic', secondary: 'runes', accentColor: '#FCD34D' },
+  m1_10: { primary: 'crown', secondary: 'sigil', accentColor: '#FBBF24', eyeColor: '#FFE066', silhouette: 'wyvern' },
+  c1_1: { primary: 'runes', accentColor: '#A78BFA', eyeColor: '#C4B5FD' },
+  c1_2: { primary: 'horns', secondary: 'spikes', accentColor: '#FCA5A5' },
+  c1_4: { primary: 'mask', secondary: 'halo', accentColor: '#E9D5FF' },
+  c1_5: { primary: 'spikes', secondary: 'orbital', accentColor: '#94A3B8', eyeColor: '#7DD3FC' },
+  c1_10: { primary: 'crystal', secondary: 'runes', accentColor: '#FCA5A5' },
+  c1_7: { primary: 'flare', secondary: 'sigil', accentColor: '#F59E0B', eyeColor: '#FDE68A', silhouette: 'overlord' },
+  c2_3: { primary: 'halo', secondary: 'crystal', accentColor: '#FDE047' },
+  c2_4: { primary: 'mask', secondary: 'cape', accentColor: '#CBD5E1' },
+  c2_5: { primary: 'orbital', secondary: 'spikes', accentColor: '#FBBF24', eyeColor: '#67E8F9' },
+  c2_7: { primary: 'flare', secondary: 'sigil', accentColor: '#A78BFA', eyeColor: '#F8FAFC', silhouette: 'reaper' },
+  m3_7: { primary: 'mask', secondary: 'mimic', accentColor: '#E2E8F0' },
+  m3_9: { primary: 'orbital', secondary: 'halo', accentColor: '#60A5FA', eyeColor: '#C4B5FD' },
+  m3_10: { primary: 'flare', secondary: 'sigil', accentColor: '#C4B5FD', eyeColor: '#FDE68A', silhouette: 'overlord' },
+  c3_3: { primary: 'halo', secondary: 'spikes', accentColor: '#93C5FD' },
+  c3_4: { primary: 'mask', secondary: 'runes', accentColor: '#E2E8F0' },
+  c3_5: { primary: 'orbital', secondary: 'crystal', accentColor: '#FCD34D', eyeColor: '#5EEAD4' },
+  c3_7: { primary: 'flare', secondary: 'sigil', accentColor: '#F59E0B', eyeColor: '#FECACA', silhouette: 'apocalypse' },
+  c3_8: { primary: 'halo', secondary: 'runes', accentColor: '#F8FAFC' },
+  c3_9: { primary: 'spikes', secondary: 'mask', accentColor: '#D1D5DB' },
+  c3_10: { primary: 'horns', secondary: 'crystal', accentColor: '#FDA4AF' },
+};
+
+const getMonsterVisualStyle = (monster: Monster): MonsterVisualStyle | undefined => {
+  const presetStyle = MONSTER_VISUALS[monster.id];
+  if (presetStyle) return presetStyle;
+
+  const theme = monster.theme.toLowerCase();
+  const name = monster.name;
+
+  if (theme.includes('dark') || theme.includes('curse') || theme.includes('void') || theme.includes('abyss') || theme.includes('nightmare')) {
+    return { primary: 'runes', secondary: 'mask', accentColor: '#C4B5FD', eyeColor: '#DDD6FE' };
+  }
+
+  if (theme.includes('fire') || theme.includes('inferno') || theme.includes('thunder') || theme.includes('crimson') || theme.includes('chaos')) {
+    return { primary: 'spikes', secondary: 'crystal', accentColor: '#FCA5A5', eyeColor: '#FDE68A' };
+  }
+
+  if (theme.includes('ancient') || theme.includes('steel') || theme.includes('titan') || theme.includes('clean')) {
+    return { primary: 'orbital', secondary: 'spikes', accentColor: '#93C5FD', eyeColor: '#67E8F9' };
+  }
+
+  if (theme.includes('book') || theme.includes('art') || theme.includes('mirror') || theme.includes('maze')) {
+    return { primary: 'mask', secondary: 'runes', accentColor: '#FDE68A' };
+  }
+
+  if (theme.includes('sleep') || theme.includes('sleepy') || theme.includes('lost') || theme.includes('scary')) {
+    return { primary: 'halo', secondary: 'orbital', accentColor: '#BFDBFE' };
+  }
+
+  if (name.includes('王') || name.includes('魔王') || name.includes('終焉') || monster.type === 'boss') {
+    return { primary: 'crown', secondary: 'cape', accentColor: '#FBBF24', eyeColor: '#FDE68A' };
+  }
+
+  switch (monster.type) {
+    case 'slime':
+      return { primary: 'orbital', accentColor: '#BAE6FD' };
+    case 'beast':
+      return { primary: 'horns', secondary: 'spikes', accentColor: '#FCD34D' };
+    case 'wing':
+      return { primary: 'halo', secondary: 'crystal', accentColor: '#E0E7FF' };
+    case 'ghost':
+      return { primary: 'mask', secondary: 'halo', accentColor: '#E9D5FF', eyeColor: '#C4B5FD' };
+    case 'robot':
+      return { primary: 'orbital', secondary: 'runes', accentColor: '#93C5FD', eyeColor: '#67E8F9' };
+    case 'object':
+      return { primary: 'crystal', secondary: 'mimic', accentColor: '#FDE68A' };
+    default:
+      return undefined;
+  }
+};
+
 // --- Rich Monster Avatar Component (SVG) ---
-const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: MonsterType, color: string, emotion?: 'normal' | 'damage' | 'win', size?: number }) => {
+const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150, visualStyle }: { type: MonsterType, color: string, emotion?: 'normal' | 'damage' | 'win', size?: number, visualStyle?: MonsterVisualStyle }) => {
   const mainColor = color;
   const gradientId = `grad-${type}-${color.replace('#', '')}`;
+  const accentColor = visualStyle?.accentColor ?? '#F8FAFC';
   
   const renderBody = () => {
     switch (type) {
@@ -1179,16 +1348,134 @@ const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: 
         return <g filter="url(#shadow)"><line x1="0" y1="-50" x2="0" y2="-70" stroke="#444" strokeWidth="4" /><circle cx="0" cy="-70" r="6" fill="red" stroke="#222" strokeWidth="2" filter="url(#glow)" /><circle cx="0" cy="-70" r="2" fill="white" opacity="0.8" /><rect x="-45" y="-50" width="90" height="80" rx="15" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><rect x="-35" y="-30" width="70" height="30" rx="5" fill="#222" stroke="#444" strokeWidth="2" /><path d="M-30 -25 L30 -25" stroke="lime" strokeWidth="1" strokeDasharray="2,2" opacity="0.5" /><rect x="-55" y="-30" width="10" height="20" fill="#888" stroke="#222" strokeWidth="2" /><rect x="45" y="-30" width="10" height="20" fill="#888" stroke="#222" strokeWidth="2" /><line x1="-20" y1="15" x2="20" y2="15" stroke="#333" strokeWidth="2" /><line x1="-20" y1="20" x2="20" y2="20" stroke="#333" strokeWidth="2" /><line x1="-20" y1="25" x2="20" y2="25" stroke="#333" strokeWidth="2" /></g>;
       case 'object': 
         return <g filter="url(#shadow)"><rect x="-40" y="-50" width="80" height="100" rx="5" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><path d="M-35 45 L35 45 L30 35 L-30 35 Z" fill="#fff" stroke="#ccc" /><circle cx="0" cy="0" r="15" fill="gold" stroke="#b8860b" strokeWidth="3" /><rect x="-5" y="-5" width="10" height="10" fill="#222" /><path d="M-40 -50 L-20 -50 L-40 -30 Z" fill="gold" stroke="#222" strokeWidth="2" /><path d="M40 -50 L20 -50 L40 -30 Z" fill="gold" stroke="#222" strokeWidth="2" /><path d="M-40 50 L-20 50 L-40 30 Z" fill="gold" stroke="#222" strokeWidth="2" /><path d="M40 50 L20 50 L40 30 Z" fill="gold" stroke="#222" strokeWidth="2" /></g>;
-      case 'boss': 
-        return <g filter="url(#shadow)"><path d="M-50 -10 L-70 -30 L-50 -20" fill="gold" stroke="#222" strokeWidth="2" /><path d="M50 -10 L70 -30 L50 -20" fill="gold" stroke="#222" strokeWidth="2" /><path d="M-30 -40 C-50 -70 -70 -50 -80 -60" fill="none" stroke="#222" strokeWidth="8" /><path d="M-30 -40 C-50 -70 -70 -50 -80 -60" fill="none" stroke="#ddd" strokeWidth="4" /><path d="M30 -40 C50 -70 70 -50 80 -60" fill="none" stroke="#222" strokeWidth="8" /><path d="M30 -40 C50 -70 70 -50 80 -60" fill="none" stroke="#ddd" strokeWidth="4" /><path d="M-50 -30 Q0 -70 50 -30 L45 50 Q0 80 -45 50 Z" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><path d="M0 -30 L0 50" stroke="rgba(0,0,0,0.2)" strokeWidth="2" /><path d="M-25 -10 L25 -10" stroke="rgba(0,0,0,0.2)" strokeWidth="2" /><path d="M-35 20 L35 20" stroke="rgba(0,0,0,0.2)" strokeWidth="2" /><path d="M-25 -45 L-12 -75 L0 -55 L12 -75 L25 -45 Z" fill="gold" stroke="#222" strokeWidth="3" /><circle cx="0" cy="-45" r="8" fill="red" stroke="#222" strokeWidth="2" filter="url(#glow)" /></g>;
+      case 'boss': {
+        const silhouette = visualStyle?.silhouette ?? 'overlord';
+
+        if (silhouette === 'wyvern') {
+          return <g filter="url(#shadow)"><path d="M-54 -8 Q-96 -40 -82 10 Q-66 28 -36 10" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="3" /><path d="M54 -8 Q96 -40 82 10 Q66 28 36 10" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="3" /><path d="M-22 -42 L-40 -72 L-10 -50 Z" fill={accentColor} stroke="#222" strokeWidth="3" /><path d="M22 -42 L40 -72 L10 -50 Z" fill={accentColor} stroke="#222" strokeWidth="3" /><path d="M-44 18 Q-48 -34 0 -50 Q48 -34 44 18 Q36 58 0 62 Q-36 58 -44 18" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><path d="M-18 44 L-6 62 L6 62 L18 44" fill="none" stroke="#222" strokeWidth="4" strokeLinecap="round" /><path d="M-28 -8 Q0 -22 28 -8" fill="none" stroke="rgba(255,255,255,0.24)" strokeWidth="3" /></g>;
+        }
+
+        if (silhouette === 'reaper') {
+          return <g filter="url(#shadow)"><path d="M-8 -62 Q24 -72 40 -44 Q18 -42 4 -20 Z" fill="rgba(15,23,42,0.92)" stroke={accentColor} strokeWidth="3" /><path d="M-50 54 Q-16 8 -10 -42 Q18 -10 48 52 Q26 62 0 62 Q-28 62 -50 54" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><path d="M-38 16 Q-76 28 -70 54 Q-40 46 -20 26" fill="rgba(15,23,42,0.9)" stroke="#222" strokeWidth="3" /><path d="M38 16 Q76 28 70 54 Q40 46 20 26" fill="rgba(15,23,42,0.9)" stroke="#222" strokeWidth="3" /><path d="M0 -50 L0 58" stroke="rgba(255,255,255,0.18)" strokeWidth="3" /><circle cx="0" cy="-12" r="30" fill="rgba(15,23,42,0.35)" /></g>;
+        }
+
+        if (silhouette === 'apocalypse') {
+          return <g filter="url(#shadow)"><path d="M-46 -18 L-74 -48 L-40 -40" fill={accentColor} stroke="#222" strokeWidth="3" /><path d="M46 -18 L74 -48 L40 -40" fill={accentColor} stroke="#222" strokeWidth="3" /><path d="M-22 -42 L-42 -78 L-8 -52 Z" fill={accentColor} stroke="#222" strokeWidth="3" /><path d="M22 -42 L42 -78 L8 -52 Z" fill={accentColor} stroke="#222" strokeWidth="3" /><path d="M-54 -8 Q0 -88 54 -8 L42 16 L54 52 Q0 82 -54 52 L-42 16 Z" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><path d="M-30 28 L0 8 L30 28 L18 58 L-18 58 Z" fill="rgba(0,0,0,0.22)" /><path d="M-34 -6 L34 -6 M-28 18 L28 18" stroke="rgba(255,255,255,0.2)" strokeWidth="3" /></g>;
+        }
+
+        return <g filter="url(#shadow)"><path d="M-58 46 Q-46 2 -30 -30 L-12 -12 L-22 44 Z" fill="rgba(15,23,42,0.7)" stroke="#222" strokeWidth="3" /><path d="M58 46 Q46 2 30 -30 L12 -12 L22 44 Z" fill="rgba(15,23,42,0.7)" stroke="#222" strokeWidth="3" /><path d="M-26 -42 C-44 -70 -66 -54 -78 -66" fill="none" stroke="#222" strokeWidth="8" /><path d="M-26 -42 C-44 -70 -66 -54 -78 -66" fill="none" stroke={accentColor} strokeWidth="4" /><path d="M26 -42 C44 -70 66 -54 78 -66" fill="none" stroke="#222" strokeWidth="8" /><path d="M26 -42 C44 -70 66 -54 78 -66" fill="none" stroke={accentColor} strokeWidth="4" /><path d="M-50 -26 Q0 -74 50 -26 L42 50 Q0 80 -42 50 Z" fill={`url(#${gradientId})`} stroke="#222" strokeWidth="4" /><path d="M0 -26 L0 52" stroke="rgba(255,255,255,0.16)" strokeWidth="3" /><path d="M-26 -8 L26 -8" stroke="rgba(255,255,255,0.16)" strokeWidth="3" /><path d="M-36 22 L36 22" stroke="rgba(255,255,255,0.16)" strokeWidth="3" /></g>;
+      }
       default: return <circle cx="0" cy="0" r="35" fill={`url(#${gradientId})`} />;
+    }
+  };
+
+  const renderVariant = (variant?: MonsterVisualVariant) => {
+    switch (variant) {
+      case 'horns':
+        return (
+          <g>
+            <path d="M-18 -38 L-34 -72 L-8 -50 Z" fill={accentColor} stroke="#111827" strokeWidth="3" />
+            <path d="M18 -38 L34 -72 L8 -50 Z" fill={accentColor} stroke="#111827" strokeWidth="3" />
+          </g>
+        );
+      case 'crown':
+        return (
+          <g>
+            <path d="M-30 -48 L-18 -68 L0 -52 L18 -68 L30 -48 L24 -34 L-24 -34 Z" fill={accentColor} stroke="#111827" strokeWidth="3" />
+            <circle cx="-18" cy="-52" r="4" fill="#FEF3C7" />
+            <circle cx="0" cy="-58" r="4.5" fill="#FCA5A5" />
+            <circle cx="18" cy="-52" r="4" fill="#BFDBFE" />
+          </g>
+        );
+      case 'mask':
+        return (
+          <g>
+            <path d="M-32 -8 Q0 -28 32 -8 Q24 22 0 30 Q-24 22 -32 -8 Z" fill="rgba(15,23,42,0.72)" stroke={accentColor} strokeWidth="3" />
+            <path d="M-20 -6 Q-10 -16 0 -6" fill="none" stroke={accentColor} strokeWidth="2" />
+            <path d="M20 -6 Q10 -16 0 -6" fill="none" stroke={accentColor} strokeWidth="2" />
+          </g>
+        );
+      case 'runes':
+        return (
+          <g opacity="0.88">
+            <circle cx="-42" cy="-6" r="8" fill="none" stroke={accentColor} strokeWidth="2.5" />
+            <path d="M-42 -14 L-42 2 M-50 -6 L-34 -6" stroke={accentColor} strokeWidth="2" />
+            <circle cx="42" cy="8" r="9" fill="none" stroke={accentColor} strokeWidth="2.5" />
+            <path d="M42 -1 L42 17 M35 8 L49 8" stroke={accentColor} strokeWidth="2" />
+          </g>
+        );
+      case 'crystal':
+        return (
+          <g>
+            <path d="M-46 18 L-30 -18 L-18 12 Z" fill={accentColor} opacity="0.8" stroke="#111827" strokeWidth="2.5" />
+            <path d="M46 10 L26 -22 L14 6 Z" fill={accentColor} opacity="0.7" stroke="#111827" strokeWidth="2.5" />
+            <path d="M0 -44 L12 -70 L24 -42 Z" fill={accentColor} opacity="0.85" stroke="#111827" strokeWidth="2.5" />
+          </g>
+        );
+      case 'mimic':
+        return (
+          <g>
+            <path d="M-24 26 L24 26 L0 42 Z" fill="#111827" />
+            <path d="M-22 26 L-16 18 L-10 26 L-4 18 L2 26 L8 18 L14 26 L20 18 L26 26" fill="none" stroke="#F8FAFC" strokeWidth="3" strokeLinejoin="round" />
+          </g>
+        );
+      case 'halo':
+        return (
+          <g>
+            <ellipse cx="0" cy="-52" rx="30" ry="10" fill="none" stroke={accentColor} strokeWidth="4" opacity="0.95" />
+            <ellipse cx="0" cy="-52" rx="18" ry="5" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" />
+          </g>
+        );
+      case 'spikes':
+        return (
+          <g>
+            <path d="M-46 14 L-62 8 L-46 -2" fill={accentColor} stroke="#111827" strokeWidth="2.5" />
+            <path d="M46 14 L62 8 L46 -2" fill={accentColor} stroke="#111827" strokeWidth="2.5" />
+            <path d="M-28 48 L-18 66 L-4 48" fill={accentColor} stroke="#111827" strokeWidth="2.5" />
+            <path d="M28 48 L18 66 L4 48" fill={accentColor} stroke="#111827" strokeWidth="2.5" />
+          </g>
+        );
+      case 'cape':
+        return (
+          <g opacity="0.92">
+            <path d="M-38 -12 Q0 12 38 -12 L52 44 Q0 74 -52 44 Z" fill="rgba(127,29,29,0.78)" stroke="#111827" strokeWidth="3" />
+            <path d="M-12 -22 Q0 -14 12 -22" fill="none" stroke={accentColor} strokeWidth="3" />
+          </g>
+        );
+      case 'orbital':
+        return (
+          <g>
+            <ellipse cx="0" cy="4" rx="52" ry="16" fill="none" stroke={accentColor} strokeWidth="3" opacity="0.8" />
+            <circle cx="-48" cy="0" r="5" fill={accentColor} />
+            <circle cx="48" cy="8" r="4" fill="#F8FAFC" opacity="0.9" />
+          </g>
+        );
+      case 'sigil':
+        return (
+          <g opacity="0.92">
+            <circle cx="0" cy="2" r="58" fill="none" stroke={accentColor} strokeWidth="3" strokeDasharray="6 5" />
+            <circle cx="0" cy="2" r="44" fill="none" stroke="rgba(248,250,252,0.55)" strokeWidth="1.8" />
+            <path d="M0 -48 L12 -18 L42 -18 L18 0 L28 30 L0 12 L-28 30 L-18 0 L-42 -18 L-12 -18 Z" fill="none" stroke={accentColor} strokeWidth="2.4" strokeLinejoin="round" />
+          </g>
+        );
+      case 'flare':
+        return (
+          <g opacity="0.95">
+            <circle cx="0" cy="-4" r="54" fill={accentColor} opacity="0.14" filter="url(#blur)" />
+            <path d="M0 -74 L8 -50 L28 -64 L22 -38 L48 -42 L30 -18 L58 -8 L30 2 L48 24 L20 18 L24 46 L0 28 L-24 46 L-20 18 L-48 24 L-30 2 L-58 -8 L-30 -18 L-48 -42 L-22 -38 L-28 -64 L-8 -50 Z" fill={accentColor} opacity="0.78" stroke="#111827" strokeWidth="2.5" strokeLinejoin="round" />
+          </g>
+        );
+      default:
+        return null;
     }
   };
 
   const renderFace = () => {
     const isRobot = type === 'robot';
     const isGhost = type === 'ghost';
-    const eyeFill = isRobot || isGhost ? (emotion === 'damage' ? '#ff0000' : '#00ffcc') : '#222';
+    const eyeFill = emotion === 'damage'
+      ? '#ff0000'
+      : visualStyle?.eyeColor ?? (isRobot || isGhost ? '#00ffcc' : '#222');
     const eyeStroke = isRobot || isGhost ? 'none' : '#222';
     const isBoss = type === 'boss';
     
@@ -1217,7 +1504,13 @@ const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150 }: { type: 
         <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style={{stopColor:'rgba(0,0,0,0.6)', stopOpacity:1}} /><stop offset="100%" style={{stopColor:'rgba(0,0,0,0)', stopOpacity:0}} /></radialGradient>
       </defs>
       <ellipse cx="0" cy="65" rx="50" ry="12" fill="url(#groundShadow)" />
-      <g className={emotion === 'damage' ? 'translate-x-2 translate-y-2' : ''}>{renderBody()}{renderFace()}</g>
+      <g className={emotion === 'damage' ? 'translate-x-2 translate-y-2' : ''}>
+        {renderVariant(visualStyle?.secondary)}
+        {visualStyle?.primary === 'cape' && renderVariant(visualStyle.primary)}
+        {renderBody()}
+        {visualStyle?.primary !== 'cape' && renderVariant(visualStyle?.primary)}
+        {renderFace()}
+      </g>
     </svg>
   );
 };
@@ -1379,6 +1672,7 @@ export default function App() {
   const [speechRatePercent, setSpeechRatePercent] = useState<number>(100);
   const sessionWeakQuestionsRef = useRef<Question[] | null>(null);
   const [bookLevel, setBookLevel] = useState<Level>(1);
+  const [bookDifficulty, setBookDifficulty] = useState<Difficulty>('Eiken5');
   const [, setShake] = useState(false);
   const [flash, setFlash] = useState(false);
   const [monsterShake, setMonsterShake] = useState(false); 
@@ -1397,6 +1691,20 @@ export default function App() {
   const recentReviewAppearanceRef = useRef<boolean[]>([]);
   const shownFinalBossIntroKeyRef = useRef<string | null>(null);
 
+  const updateSelectedDifficulty = (difficulty: Difficulty, screen?: GameState['screen']) => {
+    setGameState(prev => ({
+      ...prev,
+      selectedDifficulty: difficulty,
+      selectedLevel: getSafeLevelForDifficulty(difficulty, prev.selectedLevel),
+      ...(screen ? { screen } : {}),
+    }));
+  };
+
+  const updateBookDifficulty = (difficulty: Difficulty) => {
+    setBookDifficulty(difficulty);
+    setBookLevel(prev => getSafeLevelForDifficulty(difficulty, prev));
+  };
+
   useEffect(() => {
     const safeLevel = getSafeLevelForDifficulty(gameState.selectedDifficulty, gameState.selectedLevel);
     if (safeLevel !== gameState.selectedLevel) {
@@ -1405,11 +1713,11 @@ export default function App() {
   }, [gameState.selectedDifficulty, gameState.selectedLevel]);
 
   useEffect(() => {
-    const safeBookLevel = getSafeLevelForDifficulty(gameState.selectedDifficulty, bookLevel);
+    const safeBookLevel = getSafeLevelForDifficulty(bookDifficulty, bookLevel);
     if (safeBookLevel !== bookLevel) {
       setBookLevel(safeBookLevel);
     }
-  }, [bookLevel, gameState.selectedDifficulty]);
+  }, [bookDifficulty, bookLevel]);
 
   useEffect(() => {
     const defeatedMonsterIds = normalizeDefeatedMonsterIds(safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []));
@@ -2091,9 +2399,9 @@ export default function App() {
     const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
     const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
     const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
-    const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[diff] ?? 1;
-    const startingMonsterHp = Math.round(startingMonster.baseHp * difficultyHpMultiplier);
-    const maxQuestions = getBattleQuestionLimit(mode, startingMonsterHp);
+    const battleTuning = getBattleTuning(diff, mode, inputMode, startingMonster.baseHp);
+    const startingMonsterHp = battleTuning.monsterHp;
+    const maxQuestions = battleTuning.maxQuestions;
     const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
     if (!startingMonster) return;
@@ -2426,11 +2734,8 @@ export default function App() {
     const charsPerSec = charCount / durationSec;
     const baseDamage = charCount * 10;
     const speedMultiplier = getSpeedMultiplier(charsPerSec);
-    let finalDamage = Math.floor(baseDamage * speedMultiplier);
-    if (gameState.mode === 'guide') finalDamage = Math.floor(finalDamage * GUIDE_DAMAGE_MULTIPLIER);
-    if (gameState.mode === 'challenge' && gameState.inputMode === 'voice-text') {
-      finalDamage = Math.floor(finalDamage * LISTENING_TRAINING_DAMAGE_MULTIPLIER);
-    }
+    const damageMultiplier = getBattleDamageMultiplier(gameState.mode, gameState.inputMode);
+    let finalDamage = Math.floor(baseDamage * speedMultiplier * damageMultiplier);
     if (gameState.missCount > 0) { finalDamage = Math.max(1, Math.floor(finalDamage * 0.5)); }
     const willDefeatMonster = gameState.monsterHp - finalDamage <= 0;
     if (!willDefeatMonster) {
@@ -2575,25 +2880,29 @@ export default function App() {
 
   if (gameState.screen === 'monster-book') {
     const monstersObj = MONSTERS[bookLevel];
-    const visibleGuideMonsters = monstersObj.guide.slice(0, getGuideTargetCount(gameState.selectedDifficulty, bookLevel));
+    const visibleGuideMonsters = monstersObj.guide.slice(0, getGuideTargetCount(bookDifficulty, bookLevel));
     const visibleChallengeMonsters = monstersObj.challenge.slice(0, HARD_TARGET_COUNT);
     const allMonsters = [...visibleGuideMonsters, ...visibleChallengeMonsters];
-    const availableBookLevels = getAvailableLevels(gameState.selectedDifficulty);
-    const isMonsterDefeatedInBook = (monsterId: string) => (
-      ['guide', 'challenge'].some(mode => (
-        ['voice-text', 'voice-only', 'text-only'].some(inputMode => (
-          matchesDefeatedMonster(
-            gameState.defeatedMonsterIds,
-            gameState.selectedDifficulty,
-            bookLevel,
-            mode as Mode,
-            inputMode as InputMode,
-            monsterId
-          )
-        ))
-      ))
+    const availableBookLevels = getAvailableLevels(bookDifficulty);
+    const guideDefeatedCount = countDefeatedMonstersForBook(
+      visibleGuideMonsters,
+      gameState.defeatedMonsterIds,
+      bookDifficulty,
+      bookLevel,
+      'guide'
     );
-    const totalDefeated = allMonsters.filter(monster => isMonsterDefeatedInBook(monster.id)).length;
+    const challengeDefeatedCount = countDefeatedMonstersForBook(
+      visibleChallengeMonsters,
+      gameState.defeatedMonsterIds,
+      bookDifficulty,
+      bookLevel,
+      'challenge'
+    );
+    const isMonsterDefeatedInBook = (monsterId: string) => (
+      isMonsterDefeatedForBook(gameState.defeatedMonsterIds, bookDifficulty, bookLevel, 'guide', monsterId)
+      || isMonsterDefeatedForBook(gameState.defeatedMonsterIds, bookDifficulty, bookLevel, 'challenge', monsterId)
+    );
+    const totalDefeated = guideDefeatedCount + challengeDefeatedCount;
     return (
       <ScreenContainer className="bg-slate-900">
         <div className="max-w-6xl w-full p-4">
@@ -2601,15 +2910,18 @@ export default function App() {
               <GameButton size="sm" variant="outline" onClick={() => setGameState(prev => ({ ...prev, screen: 'title' }))}>&larr; タイトルへ</GameButton>
               <div className="flex items-center gap-2 bg-slate-800 border border-slate-600 px-4 py-2 rounded-full shadow-sm text-yellow-400"><Trophy size={20} /><span className="font-bold">撃破数: {totalDefeated} / {allMonsters.length}</span></div>
            </div>
-           <Box title={`Monster Collection - ${DIFFICULTY_LABELS[gameState.selectedDifficulty]} - Level ${bookLevel}`} className="w-full">
-               <div className="mb-4 flex flex-wrap justify-center gap-3">{DIFFICULTIES.map((diff) => (<button key={diff} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: diff }))} className={`px-5 py-2 rounded-full font-bold transition-all border-2 ${gameState.selectedDifficulty === diff ? 'bg-blue-600 border-blue-400 text-white shadow-lg scale-105' : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}`}>{DIFFICULTY_LABELS[diff]}</button>))}</div>
+           <Box title={`Monster Collection - ${DIFFICULTY_LABELS[bookDifficulty]} - Level ${bookLevel}`} className="w-full">
+               <div className="mb-4 flex flex-wrap justify-center gap-3">{DIFFICULTIES.map((diff) => (<button key={diff} onClick={() => updateBookDifficulty(diff)} className={`px-5 py-2 rounded-full font-bold transition-all border-2 ${bookDifficulty === diff ? 'bg-blue-600 border-blue-400 text-white shadow-lg scale-105' : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}`}>{DIFFICULTY_LABELS[diff]}</button>))}</div>
+               <div className="mb-4 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-center text-xs text-slate-300">
+                 モンスターの種類はレベルごとに共通です。ここでは <span className="font-bold text-blue-200">{DIFFICULTY_LABELS[bookDifficulty]}</span> の進行状況を表示しています。
+               </div>
                <div className="flex justify-center gap-4 mb-8">{availableBookLevels.map((lvl) => (<button key={lvl} onClick={() => setBookLevel(lvl as Level)} className={`px-6 py-2 rounded-full font-bold transition-all border-2 ${bookLevel === lvl ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg scale-105' : 'bg-slate-700 border-slate-600 text-slate-400 hover:bg-slate-600'}`}>レベル {lvl}</button>))}</div>
                <div className="mb-8">
                  <h3 className="text-blue-300 font-bold mb-4 flex items-center gap-2 text-xl"><Shield size={20} /> 練習エリア (Training Zone)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {visibleGuideMonsters.map((m) => {
                       const isDefeated = isMonsterDefeatedInBook(m.id);
-                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
+                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
                </div>
@@ -2618,7 +2930,7 @@ export default function App() {
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {visibleChallengeMonsters.map((m) => {
                       const isDefeated = isMonsterDefeatedInBook(m.id);
-                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
+                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
                </div>
@@ -2684,7 +2996,7 @@ export default function App() {
               <h2 className="text-2xl font-bold text-blue-300 flex items-center gap-2"><ClipboardList /> 問題リスト (Word List)</h2>
            </div>
            <div className="flex flex-col md:flex-row gap-4 mb-6 flex-shrink-0">
-               <div className="flex flex-wrap bg-slate-800 p-1 rounded-lg">{DIFFICULTIES.map(d => (<button key={d} onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: d, selectedLevel: getSafeLevelForDifficulty(d, prev.selectedLevel) }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedDifficulty === d ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{DIFFICULTY_LABELS[d]}</button>))}</div>
+               <div className="flex flex-wrap bg-slate-800 p-1 rounded-lg">{DIFFICULTIES.map(d => (<button key={d} onClick={() => updateSelectedDifficulty(d)} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedDifficulty === d ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>{DIFFICULTY_LABELS[d]}</button>))}</div>
                <div className="flex bg-slate-800 p-1 rounded-lg">{getAvailableLevels(gameState.selectedDifficulty).map(l => (<button key={l} onClick={() => setGameState(prev => ({ ...prev, selectedLevel: l }))} className={`px-4 py-2 rounded-md font-bold transition-colors ${gameState.selectedLevel === l ? 'bg-green-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}>Level {l}</button>))}</div>
            </div>
            <div className="mb-4 flex-shrink-0 rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_58%),linear-gradient(145deg,rgba(15,23,42,0.96),rgba(12,18,32,0.92))] p-4 shadow-[0_0_30px_rgba(34,211,238,0.08)]">
@@ -3129,7 +3441,7 @@ export default function App() {
                         {DIFFICULTIES.map(diff => (
                           <GameButton
                             key={diff}
-                            onClick={() => setGameState(prev => ({ ...prev, selectedDifficulty: diff, selectedLevel: getSafeLevelForDifficulty(diff, prev.selectedLevel), screen: 'level-select' }))}
+                            onClick={() => updateSelectedDifficulty(diff, 'level-select')}
                             title={DIFFICULTY_GRADE_LABELS[diff]}
                             className="w-full min-h-[86px] px-4"
                             size="lg"
@@ -3383,15 +3695,8 @@ export default function App() {
     const isPenultimateMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 2;
     const isFinalMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 1;
     const monsterEmotion = gameState.monsterHp <= 0 ? 'win' : flash ? 'damage' : 'normal';
-    const comboLabel = gameState.combo >= 10 ? 'Legendary' : gameState.combo >= 7 ? 'Blazing' : gameState.combo >= 5 ? 'Hot Streak' : gameState.combo >= 3 ? 'Combo' : '';
-    const questionLength = gameState.currentQuestion.text.length;
-    const questionTextClass = questionLength > 58
-      ? 'text-xl md:text-3xl'
-      : questionLength > 42
-        ? 'text-2xl md:text-4xl'
-        : 'text-3xl md:text-5xl';
-    const questionPanelClass = questionLength > 42 ? 'px-5 md:px-8 py-4 md:py-5' : 'px-4 md:px-6 py-3 md:py-4';
-    const questionMinHeightClass = questionLength > 58 ? 'min-h-[4.8em]' : questionLength > 42 ? 'min-h-[3.9em]' : 'min-h-[3em]';
+    const comboLabel = getComboLabel(gameState.combo);
+    const questionPresentation = getBattleQuestionPresentation(gameState.currentQuestion.text);
     const monsterDialogue = getBattleBubbleDialogue(currentMonster, {
       isDefeated: gameState.monsterHp <= 0,
       isDamaged: flash,
@@ -3456,7 +3761,7 @@ export default function App() {
                   </div>
                 )}
                 <div className={`transition-all duration-300 ${flash ? 'scale-110' : ''} mb-2`}><div className="inline-block bg-white text-slate-900 px-4 py-1.5 rounded-xl shadow-lg border-2 border-slate-200 font-bold relative text-xs">{monsterDialogue}<div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b-2 border-r-2 border-slate-200"></div></div></div>
-                <div className={`transition-transform duration-100 relative ${flash ? 'translate-x-2 -translate-y-2 brightness-150 saturate-150' : monsterShake ? 'animate-shake brightness-110' : 'animate-bounce-slow'}`}><MonsterAvatar type={currentMonster.type} color={currentMonster.color} emotion={monsterEmotion} size={140} />{isBoss && <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded animate-pulse">BOSS</div>}</div>
+                <div className={`transition-transform duration-100 relative ${flash ? 'translate-x-2 -translate-y-2 brightness-150 saturate-150' : monsterShake ? 'animate-shake brightness-110' : 'animate-bounce-slow'}`}><MonsterAvatar type={currentMonster.type} color={currentMonster.color} emotion={monsterEmotion} size={140} visualStyle={getMonsterVisualStyle(currentMonster)} />{isBoss && <div className="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded animate-pulse">BOSS</div>}</div>
                 <div className="w-64 mt-2 bg-slate-800/80 p-2 rounded-lg border border-slate-600"><div className="flex justify-between text-slate-300 text-[10px] font-bold mb-1 px-1"><span className="flex items-center gap-2">{currentMonster.name} <span className="bg-slate-700 px-1 rounded text-slate-400">Lv.{gameState.currentMonsterIndex + 1}</span></span><span>{gameState.monsterHp} / {gameState.maxMonsterHp}</span></div><div className="h-3 bg-slate-900 rounded-full overflow-hidden relative shadow-inner"><div className={`h-full transition-all duration-300 relative overflow-hidden ${hpPercent < 30 ? 'bg-red-600' : 'bg-green-500'}`} style={{ width: `${hpPercent}%` }}><div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent"></div></div></div></div>
             </div>
             <div className="w-full bg-slate-800/95 backdrop-blur border-4 border-slate-600 rounded-2xl shadow-xl p-4 md:p-5 mt-4 relative">
@@ -3496,10 +3801,10 @@ export default function App() {
                    {showJapanese && <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>}
                  </div>
                  <div
-                   className={`relative bg-black/40 rounded-xl border border-slate-700 shadow-inner ${questionPanelClass}`}
+                  className={`relative bg-black/40 rounded-xl border border-slate-700 shadow-inner ${questionPresentation.panelClass}`}
                    onClick={() => inputRef.current?.focus()}
                  >
-                    <div className={`${questionTextClass} ${questionMinHeightClass} font-mono text-center pointer-events-none select-none tracking-[0.08em] text-slate-600 relative z-20 flex flex-wrap items-center justify-center content-center gap-y-1 break-words px-3 md:px-4`}>
+                   <div className={`${questionPresentation.textClass} ${questionPresentation.minHeightClass} font-mono text-center pointer-events-none select-none tracking-[0.08em] text-slate-600 relative z-20 flex flex-wrap items-center justify-center content-center gap-y-1 break-words px-3 md:px-4`}>
                         {gameState.currentQuestion.text.split('').map((char, index) => {
                             const isTyped = index < gameState.userInput.length;
                             const isCurrent = index === gameState.userInput.length;
