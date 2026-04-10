@@ -125,7 +125,6 @@ const HARD_TARGET_COUNT = 10;
 const REVIEW_REAPPEAR_DELAY = 5;
 const REVIEW_RATE_WINDOW_SIZE = 5;
 const REVIEW_RATE_MAX_IN_WINDOW = 3;
-const LISTENING_TRAINING_HP_MULTIPLIER = 1.2;
 const LISTENING_TRAINING_DAMAGE_MULTIPLIER = 0.28;
 const GUIDE_DAMAGE_MULTIPLIER = 0.3;
 const LEARNING_LEVELS: LearningLevel[] = [1, 2, 3];
@@ -140,7 +139,7 @@ const getGuideTargetCount = (_difficulty: Difficulty, _level: Level) => GUIDE_TA
 const getListeningTargetCount = (_difficulty: Difficulty, _level: Level) => LISTENING_TRAINING_TARGET_COUNT;
 
 const getBattleQuestionLimit = (mode: Mode, monsterHp: number) => {
-  if (mode !== 'guide') return 10;
+  if (mode === 'weakness') return 10;
   return Math.max(10, Math.min(25, Math.ceil(monsterHp / 35)));
 };
 
@@ -2092,12 +2091,8 @@ export default function App() {
     const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
     const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
     const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
-    const modeHpMultiplier = mode === 'challenge' && inputMode === 'voice-text'
-      ? LISTENING_TRAINING_HP_MULTIPLIER
-      : 1;
     const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[diff] ?? 1;
-    const hpMultiplier = modeHpMultiplier * difficultyHpMultiplier;
-    const startingMonsterHp = Math.round(startingMonster.baseHp * hpMultiplier);
+    const startingMonsterHp = Math.round(startingMonster.baseHp * difficultyHpMultiplier);
     const maxQuestions = getBattleQuestionLimit(mode, startingMonsterHp);
     const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;

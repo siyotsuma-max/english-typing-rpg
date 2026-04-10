@@ -2,6 +2,353 @@ type DifficultyKey = 'Eiken5' | 'Eiken4' | 'EikenPre1';
 type LevelKey = 1 | 2 | 3;
 type QuestionLike = { text: string };
 
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const withArticle = (text: string) => `${/^[aeiou]/i.test(text) ? 'an' : 'a'} ${text}`;
+const pickExample = (text: string, patterns: string[]) => patterns[getStableIndex(text, patterns.length)];
+
+const EIKEN5_LEVEL1_ADJECTIVES = new Set([
+  'sunny', 'cloudy', 'rainy', 'snowy', 'windy', 'warm', 'cool', 'hot', 'cold',
+  'tall', 'short', 'long', 'big', 'small', 'little', 'large', 'fat', 'thin', 'heavy', 'light',
+  'old', 'new', 'young', 'good', 'bad', 'nice', 'great', 'wonderful', 'beautiful', 'pretty', 'cute',
+  'happy', 'sad', 'angry', 'tired', 'sleepy', 'hungry', 'thirsty', 'sick', 'fine', 'well', 'busy',
+  'free', 'easy', 'hard', 'difficult', 'interesting', 'exciting', 'fun', 'funny', 'kind', 'friendly',
+  'strong', 'weak', 'fast', 'slow', 'high', 'low', 'right', 'wrong', 'same', 'different', 'important',
+  'special', 'famous', 'clean', 'dirty', 'quiet', 'noisy', 'sweet', 'sour', 'soft', 'favorite',
+  'popular', 'lucky', 'careful', 'ready',
+]);
+
+const EIKEN5_LEVEL1_COLORS = new Set([
+  'red', 'blue', 'white', 'black', 'green', 'yellow', 'pink', 'orange', 'brown', 'purple', 'gold', 'silver',
+]);
+
+const EIKEN5_LEVEL1_NUMBERS = new Set([
+  'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen',
+  'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety',
+]);
+
+const EIKEN5_LEVEL1_BIG_NUMBERS = new Set(['hundred', 'thousand']);
+const EIKEN5_LEVEL1_ORDINALS = new Set(['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth']);
+const EIKEN5_LEVEL1_WEEKDAYS = new Set(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
+const EIKEN5_LEVEL1_MONTHS = new Set(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']);
+const EIKEN5_LEVEL1_SEASONS = new Set(['spring', 'summer', 'fall', 'winter']);
+const EIKEN5_LEVEL1_COUNTRIES = new Set(['Japan', 'America', 'Canada', 'Australia', 'China', 'France']);
+const EIKEN5_LEVEL1_LANGUAGES = new Set(['English', 'Chinese', 'French']);
+const EIKEN5_LEVEL1_ADVERBS = new Set([
+  'really', 'very', 'so', 'too', 'always', 'usually', 'often', 'sometimes', 'never',
+  'again', 'also', 'together', 'alone', 'here', 'there', 'near', 'far', 'away', 'home', 'out',
+]);
+const EIKEN5_LEVEL1_PLURAL_NOUNS = new Set(['children', 'people', 'teeth', 'feet']);
+const EIKEN5_LEVEL1_FOODS = new Set([
+  'banana', 'sandwich', 'hamburger', 'pizza', 'curry', 'juice', 'coffee', 'milk', 'cake', 'chocolate',
+  'orange', 'apple', 'tomato', 'salad', 'melon', 'lemon', 'breakfast', 'lunch', 'dinner', 'supper',
+  'snack', 'food', 'fruit', 'vegetable', 'meat', 'fish', 'egg', 'bread', 'rice', 'water', 'tea', 'jam',
+  'butter', 'salt', 'sugar', 'pepper', 'soy sauce', 'oil',
+]);
+const EIKEN5_LEVEL1_ANIMALS = new Set([
+  'dog', 'cat', 'rabbit', 'hamster', 'bird', 'lion', 'tiger', 'elephant', 'monkey', 'bear', 'panda',
+  'horse', 'cow', 'pig', 'sheep', 'chicken', 'dolphin', 'whale', 'insect',
+]);
+const EIKEN5_LEVEL1_PLACES = new Set([
+  'school', 'classroom', 'gym', 'library', 'office', 'hospital', 'bank', 'station', 'airport', 'park',
+  'bookstore', 'supermarket', 'building', 'apartment', 'zoo', 'museum', 'theater', 'stadium', 'bridge',
+  'tower', 'street', 'city', 'town', 'village', 'country', 'world', 'kitchen', 'bathroom', 'bedroom', 'garden',
+]);
+const EIKEN5_LEVEL1_TRANSPORT = new Set(['bus', 'taxi', 'car', 'bike', 'bicycle', 'train', 'plane', 'ship', 'boat', 'truck']);
+const EIKEN5_LEVEL1_CLOTHES = new Set([
+  'cap', 'hat', 'shirt', 'coat', 'jacket', 'sweater', 'dress', 'skirt', 'shoe', 'sock', 'pocket', 'umbrella',
+  'glove', 'T-shirt',
+]);
+const EIKEN5_LEVEL1_HOME_ITEMS = new Set([
+  'camera', 'computer', 'calendar', 'notebook', 'pen', 'pencil', 'eraser', 'ruler', 'bag', 'watch', 'cup',
+  'glass', 'dish', 'plate', 'spoon', 'fork', 'knife', 'chopstick', 'bottle', 'box', 'basket', 'table', 'chair',
+  'desk', 'bed', 'sofa', 'curtain', 'door', 'window', 'floor', 'wall', 'room', 'phone', 'book', 'magazine',
+  'newspaper', 'dictionary', 'textbook', 'page', 'map', 'picture', 'letter', 'postcard', 'ticket', 'passport',
+  'card', 'present',
+]);
+const EIKEN5_LEVEL1_BODY_PARTS = new Set([
+  'head', 'face', 'eye', 'ear', 'nose', 'mouth', 'tooth', 'teeth', 'hair', 'hand', 'finger', 'arm', 'shoulder',
+  'leg', 'foot', 'feet', 'knee', 'body', 'heart', 'stomach', 'back',
+]);
+const EIKEN5_LEVEL1_JOBS = new Set([
+  'teacher', 'student', 'doctor', 'nurse', 'dentist', 'firefighter', 'pilot', 'driver', 'cook', 'baker',
+  'farmer', 'singer', 'artist', 'writer', 'scientist', 'clerk', 'waiter', 'waitress',
+]);
+const EIKEN5_LEVEL1_PEOPLE = new Set([
+  'family', 'father', 'mother', 'parent', 'brother', 'sister', 'grandfather', 'grandmother', 'uncle', 'aunt',
+  'son', 'daughter', 'baby', 'child', 'children', 'boy', 'girl', 'man', 'woman', 'friend', 'classmate',
+  'neighbor', 'people', 'person',
+]);
+const EIKEN5_LEVEL1_NATURE = new Set([
+  'flower', 'rose', 'tree', 'leaf', 'grass', 'mountain', 'river', 'sea', 'beach', 'sky', 'star', 'sun', 'moon', 'cloud',
+]);
+
+const EIKEN5_LEVEL1_EXACT_EXAMPLES: Record<string, string> = {
+  ski: 'I ski in winter.',
+  skate: 'They skate in the park.',
+  start: 'School starts at eight.',
+  camp: 'We camp by the lake in summer.',
+  hiking: 'We go hiking on Sunday.',
+  present: 'This present is for you.',
+  watch: 'This watch is new.',
+  dish: 'This dish is very good.',
+  weather: 'The weather is nice today.',
+  rain: 'We had rain this morning.',
+  snow: 'We had snow last night.',
+  wind: 'The wind is very strong today.',
+  time: 'What time is it now?',
+  hour: 'I studied English for an hour.',
+  minute: 'Please wait a minute.',
+  second: 'Please wait a second.',
+  morning: 'I study English in the morning.',
+  afternoon: 'We play tennis in the afternoon.',
+  evening: 'My family eats dinner in the evening.',
+  night: 'I read books at night.',
+  noon: 'We have lunch at noon.',
+  day: 'It is a busy day.',
+  week: 'We play soccer every week.',
+  month: 'This month is very busy.',
+  year: 'This year is special.',
+  today: 'I am busy today.',
+  tomorrow: 'We have a test tomorrow.',
+  yesterday: 'I was at home yesterday.',
+  weekend: 'We go to the park on the weekend.',
+  holiday: 'It is a school holiday.',
+  birthday: 'Today is my birthday.',
+  Christmas: 'We have a party on Christmas.',
+  date: 'Please write the date here.',
+  family: 'I love my family.',
+  father: 'My father is kind.',
+  mother: 'My mother cooks dinner.',
+  parent: 'My parent came to school today.',
+  brother: 'My brother plays soccer.',
+  sister: 'My sister likes music.',
+  uncle: 'My uncle drives a bus.',
+  aunt: 'My aunt is a teacher.',
+  son: 'Their son is very kind.',
+  daughter: 'Their daughter can swim well.',
+  hair: 'Her hair is long.',
+  heart: 'My heart was happy.',
+  stomach: 'My stomach is full.',
+  right: 'Your answer is right.',
+  left: 'My bag is on the left.',
+  sorry: 'I am sorry for being late.',
+  sure: 'Sure, I can help you.',
+  too: 'I like dogs too.',
+  much: 'We do not have much time.',
+  many: 'We have many books at school.',
+  'a lot of': 'We have a lot of homework today.',
+  some: 'I want some water.',
+  any: 'Do you have any questions?',
+  all: 'All students are here today.',
+  every: 'I read English every day.',
+  each: 'Each student has a bag.',
+  other: 'I want the other one.',
+  another: 'Can I have another cup?',
+  both: 'Both books are interesting.',
+  only: 'Only Tom can answer it.',
+  just: 'I am just a student.',
+  about: 'There are about ten students here.',
+  almost: 'It is almost noon.',
+  either: 'I do not like coffee either.',
+  into: 'The cat ran into the room.',
+};
+
+const EIKEN5_LEVEL2_EXACT_EXAMPLES: Record<string, string> = {
+  'look at': 'Look at this picture.',
+  'listen to': 'Please listen to the teacher.',
+  'a cup of': 'I would like a cup of tea.',
+  'a piece of': 'I ate a piece of cake.',
+  'a lot of': 'We saw a lot of people in the park.',
+  'kind of': 'What kind of music do you like?',
+  'in front of': 'He is standing in front of the station.',
+  'next to': 'My house is next to the park.',
+  'live in': 'I live in Tokyo.',
+  'like to': 'I like to read books after dinner.',
+  'want to': 'I want to play tennis today.',
+  'look for': 'I am looking for my notebook.',
+  'talk with': 'I talk with my friends after school.',
+  'wait for': 'Please wait for me here.',
+  'thank you': 'Thank you for your help.',
+  'you are welcome': 'You are welcome, Mike.',
+  'excuse me': 'Excuse me, where is the station?',
+  'I am sorry': 'I am sorry I was late.',
+  'see you': 'See you after school.',
+  'good morning': 'Good morning, everyone.',
+  'good afternoon': 'Good afternoon, Ms. Brown.',
+  'good evening': 'Good evening, Dad.',
+  'good night': 'Good night, Mom.',
+  'how are you': 'How are you today?',
+  'nice to meet you': 'Nice to meet you, Ken.',
+  'of course': 'Of course, I can help you.',
+  'all right': 'It is all right now.',
+  'that is right': 'That is right, Mr. Sato.',
+  'over there': 'My school is over there.',
+  'right here': 'Come and sit right here.',
+  'T-shirt': 'This T-shirt is new.',
+};
+
+const EIKEN5_LEVEL2_VERB_STARTERS = [
+  'get', 'go', 'come', 'look', 'listen', 'sit', 'stand', 'write', 'clean', 'wake',
+  'take', 'have', 'play', 'watch', 'read', 'study', 'cook', 'help', 'do', 'wash',
+  'use', 'make', 'speak', 'swim', 'run', 'walk', 'live', 'like', 'want', 'talk', 'wait',
+];
+
+const EIKEN5_LEVEL2_TIME_PHRASES = new Set([
+  'all day', 'all night', 'all the time', 'for a long time', 'once a week', 'twice a month',
+  'three times a year', 'every morning', 'last night', 'this morning', 'tomorrow morning',
+  'day after tomorrow', 'day before yesterday', 'next week', 'last month', 'next year',
+  'in the morning', 'in the afternoon', 'in the evening', 'at night', 'on Sunday', 'after school',
+]);
+
+const EIKEN5_LEVEL2_LOCATION_PHRASES = new Set(['at home', 'at school']);
+
+const getEiken5Level1FallbackExample = (text: string) => {
+  if (EIKEN5_LEVEL1_EXACT_EXAMPLES[text]) return EIKEN5_LEVEL1_EXACT_EXAMPLES[text];
+  if (EIKEN5_LEVEL1_MONTHS.has(text)) return pickExample(text, [
+    `My birthday is in ${text}.`,
+    `School starts in ${text}.`,
+    `We have a holiday in ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_WEEKDAYS.has(text)) return pickExample(text, [
+    `We play soccer on ${text}.`,
+    `I go to school on ${text}.`,
+    `My father is busy on ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_SEASONS.has(text)) return pickExample(text, [
+    `${capitalize(text)} is my favorite season.`,
+    `We have good weather in ${text}.`,
+    `I like ${text} very much.`,
+  ]);
+  if (EIKEN5_LEVEL1_COUNTRIES.has(text)) return pickExample(text, [
+    `I want to visit ${text} someday.`,
+    `My friend is from ${text}.`,
+    `${text} is a beautiful country.`,
+  ]);
+  if (EIKEN5_LEVEL1_LANGUAGES.has(text)) return pickExample(text, [
+    `I study ${text} at school.`,
+    `My teacher speaks ${text}.`,
+    `This book is in ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_ORDINALS.has(text)) return pickExample(text, [
+    `He is the ${text} runner.`,
+    `This is my ${text} visit here.`,
+    `She sits in the ${text} row.`,
+  ]);
+  if (EIKEN5_LEVEL1_BIG_NUMBERS.has(text)) return pickExample(text, [
+    `There are a ${text} stars in the sky.`,
+    `This city has a ${text} parks.`,
+    `We need a ${text} yen.`,
+  ]);
+  if (EIKEN5_LEVEL1_NUMBERS.has(text)) return pickExample(text, [
+    `I have ${text} pens.`,
+    `She has ${text} dogs.`,
+    `We need ${text} chairs.`,
+  ]);
+  if (EIKEN5_LEVEL1_COLORS.has(text)) return pickExample(text, [
+    `My bag is ${text}.`,
+    `His bike is ${text}.`,
+    `I like the ${text} flower.`,
+  ]);
+  if (EIKEN5_LEVEL1_ADVERBS.has(text)) return pickExample(text, [
+    `We study English ${text}.`,
+    `My father comes home ${text}.`,
+    `I see my friends ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_ADJECTIVES.has(text)) return pickExample(text, [
+    `The book is ${text}.`,
+    `My dog looks ${text}.`,
+    `This question is ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_FOODS.has(text)) return pickExample(text, [
+    `I like ${text}.`,
+    `We have ${text} for lunch.`,
+    `My mother buys ${text} on Sunday.`,
+  ]);
+  if (EIKEN5_LEVEL1_ANIMALS.has(text)) return pickExample(text, [
+    `I saw ${withArticle(text)} at the zoo.`,
+    `The ${text} is very cute.`,
+    `My sister likes the ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_PLACES.has(text)) return pickExample(text, [
+    `I go to the ${text} after school.`,
+    `This ${text} is near my house.`,
+    `We can meet at the ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_TRANSPORT.has(text)) return pickExample(text, [
+    `I go to school by ${text}.`,
+    `My father has a ${text}.`,
+    `We can take the ${text} home.`,
+  ]);
+  if (EIKEN5_LEVEL1_CLOTHES.has(text)) return pickExample(text, [
+    `This ${text} is new.`,
+    `My mother bought a ${text} for me.`,
+    `I put my ${text} on the chair.`,
+  ]);
+  if (EIKEN5_LEVEL1_HOME_ITEMS.has(text)) return pickExample(text, [
+    `This ${text} is on my desk.`,
+    `I use this ${text} every day.`,
+    `My brother has ${withArticle(text)} in his room.`,
+  ]);
+  if (EIKEN5_LEVEL1_BODY_PARTS.has(text)) return pickExample(text, [
+    `My ${text} hurts today.`,
+    `Wash your ${text} before dinner.`,
+    `The baby moved its ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_JOBS.has(text)) return pickExample(text, [
+    `My mother is ${withArticle(text)}.`,
+    `That ${text} is very busy.`,
+    `I want to be ${withArticle(text)} someday.`,
+  ]);
+  if (EIKEN5_LEVEL1_PEOPLE.has(text)) return pickExample(text, [
+    `My ${text} is kind.`,
+    `I talked with my ${text} after school.`,
+    `The ${text} is waiting for us.`,
+  ]);
+  if (EIKEN5_LEVEL1_NATURE.has(text)) return pickExample(text, [
+    `I can see ${withArticle(text)} from here.`,
+    `The ${text} is beautiful today.`,
+    `We walked near the ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL1_PLURAL_NOUNS.has(text)) return pickExample(text, [
+    `I can see ${text} in the park.`,
+    `${capitalize(text)} are in the room.`,
+    `We talked with the ${text}.`,
+  ]);
+  return pickExample(text, [
+    `I saw ${withArticle(text)} today.`,
+    `This is ${withArticle(text)} from my room.`,
+    `My friend has ${withArticle(text)}.`,
+    `We use ${withArticle(text)} at school.`,
+  ]);
+};
+
+const getEiken5Level2FallbackExample = (text: string) => {
+  if (EIKEN5_LEVEL2_EXACT_EXAMPLES[text]) return EIKEN5_LEVEL2_EXACT_EXAMPLES[text];
+  if (EIKEN5_LEVEL2_TIME_PHRASES.has(text)) return pickExample(text, [
+    `We study English ${text}.`,
+    `My father is busy ${text}.`,
+    `I do my homework ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL2_LOCATION_PHRASES.has(text)) return pickExample(text, [
+    `I study English ${text}.`,
+    `My mother is ${text} now.`,
+    `We eat dinner ${text}.`,
+  ]);
+  if (EIKEN5_LEVEL2_VERB_STARTERS.some(starter => text.startsWith(`${starter} `))) return pickExample(text, [
+    `I ${text}.`,
+    `We ${text} after school.`,
+    `They ${text} every day.`,
+    `My brother likes to ${text}.`,
+  ]);
+  return pickExample(text, [
+    `I like ${text}.`,
+    `We use ${text} in class.`,
+    `My teacher says ${text}.`,
+    `I hear "${text}" at school.`,
+  ]);
+};
+
 const PRE1_LEVEL1_EXAMPLES: Record<string, string> = {
   abundant: 'Fresh water is abundant here.',
   accelerate: 'The project accelerated after the funding arrived.',
@@ -518,6 +865,12 @@ export const getQuestionExample = (
   level: LevelKey,
   question: QuestionLike
 ): string | null => {
+  if (difficulty === 'Eiken5') {
+    if (level === 1) return getEiken5Level1FallbackExample(question.text);
+    if (level === 2) return getEiken5Level2FallbackExample(question.text);
+    return question.text || null;
+  }
+
   if (difficulty !== 'EikenPre1' || level === 3) return null;
 
   if (level === 1) {
