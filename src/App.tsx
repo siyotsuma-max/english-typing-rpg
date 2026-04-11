@@ -166,17 +166,20 @@ const getBattleDamageMultiplier = (mode: Mode, inputMode: InputMode) => {
   return 1;
 };
 
-const getBattleQuestionLimit = (mode: Mode, inputMode: InputMode, monsterHp: number) => {
-  if (mode === 'weakness') return 10;
-  const effectiveHp = monsterHp / Math.max(getBattleDamageMultiplier(mode, inputMode), 0.01);
-  return Math.max(10, Math.min(25, Math.ceil(effectiveHp / 35)));
+const DEFAULT_BATTLE_QUESTION_LIMIT = 10;
+const FINAL_BOSS_QUESTION_LIMIT = 20;
+
+const getBattleQuestionLimit = (mode: Mode, isFinalStageMonster: boolean) => {
+  if (mode === 'weakness') return DEFAULT_BATTLE_QUESTION_LIMIT;
+  return isFinalStageMonster ? FINAL_BOSS_QUESTION_LIMIT : DEFAULT_BATTLE_QUESTION_LIMIT;
 };
 
 const getBattleTuning = (
   difficulty: Difficulty,
   mode: Mode,
   inputMode: InputMode,
-  baseHp: number
+  baseHp: number,
+  isFinalStageMonster: boolean
 ) => {
   const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[difficulty] ?? 1;
   const monsterHp = Math.round(baseHp * difficultyHpMultiplier);
@@ -184,7 +187,7 @@ const getBattleTuning = (
   return {
     monsterHp,
     damageMultiplier: getBattleDamageMultiplier(mode, inputMode),
-    maxQuestions: getBattleQuestionLimit(mode, inputMode, monsterHp),
+    maxQuestions: getBattleQuestionLimit(mode, isFinalStageMonster),
   };
 };
 
@@ -2399,10 +2402,10 @@ export default function App() {
     const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
     const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
     const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
-    const battleTuning = getBattleTuning(diff, mode, inputMode, startingMonster.baseHp);
+    const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
+    const battleTuning = getBattleTuning(diff, mode, inputMode, startingMonster.baseHp, isFinalStageMonster);
     const startingMonsterHp = battleTuning.monsterHp;
     const maxQuestions = battleTuning.maxQuestions;
-    const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
     const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
     if (!startingMonster) return;
     soundEngine.stopBattleAmbience();
