@@ -168,10 +168,21 @@ const getBattleDamageMultiplier = (mode: Mode, inputMode: InputMode) => {
 
 const DEFAULT_BATTLE_QUESTION_LIMIT = 10;
 const FINAL_BOSS_QUESTION_LIMIT = 20;
+const FINAL_BOSS_HP_MULTIPLIER = 1.6;
 
 const getBattleQuestionLimit = (mode: Mode, isFinalStageMonster: boolean) => {
   if (mode === 'weakness') return DEFAULT_BATTLE_QUESTION_LIMIT;
   return isFinalStageMonster ? FINAL_BOSS_QUESTION_LIMIT : DEFAULT_BATTLE_QUESTION_LIMIT;
+};
+
+const getBattleHp = (
+  difficulty: Difficulty,
+  baseHp: number,
+  isFinalStageMonster: boolean
+) => {
+  const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[difficulty] ?? 1;
+  const finalStageHpMultiplier = isFinalStageMonster ? FINAL_BOSS_HP_MULTIPLIER : 1;
+  return Math.round(baseHp * difficultyHpMultiplier * finalStageHpMultiplier);
 };
 
 const getBattleTuning = (
@@ -181,8 +192,7 @@ const getBattleTuning = (
   baseHp: number,
   isFinalStageMonster: boolean
 ) => {
-  const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[difficulty] ?? 1;
-  const monsterHp = Math.round(baseHp * difficultyHpMultiplier);
+  const monsterHp = getBattleHp(difficulty, baseHp, isFinalStageMonster);
 
   return {
     monsterHp,
@@ -2905,6 +2915,9 @@ export default function App() {
       isMonsterDefeatedForBook(gameState.defeatedMonsterIds, bookDifficulty, bookLevel, 'guide', monsterId)
       || isMonsterDefeatedForBook(gameState.defeatedMonsterIds, bookDifficulty, bookLevel, 'challenge', monsterId)
     );
+    const getBookMonsterHp = (monster: Monster, monsterIndex: number, monsters: Monster[]) => (
+      getBattleHp(bookDifficulty, monster.baseHp, monsterIndex === monsters.length - 1)
+    );
     const totalDefeated = guideDefeatedCount + challengeDefeatedCount;
     return (
       <ScreenContainer className="bg-slate-900">
@@ -2922,18 +2935,20 @@ export default function App() {
                <div className="mb-8">
                  <h3 className="text-blue-300 font-bold mb-4 flex items-center gap-2 text-xl"><Shield size={20} /> 練習エリア (Training Zone)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {visibleGuideMonsters.map((m) => {
+                    {visibleGuideMonsters.map((m, index, monsters) => {
                       const isDefeated = isMonsterDefeatedInBook(m.id);
-                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
+                      const displayHp = getBookMonsterHp(m, index, monsters);
+                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {displayHp}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {displayHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
                </div>
                <div>
                  <h3 className="text-red-400 font-bold mb-4 flex items-center gap-2 text-xl"><Skull size={20} /> 危険エリア (Danger Zone)</h3>
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {visibleChallengeMonsters.map((m) => {
+                    {visibleChallengeMonsters.map((m, index, monsters) => {
                       const isDefeated = isMonsterDefeatedInBook(m.id);
-                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {m.baseHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
+                      const displayHp = getBookMonsterHp(m, index, monsters);
+                      return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {displayHp}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {displayHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
                </div>
