@@ -2350,15 +2350,16 @@ export default function App() {
       : null;
     activeReviewEntryRef.current = null;
 
-    const getOrderedStageIndices = (list: Monster[], countToSelect: number, rangeLimit: number) => {
-        const pool = list.slice(0, rangeLimit);
-        return pool.slice(0, countToSelect).map((_, index) => index);
+    const getOrderedStageIndices = (list: Monster[], countToSelect: number, rangeLimit: number = list.length) => {
+        const cappedRange = Math.min(rangeLimit, list.length);
+        const cappedCount = Math.min(countToSelect, cappedRange);
+        return Array.from({ length: cappedCount }, (_, index) => index);
     };
 
     if (mode === 'guide') {
       selectedList = monstersObj.guide;
       indices = getOrderedStageIndices(selectedList, guideTargetCount, guideTargetCount); 
-      totalStageMonsters = guideTargetCount;
+      totalStageMonsters = indices.length;
     } else if (mode === 'weakness') {
         const activeWeakQuestions = sessionWeakQuestionsRef.current ?? getScopedWeakQuestions(diff, level);
         if (activeWeakQuestions.length === 0) { alert("まだ苦手な単語がありません！"); return; }
@@ -2370,17 +2371,15 @@ export default function App() {
       if (inputMode === 'voice-text') {
         selectedList = monstersObj.guide;
         indices = getOrderedStageIndices(selectedList, listeningTargetCount, listeningTargetCount);
-        totalStageMonsters = listeningTargetCount;
+        totalStageMonsters = indices.length;
       } else if (inputMode === 'voice-only') {
         selectedList = monstersObj.challenge;
-        // Normal Mode: Fixed order, 5 monsters. No randomization.
-        indices = [0, 1, 2, 3, 4];
-        totalStageMonsters = NORMAL_TARGET_COUNT;
+        indices = getOrderedStageIndices(selectedList, NORMAL_TARGET_COUNT, NORMAL_TARGET_COUNT);
+        totalStageMonsters = indices.length;
       } else {
         selectedList = monstersObj.challenge;
-        // Hard Mode: Fixed order, 7 monsters.
-        indices = [0, 1, 2, 3, 4, 5, 6];
-        totalStageMonsters = HARD_TARGET_COUNT;
+        indices = getOrderedStageIndices(selectedList, HARD_TARGET_COUNT, HARD_TARGET_COUNT);
+        totalStageMonsters = indices.length;
       }
     }
 
@@ -3873,9 +3872,7 @@ export default function App() {
     const skippedCount = gameState.battleLog.filter(log => log.skipped).length;
     const answeredCount = gameState.battleLog.length - skippedCount;
     const perfectRate = answeredCount > 0 ? Math.round((perfectCount / answeredCount) * 100) : 0;
-    // Determine if next monster is available based on totalMonstersInStage
-    // Guide/Easy have 3, Normal 5, Hard 7.
-    // If current index < total - 1, we can go next.
+    // Advance while the current step is still within the generated stage length.
     const isNextAvailable = gameState.currentMonsterIndex < gameState.totalMonstersInStage - 1;
     const nextMonsterIsFinal = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 2;
     
