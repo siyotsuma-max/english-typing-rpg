@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, Sword, Shield, Trophy, Home, SkipForward, Zap, ArrowRight, RotateCcw, BookOpen, Star, Lock, Flame, Skull, ClipboardList, Crown, Target, Medal, Keyboard, AlertCircle, Brain, CheckCircle2, FastForward, LayoutGrid, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Volume2, Sword, Shield, Trophy, Home, SkipForward, Zap, ArrowRight, RotateCcw, BookOpen, Star, Lock, Flame, Skull, ClipboardList, Crown, Target, Medal, Keyboard, AlertCircle, Brain, CheckCircle2, FastForward, LayoutGrid, LogOut, Square } from 'lucide-react';
 import { QUESTIONS } from './data/questions';
 import { getQuestionExample } from './data/questionExamples';
 
@@ -89,6 +89,26 @@ type ReviewQueueEntry = {
   question: Question;
   remainingQuestions: number;
   missCount: number;
+};
+
+type AutoPlaySource = 'weak' | 'selected';
+
+type AutoPlaySettings = {
+  source: AutoPlaySource;
+  playText: boolean;
+  playTranslation: boolean;
+  playExample: boolean;
+  itemGapSeconds: number;
+  questionGapSeconds: number;
+};
+
+type SavedSelectionList = {
+  id: string;
+  name: string;
+  difficulty: Difficulty;
+  level: Level;
+  questionKeys: string[];
+  updatedAt: number;
 };
 
 type ResolvedSpeechConfig = {
@@ -833,17 +853,31 @@ const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMo
   };
 };
 
-const speakText = (text: string, options?: { voice?: SpeechSynthesisVoice | null; rate?: number; lang?: string }) => {
-  // Cancel any ongoing speech to prevent queuing lag
-  window.speechSynthesis.cancel();
-  
+const speakText = (
+  text: string,
+  options?: {
+    voice?: SpeechSynthesisVoice | null;
+    rate?: number;
+    lang?: string;
+    interrupt?: boolean;
+    onend?: () => void;
+    onerror?: () => void;
+  }
+) => {
+  if (options?.interrupt !== false) {
+    // Cancel any ongoing speech to prevent queuing lag
+    window.speechSynthesis.cancel();
+  }
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = options?.rate ?? 0.9;
   if (options?.voice) {
     utterance.voice = options.voice;
   }
   utterance.lang = options?.lang || options?.voice?.lang || 'en-US';
-  
+  utterance.onend = () => options?.onend?.();
+  utterance.onerror = () => options?.onerror?.();
+
   window.speechSynthesis.speak(utterance);
 };
 
@@ -1141,6 +1175,9 @@ const STORAGE_KEYS = {
   bgmVolumeLevel: 'etyping_bgm_volume_level',
   speechVoiceMode: 'etyping_speech_voice_mode',
   speechRatePercent: 'etyping_speech_rate_percent',
+  autoPlaySettings: 'etyping_auto_play_settings',
+  selectedQuestionKeysByScope: 'etyping_selected_question_keys_by_scope',
+  savedSelectionLists: 'etyping_saved_selection_lists',
 } as const;
 
 const safeLoadJson = <T,>(key: string, fallback: T): T => {
@@ -1183,6 +1220,15 @@ const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
   consecutiveCorrect: 0,
 });
 
+const getDefaultAutoPlaySettings = (): AutoPlaySettings => ({
+  source: 'weak',
+  playText: true,
+  playTranslation: false,
+  playExample: false,
+  itemGapSeconds: 0.5,
+  questionGapSeconds: 1.5,
+});
+
 const getDefaultManualQuestionStatus = (): ManualQuestionStatus => ({
   practiceLevel: 1,
   battleLevel: 1,
@@ -1220,6 +1266,56 @@ const normalizeManualQuestionStatuses = (statuses: Record<string, ManualQuestion
 const getQuestionStatusKey = (difficulty: Difficulty, level: Level, question: Question) => (
   `${difficulty}:${level}:${question.text}:${question.translation}`
 );
+
+const normalizeSelectedQuestionKeysByScope = (value: unknown) => (
+  Object.fromEntries(
+    Object.entries(typeof value === 'object' && value !== null ? value : {}).map(([key, item]) => [
+      key,
+      Array.isArray(item)
+        ? item.filter((entry): entry is string => typeof entry === 'string')
+        : [],
+    ])
+  ) as Record<string, string[]>
+);
+
+const normalizeSavedSelectionLists = (value: unknown): SavedSelectionList[] => (
+  Array.isArray(value)
+    ? value.flatMap((item) => {
+      if (!item || typeof item !== 'object') return [];
+      const typedItem = item as Partial<SavedSelectionList> & Record<string, unknown>;
+      const difficulty = typedItem.difficulty;
+      const level = typedItem.level;
+      if (!DIFFICULTIES.includes(difficulty as Difficulty)) return [];
+      if (![1, 2, 3].includes(level as number)) return [];
+
+      return [{
+        id: typeof typedItem.id === 'string' && typedItem.id.length > 0 ? typedItem.id : `${difficulty}:${level}:${Date.now()}`,
+        name: typeof typedItem.name === 'string' && typedItem.name.trim().length > 0 ? typedItem.name.trim() : '保存リスト',
+        difficulty: difficulty as Difficulty,
+        level: level as Level,
+        questionKeys: Array.isArray(typedItem.questionKeys)
+          ? typedItem.questionKeys.filter((entry: unknown): entry is string => typeof entry === 'string')
+          : [],
+        updatedAt: Number.isFinite(typedItem.updatedAt) ? Number(typedItem.updatedAt) : 0,
+      }];
+    })
+    : []
+);
+
+const normalizeAutoPlaySettings = (value: unknown): AutoPlaySettings => {
+  const defaults = getDefaultAutoPlaySettings();
+  if (!value || typeof value !== 'object') return defaults;
+  const typedValue = value as Partial<AutoPlaySettings> & Record<string, unknown>;
+
+  return {
+    source: typedValue.source === 'selected' ? 'selected' : defaults.source,
+    playText: typeof typedValue.playText === 'boolean' ? typedValue.playText : defaults.playText,
+    playTranslation: typeof typedValue.playTranslation === 'boolean' ? typedValue.playTranslation : defaults.playTranslation,
+    playExample: typeof typedValue.playExample === 'boolean' ? typedValue.playExample : defaults.playExample,
+    itemGapSeconds: Number.isFinite(typedValue.itemGapSeconds) ? Math.min(10, Math.max(0, Number(typedValue.itemGapSeconds))) : defaults.itemGapSeconds,
+    questionGapSeconds: Number.isFinite(typedValue.questionGapSeconds) ? Math.min(15, Math.max(0, Number(typedValue.questionGapSeconds))) : defaults.questionGapSeconds,
+  };
+};
 
 const getEffectiveLearningLevel = (status: ManualQuestionStatus): LearningLevel => (
   status.manualOverrideLevel ?? status.battleLevel
@@ -1639,6 +1735,105 @@ const GameButton = ({ onClick, children, className = "", variant = "primary", di
   );
 };
 
+type QuestionListRowProps = {
+  question: Question;
+  idx: number;
+  questionKey: string;
+  isWeakQuestion: boolean;
+  stats?: WeakQuestionStat;
+  manualStatus: ManualQuestionStatus;
+  isSelectedForAutoPlay: boolean;
+  example?: string | null;
+  onSpeak: (text: string) => void;
+  onToggleSelected: (question: Question) => void;
+  onUpdateManualLevel: (question: Question, level: LearningLevel) => void;
+  onToggleExcluded: (question: Question) => void;
+};
+
+const QuestionListRow = React.memo(function QuestionListRow({
+  question,
+  idx,
+  questionKey,
+  isWeakQuestion,
+  stats,
+  manualStatus,
+  isSelectedForAutoPlay,
+  example,
+  onSpeak,
+  onToggleSelected,
+  onUpdateManualLevel,
+  onToggleExcluded,
+}: QuestionListRowProps) {
+  const learningLabel = manualStatus.learningLevel === 1 ? '学習中' : manualStatus.learningLevel === 2 ? 'もう少し' : '覚えた';
+  const autoLabel = manualStatus.battleLevel === 1 ? '学習中' : manualStatus.battleLevel === 2 ? 'もう少し' : '覚えた';
+  const isManualOverrideActive = manualStatus.manualOverrideLevel !== null;
+
+  return (
+    <div key={`${questionKey}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${manualStatus.excluded ? 'bg-slate-950/80 border-slate-600 opacity-85' : isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex items-start gap-4 min-w-0">
+          <label className="mt-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-950/40 text-cyan-100 transition-colors hover:bg-cyan-900/40">
+            <input
+              type="checkbox"
+              checked={isSelectedForAutoPlay}
+              onChange={() => onToggleSelected(question)}
+              className="h-4 w-4 rounded border-slate-500 bg-slate-900 text-cyan-400"
+            />
+          </label>
+          <button onClick={() => onSpeak(question.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-lg md:text-xl font-mono text-blue-100 font-bold break-all">{question.text}</span>
+              <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] ${manualStatus.learningLevel === 1 ? 'border border-sky-400/35 bg-sky-500/10 text-sky-100' : manualStatus.learningLevel === 2 ? 'border border-emerald-400/35 bg-emerald-500/10 text-emerald-100' : 'border border-violet-400/35 bg-violet-500/10 text-violet-100'}`}>
+                {learningLabel}
+              </span>
+              {isSelectedForAutoPlay && <span className="rounded-full border border-cyan-300/40 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-cyan-100">選択中</span>}
+              {manualStatus.manualOverrideLevel !== null && <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-fuchsia-200">手動優先</span>}
+              {manualStatus.excluded && <span className="rounded-full border border-slate-400/40 bg-slate-700/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-200">除外中</span>}
+              {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
+              {isWeakQuestion && stats && <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">Miss x{stats.missCount}</span>}
+              {!isWeakQuestion && stats && <span className="rounded-full border border-slate-500/30 bg-slate-700/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-300">Past Miss x{stats.missCount}</span>}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <span className={`rounded-2xl border px-4 py-2 text-xl font-black leading-none tracking-[0.08em] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] md:text-2xl ${isManualOverrideActive ? 'border-slate-700 bg-slate-900/60 text-slate-300' : manualStatus.learningLevel === 1 ? 'border-sky-400/30 bg-sky-500/10 text-sky-100' : manualStatus.learningLevel === 2 ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100' : 'border-violet-400/30 bg-violet-500/10 text-violet-100'}`}>
+                {learningLabel}
+              </span>
+              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${isManualOverrideActive ? 'border-slate-700 bg-slate-900/70 text-slate-400' : 'border-cyan-400/30 bg-cyan-500/10 text-cyan-100'}`}>
+                自動: {autoLabel}
+              </span>
+            </div>
+          </div>
+        </div>
+        <span className="text-slate-300 font-bold text-sm md:text-base text-right flex-shrink-0">{question.translation}</span>
+      </div>
+      <div className="mt-3 ml-12 flex flex-wrap items-center gap-2 md:justify-end">
+        <span className="text-[11px] font-bold text-slate-400">手動設定</span>
+        {LEARNING_LEVELS.map(level => (
+          <button
+            key={level}
+            onClick={() => onUpdateManualLevel(question, level)}
+            className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.manualOverrideLevel === level ? level === 1 ? 'border-sky-300 bg-sky-500/20 text-sky-100 shadow-[0_0_18px_rgba(56,189,248,0.24)]' : level === 2 ? 'border-emerald-300 bg-emerald-500/20 text-emerald-100 shadow-[0_0_18px_rgba(52,211,153,0.22)]' : 'border-violet-300 bg-violet-500/20 text-violet-100 shadow-[0_0_18px_rgba(167,139,250,0.24)]' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+          >
+            {level === 1 ? '学習中' : level === 2 ? 'もう少し' : '覚えた'}
+          </button>
+        ))}
+        <button
+          onClick={() => onToggleExcluded(question)}
+          className={`rounded-full border px-3 py-1 text-[11px] font-bold transition-colors ${manualStatus.excluded ? 'border-slate-300 bg-slate-200 text-slate-900' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+        >
+          {manualStatus.excluded ? '除外を解除' : '除外する'}
+        </button>
+      </div>
+      {example && (
+        <div className="mt-3 ml-12 rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">Example</p>
+          <p className="mt-1 text-xs md:text-sm text-slate-200">{example}</p>
+        </div>
+      )}
+    </div>
+  );
+});
+
 // --- Main App ---
 export default function App() {
   const [gameState, setGameState] = useState<GameState>({
@@ -1683,6 +1878,12 @@ export default function App() {
   const [speechVoices, setSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [speechVoiceMode, setSpeechVoiceMode] = useState<SpeechVoiceMode>('us_female');
   const [speechRatePercent, setSpeechRatePercent] = useState<number>(100);
+  const [autoPlaySettings, setAutoPlaySettings] = useState<AutoPlaySettings>(getDefaultAutoPlaySettings());
+  const [selectedQuestionKeysByScope, setSelectedQuestionKeysByScope] = useState<Record<string, string[]>>({});
+  const [savedSelectionLists, setSavedSelectionLists] = useState<SavedSelectionList[]>([]);
+  const [selectionListName, setSelectionListName] = useState('');
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [autoPlayStatusText, setAutoPlayStatusText] = useState('待機中');
   const sessionWeakQuestionsRef = useRef<Question[] | null>(null);
   const [bookLevel, setBookLevel] = useState<Level>(1);
   const [bookDifficulty, setBookDifficulty] = useState<Difficulty>('Eiken5');
@@ -1698,6 +1899,8 @@ export default function App() {
   const [showFinalBossIntro, setShowFinalBossIntro] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const speechPreviewTimeoutRef = useRef<number | null>(null);
+  const autoPlayTimeoutRef = useRef<number | null>(null);
+  const autoPlayRunIdRef = useRef(0);
   const questionPoolRef = useRef<Record<string, QuestionPoolState>>({});
   const reviewQueueRef = useRef<ReviewQueueEntry[]>([]);
   const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
@@ -1740,6 +1943,9 @@ export default function App() {
     const savedManualStatuses = normalizeManualQuestionStatuses(safeLoadJson<Record<string, ManualQuestionStatus>>(STORAGE_KEYS.manualQuestionStatuses, {}));
     const savedReviewQueue = normalizeReviewQueue(safeLoadJson<ReviewQueueEntry[]>(STORAGE_KEYS.reviewQueue, []));
     const savedDailyProgress = safeLoadJson<DailyProgress>(STORAGE_KEYS.dailyProgress, createDailyProgress());
+    const savedAutoPlaySettings = normalizeAutoPlaySettings(safeLoadJson<AutoPlaySettings>(STORAGE_KEYS.autoPlaySettings, getDefaultAutoPlaySettings()));
+    const savedSelectedQuestionKeysByScope = normalizeSelectedQuestionKeysByScope(safeLoadJson<Record<string, string[]>>(STORAGE_KEYS.selectedQuestionKeysByScope, {}));
+    const savedSelectionLists = normalizeSavedSelectionLists(safeLoadJson<SavedSelectionList[]>(STORAGE_KEYS.savedSelectionLists, []));
     const todayKey = getTodayKey();
     const isNewDay = savedDailyProgress.date !== todayKey;
     const normalizedReviewQueue = isNewDay
@@ -1767,6 +1973,9 @@ export default function App() {
     setWeakQuestions(savedWeak);
     setWeakQuestionStats(savedWeakStats);
     setManualQuestionStatuses(savedManualStatuses);
+    setAutoPlaySettings(savedAutoPlaySettings);
+    setSelectedQuestionKeysByScope(savedSelectedQuestionKeysByScope);
+    setSavedSelectionLists(savedSelectionLists);
     reviewQueueRef.current = normalizedReviewQueue;
     localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(normalizedReviewQueue));
     setDailyProgress(normalizedDailyProgress);
@@ -1955,6 +2164,18 @@ export default function App() {
   }, [speechRatePercent]);
 
   useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.autoPlaySettings, JSON.stringify(autoPlaySettings));
+  }, [autoPlaySettings]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.selectedQuestionKeysByScope, JSON.stringify(selectedQuestionKeysByScope));
+  }, [selectedQuestionKeysByScope]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.savedSelectionLists, JSON.stringify(savedSelectionLists));
+  }, [savedSelectionLists]);
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       setSpeechVoices([]);
       return;
@@ -1964,8 +2185,7 @@ export default function App() {
     const loadVoices = () => {
       try {
         const voices = synth.getVoices();
-        const englishVoices = voices.filter(isEnglishVoice);
-        setSpeechVoices(englishVoices.length > 0 ? englishVoices : voices);
+        setSpeechVoices(voices);
       } catch (error) {
         console.error('Failed to load speech voices:', error);
         setSpeechVoices([]);
@@ -1991,6 +2211,7 @@ export default function App() {
       if (speechPreviewTimeoutRef.current !== null) {
         window.clearTimeout(speechPreviewTimeoutRef.current);
       }
+      clearAutoPlayTimeout();
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
@@ -1999,11 +2220,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (gameState.screen === 'settings') return;
+    if (gameState.screen === 'settings' || gameState.screen === 'question-list') return;
     clearSpeechPreviewTimeout();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopAutoPlay('停止しました');
     soundEngine.stopBattleMusicPreview();
   }, [gameState.screen]);
 
@@ -2116,6 +2335,99 @@ export default function App() {
           lang: speechConfig.lang,
           rate: speechRatePercent / 100,
       });
+  };
+
+  const getJapaneseSpeechVoice = () => (
+    speechVoices.find(voice => normalizeVoiceLang(voice.lang).startsWith('ja'))
+    ?? null
+  );
+
+  const clearAutoPlayTimeout = () => {
+    if (autoPlayTimeoutRef.current !== null) {
+      window.clearTimeout(autoPlayTimeoutRef.current);
+      autoPlayTimeoutRef.current = null;
+    }
+  };
+
+  const stopAutoPlay = (statusText: string = '停止しました') => {
+    autoPlayRunIdRef.current += 1;
+    clearAutoPlayTimeout();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsAutoPlaying(false);
+    setAutoPlayStatusText(statusText);
+  };
+
+  const updateSelectedQuestionKeysForScope = (
+    difficulty: Difficulty,
+    level: Level,
+    nextKeys: string[],
+  ) => {
+    const scopeKey = getReviewScopeKey(difficulty, level);
+    setSelectedQuestionKeysByScope(prev => ({
+      ...prev,
+      [scopeKey]: nextKeys,
+    }));
+  };
+
+  const toggleSelectedQuestion = (
+    difficulty: Difficulty,
+    level: Level,
+    question: Question,
+  ) => {
+    const scopeKey = getReviewScopeKey(difficulty, level);
+    const questionKey = getQuestionStatusKey(difficulty, level, question);
+    setSelectedQuestionKeysByScope(prev => {
+      const currentKeys = prev[scopeKey] ?? [];
+      const nextKeys = currentKeys.includes(questionKey)
+        ? currentKeys.filter(key => key !== questionKey)
+        : [...currentKeys, questionKey];
+
+      return {
+        ...prev,
+        [scopeKey]: nextKeys,
+      };
+    });
+  };
+
+  const saveCurrentSelectionList = (
+    difficulty: Difficulty,
+    level: Level,
+    questionKeys: string[],
+    name: string,
+  ) => {
+    const trimmedName = name.trim();
+    if (trimmedName.length === 0 || questionKeys.length === 0) return false;
+
+    const nextList: SavedSelectionList = {
+      id: `${difficulty}:${level}:${Date.now()}`,
+      name: trimmedName,
+      difficulty,
+      level,
+      questionKeys,
+      updatedAt: Date.now(),
+    };
+
+    setSavedSelectionLists(prev => (
+      [nextList, ...prev.filter(list => !(list.difficulty === difficulty && list.level === level && list.name === trimmedName))]
+    ));
+    setSelectionListName('');
+    return true;
+  };
+
+  const applySavedSelectionList = (list: SavedSelectionList) => {
+    updateSelectedQuestionKeysForScope(list.difficulty, list.level, list.questionKeys);
+    setGameState(prev => ({
+      ...prev,
+      selectedDifficulty: list.difficulty,
+      selectedLevel: list.level,
+      screen: 'question-list',
+    }));
+  };
+
+  const deleteSavedSelectionList = (listId: string) => {
+    setSavedSelectionLists(prev => prev.filter(list => list.id !== listId));
   };
 
   const clearSpeechPreviewTimeout = () => {
@@ -2810,6 +3122,15 @@ export default function App() {
   const selectedSpeechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
   const supportedSpeechModes = getSupportedSpeechModes(speechVoices);
   const selectedSpeechLocale = normalizeVoiceLang(selectedSpeechConfig.lang);
+  const currentScopedQuestions = QUESTIONS[gameState.selectedDifficulty]?.[gameState.selectedLevel] ?? [];
+  const currentQuestionExamples = useMemo(() => (
+    new Map(
+      currentScopedQuestions.map(question => {
+        const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, question);
+        return [questionKey, getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, question)] as const;
+      })
+    )
+  ), [currentScopedQuestions, gameState.selectedDifficulty, gameState.selectedLevel]);
   const speechDebugCandidates = speechVoices
     .filter(voice => matchesVoiceLocale(voice, selectedSpeechLocale as 'en-us' | 'en-gb'))
     .map(voice => ({
@@ -2818,6 +3139,82 @@ export default function App() {
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
+
+  const handleToggleSelectedQuestion = useCallback((question: Question) => {
+    toggleSelectedQuestion(gameState.selectedDifficulty, gameState.selectedLevel, question);
+  }, [gameState.selectedDifficulty, gameState.selectedLevel]);
+
+  const handleUpdateManualLevel = useCallback((question: Question, level: LearningLevel) => {
+    updateManualQuestionStatus(
+      gameState.selectedDifficulty,
+      gameState.selectedLevel,
+      question,
+      current => ({ ...current, manualOverrideLevel: current.manualOverrideLevel === level ? null : level })
+    );
+  }, [gameState.selectedDifficulty, gameState.selectedLevel]);
+
+  const handleToggleExcludedQuestion = useCallback((question: Question) => {
+    updateManualQuestionStatus(
+      gameState.selectedDifficulty,
+      gameState.selectedLevel,
+      question,
+      current => ({ ...current, excluded: !current.excluded })
+    );
+  }, [gameState.selectedDifficulty, gameState.selectedLevel]);
+
+  const startAutoPlaySequence = (
+    entries: Array<{ label: string; text: string; lang: string; voice: SpeechSynthesisVoice | null; gapAfterSeconds: number }>,
+  ) => {
+    if (entries.length === 0) {
+      stopAutoPlay('再生できる項目がありません');
+      return;
+    }
+
+    autoPlayRunIdRef.current += 1;
+    const runId = autoPlayRunIdRef.current;
+    clearAutoPlayTimeout();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsAutoPlaying(true);
+
+    const playAt = (index: number) => {
+      if (autoPlayRunIdRef.current !== runId) return;
+
+      if (index >= entries.length) {
+        setIsAutoPlaying(false);
+        setAutoPlayStatusText('再生が完了しました');
+        return;
+      }
+
+      const entry = entries[index];
+      setAutoPlayStatusText(`${index + 1}/${entries.length} ${entry.label}`);
+      const nextDelaySeconds = entry.gapAfterSeconds;
+
+      speakText(entry.text, {
+        voice: entry.voice,
+        lang: entry.lang,
+        rate: entry.lang.startsWith('ja') ? 1 : speechRatePercent / 100,
+        interrupt: false,
+        onend: () => {
+          if (autoPlayRunIdRef.current !== runId) return;
+          autoPlayTimeoutRef.current = window.setTimeout(() => {
+            autoPlayTimeoutRef.current = null;
+            playAt(index + 1);
+          }, nextDelaySeconds * 1000);
+        },
+        onerror: () => {
+          if (autoPlayRunIdRef.current !== runId) return;
+          autoPlayTimeoutRef.current = window.setTimeout(() => {
+            autoPlayTimeoutRef.current = null;
+            playAt(index + 1);
+          }, nextDelaySeconds * 1000);
+        },
+      });
+    };
+
+    playAt(0);
+  };
 
   if (gameState.screen === 'rank-list') {
       const allMonsterIds = Object.values(MONSTERS).flatMap(lvl => [...lvl.guide, ...lvl.challenge]).map(m => m.id);
@@ -2958,12 +3355,19 @@ export default function App() {
   }
 
   if (gameState.screen === 'question-list') {
-    const questions = QUESTIONS[gameState.selectedDifficulty][gameState.selectedLevel] || [];
+    const questions = currentScopedQuestions;
+    const selectionScopeKey = getReviewScopeKey(gameState.selectedDifficulty, gameState.selectedLevel);
     const learningSummary = getScopedLearningSummary(gameState.selectedDifficulty, gameState.selectedLevel);
     const weakQuestionTexts = new Set(weakQuestions.map(q => q.text));
     const playableQuestions = questions.filter(q => !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const excludedQuestions = questions.filter(q => isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const weakQuestionsInView = questions.filter(q => weakQuestionTexts.has(q.text) && !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
+    const selectedQuestionKeys = selectedQuestionKeysByScope[selectionScopeKey] ?? [];
+    const selectedQuestionKeySet = new Set(selectedQuestionKeys);
+    const selectedQuestionsInView = playableQuestions.filter(q => selectedQuestionKeySet.has(getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q)));
+    const savedSelectionListsInScope = savedSelectionLists
+      .filter(list => list.difficulty === gameState.selectedDifficulty && list.level === gameState.selectedLevel)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
     const weakCountInView = weakQuestionsInView.length;
     const manualReviewQuestions = playableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) < 3);
     const manualStudyCount = learningSummary.learningCount;
@@ -2977,6 +3381,7 @@ export default function App() {
       return (bStats.lastMissedAt - aStats.lastMissedAt) || (bStats.missCount - aStats.missCount) || a.text.localeCompare(b.text);
     });
     const visibleQuestions = questionListFilter === 'weak' ? sortedWeakQuestions : questions;
+    const visiblePlayableQuestions = visibleQuestions.filter(q => !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const recentWeakSamples = [...weakQuestionsInView]
       .sort((a, b) => (weakQuestionStats[b.text]?.lastMissedAt ?? 0) - (weakQuestionStats[a.text]?.lastMissedAt ?? 0))
       .slice(0, 3);
@@ -2988,6 +3393,13 @@ export default function App() {
       .sort((a, b) => ((weakQuestionStats[b.text]?.missCount ?? 0) - (weakQuestionStats[a.text]?.missCount ?? 0)) || ((weakQuestionStats[b.text]?.lastMissedAt ?? 0) - (weakQuestionStats[a.text]?.lastMissedAt ?? 0)))
       .slice(0, 10);
     const reviewTargetQuestions = questionListFilter === 'weak' ? visibleQuestions : weakQuestionsInView;
+    const autoPlayTargetQuestions = autoPlaySettings.source === 'weak' ? weakQuestionsInView : selectedQuestionsInView;
+    const autoPlayJapaneseVoice = getJapaneseSpeechVoice();
+    const autoPlayPlayableQuestionCount = autoPlayTargetQuestions.filter(q => {
+      if (autoPlaySettings.playText || autoPlaySettings.playTranslation) return true;
+      const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
+      return !!currentQuestionExamples.get(questionKey);
+    }).length;
     const manualReviewSamples = manualReviewQuestions.slice(0, 5).map(q => q.text).join(' / ');
 
     const startReviewFromList = (mode: Mode, inputMode: InputMode) => {
@@ -3004,6 +3416,90 @@ export default function App() {
       if (topMissedQuestions.length === 0) return;
       startGame(gameState.selectedDifficulty, gameState.selectedLevel, mode, inputMode, topMissedQuestions);
     };
+
+    const updateAutoPlaySetting = <K extends keyof AutoPlaySettings>(key: K, value: AutoPlaySettings[K]) => {
+      setAutoPlaySettings(prev => ({
+        ...prev,
+        [key]: value,
+      }));
+    };
+
+    const handleStartAutoPlay = () => {
+      if (!autoPlaySettings.playText && !autoPlaySettings.playTranslation && !autoPlaySettings.playExample) {
+        setAutoPlayStatusText('再生対象を1つ以上選んでください');
+        return;
+      }
+
+      const entries = autoPlayTargetQuestions.flatMap((question, questionIndex) => {
+        const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, question);
+        const example = currentQuestionExamples.get(questionKey);
+        const nextEntries: Array<{ label: string; text: string; lang: string; voice: SpeechSynthesisVoice | null; gapAfterSeconds: number }> = [];
+        const pushEntry = (entry: { label: string; text: string; lang: string; voice: SpeechSynthesisVoice | null }) => {
+          nextEntries.push({
+            ...entry,
+            gapAfterSeconds: autoPlaySettings.itemGapSeconds,
+          });
+        };
+
+        if (autoPlaySettings.playText) {
+          pushEntry({
+            label: `単語: ${question.text}`,
+            text: question.text,
+            lang: selectedSpeechConfig.lang,
+            voice: selectedSpeechConfig.voice,
+          });
+        }
+
+        if (autoPlaySettings.playTranslation) {
+          pushEntry({
+            label: `和訳: ${question.translation}`,
+            text: question.translation,
+            lang: autoPlayJapaneseVoice?.lang || 'ja-JP',
+            voice: autoPlayJapaneseVoice,
+          });
+        }
+
+        if (autoPlaySettings.playExample && example) {
+          pushEntry({
+            label: `例文: ${question.text}`,
+            text: example,
+            lang: selectedSpeechConfig.lang,
+            voice: selectedSpeechConfig.voice,
+          });
+        }
+
+        if (nextEntries.length > 0) {
+          nextEntries[nextEntries.length - 1].gapAfterSeconds = questionIndex < autoPlayTargetQuestions.length - 1
+            ? autoPlaySettings.questionGapSeconds
+            : 0;
+        }
+
+        return nextEntries;
+      });
+
+      startAutoPlaySequence(entries);
+    };
+
+    const questionRows = visibleQuestions.map((q, idx) => {
+      const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
+      return (
+        <QuestionListRow
+          key={questionKey}
+          idx={idx}
+          question={q}
+          questionKey={questionKey}
+          isWeakQuestion={weakQuestionTexts.has(q.text)}
+          stats={weakQuestionStats[q.text]}
+          manualStatus={getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)}
+          isSelectedForAutoPlay={selectedQuestionKeySet.has(questionKey)}
+          example={currentQuestionExamples.get(questionKey)}
+          onSpeak={speakWithSettings}
+          onToggleSelected={handleToggleSelectedQuestion}
+          onUpdateManualLevel={handleUpdateManualLevel}
+          onToggleExcluded={handleToggleExcludedQuestion}
+        />
+      );
+    });
 
     return (
       <ScreenContainer className="bg-slate-900">
@@ -3140,6 +3636,174 @@ export default function App() {
                 <Flame size={16} className="mr-1" /> {'Translation Battle\u5fa9\u7fd2'}
               </GameButton>
             </div>
+            <div className="mb-4 flex-shrink-0 rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-4 shadow-[0_0_24px_rgba(34,211,238,0.08)]">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-cyan-300">Auto Play</p>
+                  <h3 className="mt-1 text-xl font-black text-white">単語一覧の連続再生</h3>
+                  <p className="mt-2 text-xs text-slate-300">苦手語だけ、または自分で選んだ単語だけを連続再生できます。和訳は日本語音声、用語と例文は英語音声で読み上げます。</p>
+                </div>
+                <div className="rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
+                  <div>対象数: <span className="font-black text-white">{autoPlayTargetQuestions.length}</span></div>
+                  <div>再生可能: <span className="font-black text-cyan-200">{autoPlayPlayableQuestionCount}</span></div>
+                  <div className="mt-1 text-xs text-slate-400">{autoPlayStatusText}</div>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+                <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                  <p className="text-sm font-bold text-cyan-200">1. 再生元</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => updateAutoPlaySetting('source', 'weak')}
+                      className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${autoPlaySettings.source === 'weak' ? 'border-orange-300 bg-orange-500/20 text-orange-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                    >
+                      苦手語だけ ({weakQuestionsInView.length})
+                    </button>
+                    <button
+                      onClick={() => updateAutoPlaySetting('source', 'selected')}
+                      className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${autoPlaySettings.source === 'selected' ? 'border-cyan-300 bg-cyan-500/20 text-cyan-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                    >
+                      自分で選んだ語 ({selectedQuestionsInView.length})
+                    </button>
+                  </div>
+                  <p className="mt-4 text-sm font-bold text-cyan-200">2. 再生する内容</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {[
+                      { key: 'playText', label: '用語', checked: autoPlaySettings.playText },
+                      { key: 'playTranslation', label: '和訳', checked: autoPlaySettings.playTranslation },
+                      { key: 'playExample', label: '例文', checked: autoPlaySettings.playExample },
+                    ].map(item => (
+                      <label key={item.key} className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200">
+                        <input
+                          type="checkbox"
+                          checked={item.checked}
+                          onChange={(e) => updateAutoPlaySetting(item.key as keyof AutoPlaySettings, e.target.checked as never)}
+                          className="h-4 w-4 rounded border-slate-500 bg-slate-900 text-cyan-400"
+                        />
+                        <span>{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-sm font-bold text-cyan-200">3. 間隔</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <label className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-200">
+                      <span className="block text-xs font-bold uppercase tracking-wide text-slate-400">用語・和訳・例文の間隔</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={10}
+                        step={0.5}
+                        value={autoPlaySettings.itemGapSeconds}
+                        onChange={(e) => updateAutoPlaySetting('itemGapSeconds', Math.min(10, Math.max(0, Number(e.target.value) || 0)))}
+                        className="mt-2 w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-white"
+                      />
+                    </label>
+                    <label className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-200">
+                      <span className="block text-xs font-bold uppercase tracking-wide text-slate-400">次の用語までの間隔</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={15}
+                        step={0.5}
+                        value={autoPlaySettings.questionGapSeconds}
+                        onChange={(e) => updateAutoPlaySetting('questionGapSeconds', Math.min(15, Math.max(0, Number(e.target.value) || 0)))}
+                        className="mt-2 w-full rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-white"
+                      />
+                    </label>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <GameButton
+                      onClick={handleStartAutoPlay}
+                      size="sm"
+                      className="bg-cyan-600 border-cyan-400 text-white hover:bg-cyan-500"
+                      disabled={isAutoPlaying || autoPlayPlayableQuestionCount === 0}
+                    >
+                      <Volume2 size={16} className="mr-1" /> 連続再生を開始
+                    </GameButton>
+                    <GameButton
+                      onClick={() => stopAutoPlay()}
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-500 text-slate-200 hover:bg-slate-800"
+                      disabled={!isAutoPlaying}
+                    >
+                      <Square size={16} className="mr-1" /> 停止
+                    </GameButton>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-cyan-200">任意選択リスト</p>
+                      <p className="mt-1 text-xs text-slate-400">この難易度・レベルで選んだ単語は自動保存されます。さらに名前を付けて複数保存できます。</p>
+                    </div>
+                    <div className="text-xs text-slate-400">現在の選択: {selectedQuestionsInView.length}語</div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <GameButton
+                      onClick={() => updateSelectedQuestionKeysForScope(gameState.selectedDifficulty, gameState.selectedLevel, weakQuestionsInView.map(q => getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q)))}
+                      size="sm"
+                      variant="outline"
+                      className="border-orange-500/40 text-orange-200 hover:bg-orange-900/20"
+                    >
+                      苦手語を全部選択
+                    </GameButton>
+                    <GameButton
+                      onClick={() => updateSelectedQuestionKeysForScope(gameState.selectedDifficulty, gameState.selectedLevel, visiblePlayableQuestions.map(q => getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q)))}
+                      size="sm"
+                      variant="outline"
+                      className="border-blue-500/40 text-blue-200 hover:bg-blue-900/20"
+                    >
+                      表示中を全部選択
+                    </GameButton>
+                    <GameButton
+                      onClick={() => updateSelectedQuestionKeysForScope(gameState.selectedDifficulty, gameState.selectedLevel, [])}
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-500 text-slate-200 hover:bg-slate-800"
+                    >
+                      選択解除
+                    </GameButton>
+                  </div>
+                  <div className="mt-4 flex flex-col gap-3 md:flex-row">
+                    <input
+                      value={selectionListName}
+                      onChange={(e) => setSelectionListName(e.target.value)}
+                      placeholder="保存名を入力"
+                      className="flex-1 rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                    />
+                    <GameButton
+                      onClick={() => saveCurrentSelectionList(gameState.selectedDifficulty, gameState.selectedLevel, selectedQuestionKeys, selectionListName)}
+                      size="sm"
+                      className="bg-emerald-600 border-emerald-400 text-white hover:bg-emerald-500"
+                      disabled={selectedQuestionKeys.length === 0 || selectionListName.trim().length === 0}
+                    >
+                      保存する
+                    </GameButton>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {savedSelectionListsInScope.length > 0 ? savedSelectionListsInScope.map(list => (
+                      <div key={list.id} className="flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-950/70 px-3 py-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <div className="font-bold text-white">{list.name}</div>
+                          <div className="mt-1 text-xs text-slate-400">{list.questionKeys.length}語 / 更新 {new Date(list.updatedAt).toLocaleString('ja-JP')}</div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <GameButton onClick={() => applySavedSelectionList(list)} size="sm" variant="outline" className="border-cyan-500/40 text-cyan-200 hover:bg-cyan-900/20">
+                            読み込む
+                          </GameButton>
+                          <GameButton onClick={() => deleteSavedSelectionList(list.id)} size="sm" variant="outline" className="border-red-500/40 text-red-200 hover:bg-red-900/20">
+                            削除
+                          </GameButton>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/50 px-3 py-4 text-sm text-slate-400">まだ保存済みリストはありません。</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
             {questionListFilter === 'weak' && (
               <div className="mb-4 grid gap-4 md:grid-cols-3 flex-shrink-0">
                 <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
@@ -3217,18 +3881,28 @@ export default function App() {
                        <p className="mt-2 text-sm text-slate-400">通常の一覧に戻して、全問題を確認できます。</p>
                        <GameButton onClick={() => setQuestionListFilter('all')} variant="outline" size="sm" className="mt-4">すべて表示に戻す</GameButton>
                      </div>
-                   ) : <div className="grid gap-2 pb-4">{visibleQuestions.map((q, idx) => {
+                   ) : <div className="grid gap-2 pb-4">{questionRows /* visibleQuestions.map((q, idx) => {
                      const isWeakQuestion = weakQuestionTexts.has(q.text);
                      const stats = weakQuestionStats[q.text];
                      const manualStatus = getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q);
+                     const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
+                     const isSelectedForAutoPlay = selectedQuestionKeySet.has(questionKey);
                      const learningLabel = manualStatus.learningLevel === 1 ? '学習中' : manualStatus.learningLevel === 2 ? 'もう少し' : '覚えた';
                      const autoLabel = manualStatus.battleLevel === 1 ? '学習中' : manualStatus.battleLevel === 2 ? 'もう少し' : '覚えた';
                      const isManualOverrideActive = manualStatus.manualOverrideLevel !== null;
-                     const example = getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, q);
+                     const example = currentQuestionExamples.get(questionKey);
                      return (
                        <div key={`${q.text}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${manualStatus.excluded ? 'bg-slate-950/80 border-slate-600 opacity-85' : isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
                          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                            <div className="flex items-start gap-4 min-w-0">
+                             <label className="mt-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-950/40 text-cyan-100 transition-colors hover:bg-cyan-900/40">
+                               <input
+                                 type="checkbox"
+                                 checked={isSelectedForAutoPlay}
+                                 onChange={() => toggleSelectedQuestion(gameState.selectedDifficulty, gameState.selectedLevel, q)}
+                                 className="h-4 w-4 rounded border-slate-500 bg-slate-900 text-cyan-400"
+                               />
+                             </label>
                              <button onClick={() => speakWithSettings(q.text)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-colors flex-shrink-0"><Volume2 size={16} /></button>
                              <div className="min-w-0">
                                <div className="flex flex-wrap items-center gap-3">
@@ -3236,6 +3910,7 @@ export default function App() {
                                 <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] ${manualStatus.learningLevel === 1 ? 'border border-sky-400/35 bg-sky-500/10 text-sky-100' : manualStatus.learningLevel === 2 ? 'border border-emerald-400/35 bg-emerald-500/10 text-emerald-100' : 'border border-violet-400/35 bg-violet-500/10 text-violet-100'}`}>
                                  {learningLabel}
                                </span>
+                                {isSelectedForAutoPlay && <span className="rounded-full border border-cyan-300/40 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-cyan-100">選択中</span>}
                                 {manualStatus.manualOverrideLevel !== null && <span className="rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-bold tracking-wide text-fuchsia-200">{'\u624b\u52d5\u512a\u5148'}</span>}
                                 {manualStatus.excluded && <span className="rounded-full border border-slate-400/40 bg-slate-700/70 px-2 py-0.5 text-[10px] font-bold tracking-wide text-slate-200">{'\u9664\u5916\u4e2d'}</span>}
                                {isWeakQuestion && <span className="rounded-full border border-orange-400/40 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-300">Weak</span>}
@@ -3280,7 +3955,7 @@ export default function App() {
                          )}
                        </div>
                      );
-                   })}</div>}</div>
+                   }) */}</div>}</div>
                </Box>
            </div>
         </div>
