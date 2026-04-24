@@ -103,6 +103,15 @@ type AutoPlaySettings = {
   questionGapSeconds: number;
 };
 
+type AutoPlayNowPlayingPart = 'text' | 'translation' | 'example';
+
+type AutoPlayNowPlaying = {
+  questionText: string;
+  translation: string;
+  example: string | null;
+  activePart: AutoPlayNowPlayingPart;
+};
+
 type SavedSelectionList = {
   id: string;
   name: string;
@@ -1232,6 +1241,8 @@ const getDefaultAutoPlaySettings = (): AutoPlaySettings => ({
 });
 
 const AUTO_PLAY_RATE_OPTIONS = [75, 100, 125, 150, 175, 200] as const;
+const MIN_AUTO_PLAY_ITEM_GAP_SECONDS = 0.2;
+const MIN_AUTO_PLAY_QUESTION_GAP_SECONDS = 0.5;
 
 const getDefaultManualQuestionStatus = (): ManualQuestionStatus => ({
   practiceLevel: 1,
@@ -1891,6 +1902,7 @@ export default function App() {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [autoPlayStatusText, setAutoPlayStatusText] = useState('待機中');
   const sessionWeakQuestionsRef = useRef<Question[] | null>(null);
+  const [autoPlayNowPlaying, setAutoPlayNowPlaying] = useState<AutoPlayNowPlaying | null>(null);
   const [bookLevel, setBookLevel] = useState<Level>(1);
   const [bookDifficulty, setBookDifficulty] = useState<Difficulty>('Eiken5');
   const [, setShake] = useState(false);
@@ -2239,6 +2251,18 @@ export default function App() {
   }, [gameState.screen]);
 
   useEffect(() => {
+    if (gameState.screen !== 'question-list') return;
+    if (!isAutoPlaying) return;
+    stopAutoPlay('一覧条件の変更に合わせて停止しました');
+  }, [
+    gameState.screen,
+    gameState.selectedDifficulty,
+    gameState.selectedLevel,
+    questionListFilter,
+    weakListSort,
+  ]);
+
+  useEffect(() => {
     if (gameState.screen === 'battle') inputRef.current?.focus();
   }, [gameState.screen, gameState.currentQuestion]);
 
@@ -2368,6 +2392,7 @@ export default function App() {
       window.speechSynthesis.cancel();
     }
     setIsAutoPlaying(false);
+    setAutoPlayNowPlaying(null);
     setAutoPlayStatusText(statusText);
   };
 
@@ -3175,7 +3200,14 @@ export default function App() {
   }, [gameState.selectedDifficulty, gameState.selectedLevel]);
 
   const startAutoPlaySequence = (
-    entries: Array<{ label: string; text: string; lang: string; voice: SpeechSynthesisVoice | null; gapAfterSeconds: number }>,
+    entries: Array<{
+      label: string;
+      text: string;
+      lang: string;
+      voice: SpeechSynthesisVoice | null;
+      gapAfterSeconds: number;
+      nowPlaying: AutoPlayNowPlaying;
+    }>,
   ) => {
     if (entries.length === 0) {
       stopAutoPlay('再生できる項目がありません');
@@ -3188,6 +3220,7 @@ export default function App() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+    setAutoPlayNowPlaying(null);
     setIsAutoPlaying(true);
 
     const playAt = (index: number) => {
@@ -3195,13 +3228,21 @@ export default function App() {
 
       if (index >= entries.length) {
         setIsAutoPlaying(false);
+        setAutoPlayNowPlaying(null);
         setAutoPlayStatusText('再生が完了しました');
         return;
       }
 
       const entry = entries[index];
+      setAutoPlayNowPlaying(entry.nowPlaying);
       setAutoPlayStatusText(`${index + 1}/${entries.length} ${entry.label}`);
-      const nextDelaySeconds = entry.gapAfterSeconds;
+      const playbackRate = Math.max(0.5, autoPlaySettings.playbackRatePercent / 100);
+      const minGapSeconds = index < entries.length - 1
+        ? entries[index + 1].label.startsWith('次の単語')
+          ? MIN_AUTO_PLAY_QUESTION_GAP_SECONDS
+          : MIN_AUTO_PLAY_ITEM_GAP_SECONDS
+        : 0;
+      const nextDelaySeconds = Math.max(minGapSeconds, entry.gapAfterSeconds / playbackRate);
 
       speakText(entry.text, {
         voice: entry.voice,
@@ -3412,6 +3453,26 @@ export default function App() {
       const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
       return !!currentQuestionExamples.get(questionKey);
     }).length;
+    const learningLevelSelectionOptions: Array<{ level: LearningLevel; label: string; questions: Question[]; className: string }> = [
+      {
+        level: 1,
+        label: '学習中',
+        questions: visiblePlayableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) === 1),
+        className: 'border-sky-500/40 text-sky-200 hover:bg-sky-900/20',
+      },
+      {
+        level: 2,
+        label: 'もう少し',
+        questions: visiblePlayableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) === 2),
+        className: 'border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/20',
+      },
+      {
+        level: 3,
+        label: '覚えた',
+        questions: visiblePlayableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) === 3),
+        className: 'border-violet-500/40 text-violet-200 hover:bg-violet-900/20',
+      },
+    ];
     const manualReviewSamples = manualReviewQuestions.slice(0, 5).map(q => q.text).join(' / ');
 
     const startReviewFromList = (mode: Mode, inputMode: InputMode) => {
@@ -3445,8 +3506,21 @@ export default function App() {
       const entries = autoPlayTargetQuestions.flatMap((question, questionIndex) => {
         const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, question);
         const example = currentQuestionExamples.get(questionKey);
-        const nextEntries: Array<{ label: string; text: string; lang: string; voice: SpeechSynthesisVoice | null; gapAfterSeconds: number }> = [];
-        const pushEntry = (entry: { label: string; text: string; lang: string; voice: SpeechSynthesisVoice | null }) => {
+        const nextEntries: Array<{
+          label: string;
+          text: string;
+          lang: string;
+          voice: SpeechSynthesisVoice | null;
+          gapAfterSeconds: number;
+          nowPlaying: AutoPlayNowPlaying;
+        }> = [];
+        const pushEntry = (entry: {
+          label: string;
+          text: string;
+          lang: string;
+          voice: SpeechSynthesisVoice | null;
+          nowPlaying: AutoPlayNowPlaying;
+        }) => {
           nextEntries.push({
             ...entry,
             gapAfterSeconds: autoPlaySettings.itemGapSeconds,
@@ -3459,6 +3533,12 @@ export default function App() {
             text: question.text,
             lang: selectedSpeechConfig.lang,
             voice: selectedSpeechConfig.voice,
+            nowPlaying: {
+              questionText: question.text,
+              translation: question.translation,
+              example: example ?? null,
+              activePart: 'text',
+            },
           });
         }
 
@@ -3468,6 +3548,12 @@ export default function App() {
             text: question.translation,
             lang: autoPlayJapaneseVoice?.lang || 'ja-JP',
             voice: autoPlayJapaneseVoice,
+            nowPlaying: {
+              questionText: question.text,
+              translation: question.translation,
+              example: example ?? null,
+              activePart: 'translation',
+            },
           });
         }
 
@@ -3477,6 +3563,12 @@ export default function App() {
             text: example,
             lang: selectedSpeechConfig.lang,
             voice: selectedSpeechConfig.voice,
+            nowPlaying: {
+              questionText: question.text,
+              translation: question.translation,
+              example,
+              activePart: 'example',
+            },
           });
         }
 
@@ -3739,7 +3831,7 @@ export default function App() {
                   </div>
                   <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-bold text-cyan-200">再生速度</span>
+                      <span className="text-sm font-bold text-cyan-200">英語の再生速度</span>
                       <span className="text-sm font-bold text-white">{autoPlaySettings.playbackRatePercent / 100}x</span>
                     </div>
                     <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -3753,6 +3845,34 @@ export default function App() {
                         </button>
                       ))}
                     </div>
+                  </div>
+                  <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-cyan-200">現在再生中</span>
+                      <span className="text-xs font-bold text-slate-400">{isAutoPlaying ? '再生中' : '待機中'}</span>
+                    </div>
+                    {autoPlayNowPlaying ? (
+                      <div className="mt-3 space-y-2">
+                        <div className={`rounded-lg border px-3 py-2 text-sm transition-colors ${autoPlayNowPlaying.activePart === 'text' ? 'border-cyan-300 bg-cyan-500/15 text-cyan-50' : 'border-slate-700 bg-slate-900/70 text-slate-300'}`}>
+                          <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">用語</div>
+                          <div className="mt-1 break-words font-semibold">{autoPlayNowPlaying.questionText}</div>
+                        </div>
+                        <div className={`rounded-lg border px-3 py-2 text-sm transition-colors ${autoPlayNowPlaying.activePart === 'translation' ? 'border-emerald-300 bg-emerald-500/15 text-emerald-50' : 'border-slate-700 bg-slate-900/70 text-slate-300'}`}>
+                          <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">和訳</div>
+                          <div className="mt-1 break-words font-semibold">{autoPlayNowPlaying.translation}</div>
+                        </div>
+                        {autoPlayNowPlaying.example && (
+                          <div className={`rounded-lg border px-3 py-2 text-sm transition-colors ${autoPlayNowPlaying.activePart === 'example' ? 'border-violet-300 bg-violet-500/15 text-violet-50' : 'border-slate-700 bg-slate-900/70 text-slate-300'}`}>
+                            <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">例文</div>
+                            <div className="mt-1 break-words leading-relaxed">{autoPlayNowPlaying.example}</div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-3 rounded-lg border border-dashed border-slate-700 bg-slate-900/50 px-3 py-4 text-sm text-slate-400">
+                        再生を開始すると、ここに用語・和訳・例文を表示します。
+                      </div>
+                    )}
                   </div>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <GameButton
@@ -3807,6 +3927,23 @@ export default function App() {
                     >
                       選択解除
                     </GameButton>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {learningLevelSelectionOptions.map(option => (
+                      <GameButton
+                        key={option.level}
+                        onClick={() => updateSelectedQuestionKeysForScope(
+                          gameState.selectedDifficulty,
+                          gameState.selectedLevel,
+                          option.questions.map(q => getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q)),
+                        )}
+                        size="sm"
+                        variant="outline"
+                        className={option.className}
+                      >
+                        {option.label}を選択 ({option.questions.length})
+                      </GameButton>
+                    ))}
                   </div>
                   <div className="mt-4 flex flex-col gap-3 md:flex-row">
                     <input
