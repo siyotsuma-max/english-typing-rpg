@@ -98,6 +98,7 @@ type AutoPlaySettings = {
   playText: boolean;
   playTranslation: boolean;
   playExample: boolean;
+  playbackRatePercent: number;
   itemGapSeconds: number;
   questionGapSeconds: number;
 };
@@ -1223,11 +1224,14 @@ const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
 const getDefaultAutoPlaySettings = (): AutoPlaySettings => ({
   source: 'weak',
   playText: true,
-  playTranslation: false,
-  playExample: false,
+  playTranslation: true,
+  playExample: true,
+  playbackRatePercent: 100,
   itemGapSeconds: 0.5,
   questionGapSeconds: 1.5,
 });
+
+const AUTO_PLAY_RATE_OPTIONS = [75, 100, 125, 150, 175, 200] as const;
 
 const getDefaultManualQuestionStatus = (): ManualQuestionStatus => ({
   practiceLevel: 1,
@@ -1312,6 +1316,7 @@ const normalizeAutoPlaySettings = (value: unknown): AutoPlaySettings => {
     playText: typeof typedValue.playText === 'boolean' ? typedValue.playText : defaults.playText,
     playTranslation: typeof typedValue.playTranslation === 'boolean' ? typedValue.playTranslation : defaults.playTranslation,
     playExample: typeof typedValue.playExample === 'boolean' ? typedValue.playExample : defaults.playExample,
+    playbackRatePercent: Number.isFinite(typedValue.playbackRatePercent) ? Math.min(250, Math.max(50, Number(typedValue.playbackRatePercent))) : defaults.playbackRatePercent,
     itemGapSeconds: Number.isFinite(typedValue.itemGapSeconds) ? Math.min(10, Math.max(0, Number(typedValue.itemGapSeconds))) : defaults.itemGapSeconds,
     questionGapSeconds: Number.isFinite(typedValue.questionGapSeconds) ? Math.min(15, Math.max(0, Number(typedValue.questionGapSeconds))) : defaults.questionGapSeconds,
   };
@@ -1875,6 +1880,7 @@ export default function App() {
   const [manualQuestionStatuses, setManualQuestionStatuses] = useState<Record<string, ManualQuestionStatus>>({});
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>(createDailyProgress());
   const [bgmVolumeLevel, setBgmVolumeLevel] = useState<number>(3);
+  const [allSpeechVoices, setAllSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [speechVoices, setSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [speechVoiceMode, setSpeechVoiceMode] = useState<SpeechVoiceMode>('us_female');
   const [speechRatePercent, setSpeechRatePercent] = useState<number>(100);
@@ -1893,6 +1899,8 @@ export default function App() {
   const [scoreViewDiff, setScoreViewDiff] = useState<Difficulty>('Eiken5');
   const [questionListFilter, setQuestionListFilter] = useState<'all' | 'weak'>('all');
   const [weakListSort, setWeakListSort] = useState<'recent' | 'frequent'>('recent');
+  const [wordListToolsOpen, setWordListToolsOpen] = useState(false);
+  const [weakReviewPanelOpen, setWeakReviewPanelOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [lastSolvedQuestion, setLastSolvedQuestion] = useState<Question | null>(null);
@@ -1999,7 +2007,7 @@ export default function App() {
     const savedSpeechRatePercent = localStorage.getItem(STORAGE_KEYS.speechRatePercent);
     if (savedSpeechRatePercent) {
       const parsedSpeechRatePercent = parseInt(savedSpeechRatePercent, 10);
-      if (Number.isFinite(parsedSpeechRatePercent) && parsedSpeechRatePercent >= 50 && parsedSpeechRatePercent <= 200) {
+      if (Number.isFinite(parsedSpeechRatePercent) && parsedSpeechRatePercent >= 50 && parsedSpeechRatePercent <= 250) {
         setSpeechRatePercent(parsedSpeechRatePercent);
       } else {
         localStorage.removeItem(STORAGE_KEYS.speechRatePercent);
@@ -2177,6 +2185,7 @@ export default function App() {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      setAllSpeechVoices([]);
       setSpeechVoices([]);
       return;
     }
@@ -2185,9 +2194,12 @@ export default function App() {
     const loadVoices = () => {
       try {
         const voices = synth.getVoices();
-        setSpeechVoices(voices);
+        const englishVoices = voices.filter(isEnglishVoice);
+        setAllSpeechVoices(voices);
+        setSpeechVoices(englishVoices.length > 0 ? englishVoices : voices);
       } catch (error) {
         console.error('Failed to load speech voices:', error);
+        setAllSpeechVoices([]);
         setSpeechVoices([]);
       }
     };
@@ -2338,7 +2350,7 @@ export default function App() {
   };
 
   const getJapaneseSpeechVoice = () => (
-    speechVoices.find(voice => normalizeVoiceLang(voice.lang).startsWith('ja'))
+    allSpeechVoices.find(voice => normalizeVoiceLang(voice.lang).startsWith('ja'))
     ?? null
   );
 
@@ -3194,7 +3206,7 @@ export default function App() {
       speakText(entry.text, {
         voice: entry.voice,
         lang: entry.lang,
-        rate: entry.lang.startsWith('ja') ? 1 : speechRatePercent / 100,
+        rate: entry.lang.startsWith('ja') ? 1 : autoPlaySettings.playbackRatePercent / 100,
         interrupt: false,
         onend: () => {
           if (autoPlayRunIdRef.current !== runId) return;
@@ -3588,6 +3600,20 @@ export default function App() {
                 )}
               </div>
             </div>
+            <div className="mb-4 flex-shrink-0">
+              <button
+                onClick={() => setWordListToolsOpen(prev => !prev)}
+                className="flex w-full items-center justify-between rounded-xl border border-cyan-500/30 bg-cyan-950/20 px-4 py-3 text-left transition-colors hover:bg-cyan-900/25"
+              >
+                <div>
+                  <p className="text-sm font-bold text-cyan-200">選択・自動再生ツール</p>
+                  <p className="mt-1 text-xs text-slate-400">任意選択、25語まとめ選択、自動再生を必要なときだけ開けます。</p>
+                </div>
+                <span className="text-sm font-bold text-cyan-100">{wordListToolsOpen ? '閉じる ▲' : '開く ▼'}</span>
+              </button>
+            </div>
+            {wordListToolsOpen && (
+            <>
             <div className="mb-4 flex-shrink-0 rounded-xl border border-sky-500/30 bg-sky-950/20 p-4">
               <div className="mb-3 hidden flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -3711,6 +3737,23 @@ export default function App() {
                       />
                     </label>
                   </div>
+                  <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-cyan-200">再生速度</span>
+                      <span className="text-sm font-bold text-white">{autoPlaySettings.playbackRatePercent / 100}x</span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+                      {AUTO_PLAY_RATE_OPTIONS.map(rateOption => (
+                        <button
+                          key={rateOption}
+                          onClick={() => updateAutoPlaySetting('playbackRatePercent', rateOption)}
+                          className={`rounded-lg border px-2 py-2 text-sm font-bold transition-colors ${autoPlaySettings.playbackRatePercent === rateOption ? 'border-cyan-300 bg-cyan-500/20 text-cyan-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                        >
+                          {rateOption / 100}x
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <GameButton
                       onClick={handleStartAutoPlay}
@@ -3804,7 +3847,23 @@ export default function App() {
                 </div>
               </div>
             </div>
+            </>
+            )}
             {questionListFilter === 'weak' && (
+              <div className="mb-4 flex-shrink-0">
+                <button
+                  onClick={() => setWeakReviewPanelOpen(prev => !prev)}
+                  className="flex w-full items-center justify-between rounded-xl border border-orange-500/30 bg-orange-950/20 px-4 py-3 text-left transition-colors hover:bg-orange-900/25"
+                >
+                  <div>
+                    <p className="text-sm font-bold text-orange-200">苦手語レビュー詳細</p>
+                    <p className="mt-1 text-xs text-slate-400">苦手語の統計や復習ボタンは必要なときだけ開けます。</p>
+                  </div>
+                  <span className="text-sm font-bold text-orange-100">{weakReviewPanelOpen ? '閉じる ▲' : '開く ▼'}</span>
+                </button>
+              </div>
+            )}
+            {questionListFilter === 'weak' && weakReviewPanelOpen && (
               <div className="mb-4 grid gap-4 md:grid-cols-3 flex-shrink-0">
                 <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
                   <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">Recent Mistakes</p>
@@ -3823,7 +3882,7 @@ export default function App() {
                 </div>
               </div>
             )}
-            {questionListFilter === 'weak' && (
+            {questionListFilter === 'weak' && weakReviewPanelOpen && (
               <div className="mb-4 flex-shrink-0 rounded-xl border border-orange-500/30 bg-orange-950/20 p-4">
                 <div className="mb-3">
                   <p className="text-sm font-bold text-orange-200">表示中の苦手語を復習する</p>
@@ -3845,7 +3904,7 @@ export default function App() {
                 </div>
               </div>
             )}
-            {questionListFilter === 'weak' && (
+            {questionListFilter === 'weak' && weakReviewPanelOpen && (
               <div className="mb-4 flex-shrink-0 rounded-xl border border-amber-500/30 bg-amber-950/20 p-4">
                 <div className="mb-3">
                   <p className="text-sm font-bold text-amber-200">特に間違いが多い問題から復習する</p>
@@ -4050,7 +4109,7 @@ export default function App() {
               <input
                 type="range"
                 min="50"
-                max="200"
+                max="250"
                 step="5"
                 value={speechRatePercent}
                 onChange={(e) => handleSpeechRateChange(parseInt(e.target.value, 10))}
