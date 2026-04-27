@@ -2075,6 +2075,7 @@ export default function App() {
   const [playerProfiles, setPlayerProfiles] = useState<PlayerProfile[]>([]);
   const [activePlayerId, setActivePlayerId] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [settingsFocusSection, setSettingsFocusSection] = useState<'progress-transfer' | 'player-profiles' | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [autoPlayStatusText, setAutoPlayStatusText] = useState('待機中');
   const sessionWeakQuestionsRef = useRef<Question[] | null>(null);
@@ -2096,6 +2097,8 @@ export default function App() {
   const [progressTransferStatus, setProgressTransferStatus] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const progressImportInputRef = useRef<HTMLInputElement>(null);
+  const playerProfilesSectionRef = useRef<HTMLDivElement>(null);
+  const progressTransferSectionRef = useRef<HTMLDivElement>(null);
   const speechPreviewTimeoutRef = useRef<number | null>(null);
   const autoPlayTimeoutRef = useRef<number | null>(null);
   const autoPlayRunIdRef = useRef(0);
@@ -2114,6 +2117,16 @@ export default function App() {
       selectedLevel: getSafeLevelForDifficulty(difficulty, prev.selectedLevel),
       ...(screen ? { screen } : {}),
     }));
+  };
+
+  const openProgressTransferSettings = () => {
+    setSettingsFocusSection('progress-transfer');
+    setGameState(prev => ({ ...prev, screen: 'settings' }));
+  };
+
+  const openPlayerProfileSettings = () => {
+    setSettingsFocusSection('player-profiles');
+    setGameState(prev => ({ ...prev, screen: 'settings' }));
   };
 
   const updateBookDifficulty = (difficulty: Difficulty) => {
@@ -2622,6 +2635,21 @@ export default function App() {
     stopAutoPlay('停止しました');
     soundEngine.stopBattleMusicPreview();
   }, [gameState.screen]);
+
+  useEffect(() => {
+    if (gameState.screen !== 'settings') return;
+    if (!settingsFocusSection) return;
+
+    const timerId = window.setTimeout(() => {
+      const sectionRef = settingsFocusSection === 'player-profiles'
+        ? playerProfilesSectionRef.current
+        : progressTransferSectionRef.current;
+      sectionRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setSettingsFocusSection(null);
+    }, 60);
+
+    return () => window.clearTimeout(timerId);
+  }, [gameState.screen, settingsFocusSection]);
 
   useEffect(() => {
     if (gameState.screen !== 'question-list') return;
@@ -4920,6 +4948,7 @@ export default function App() {
               </div>
             </div>
           </Box>
+          <div ref={playerProfilesSectionRef}>
           <Box title="Player Profiles" className="w-full mt-6">
             <div className="space-y-5">
               <div className="rounded-xl border border-violet-500/20 bg-violet-950/10 p-4 text-sm text-slate-300">
@@ -4969,11 +4998,17 @@ export default function App() {
               </div>
             </div>
           </Box>
+          </div>
+          <div ref={progressTransferSectionRef}>
           <Box title="Progress Transfer" className="w-full mt-6">
             <div className="space-y-5">
               <p className="text-sm text-slate-300">
                 学習データを JSON ファイルとして保存し、別端末で読み込めます。分かる項目だけ復元するので、将来データ項目が増減しても壊れにくい方式です。
               </p>
+              <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-300">
+                <p>現在のプレイヤーのみを書き出します。</p>
+                <p className="mt-2">読み込むと、そのプレイヤーデータを追加または更新します。</p>
+              </div>
               <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/10 p-4 text-sm text-slate-300">
                 <p className="font-bold text-cyan-200">引き継げる主な内容</p>
                 <p className="mt-2">苦手語、ミス統計、手動設定、除外設定、復習キュー、日次進捗、保存済み選択リスト、自動再生設定</p>
@@ -5002,6 +5037,7 @@ export default function App() {
               </div>
             </div>
           </Box>
+          </div>
         </div>
       </ScreenContainer>
     );
@@ -5069,6 +5105,41 @@ export default function App() {
                      <div className="text-sm font-bold bg-black/50 px-6 py-3 rounded-full border border-slate-600 flex items-center gap-2"><Medal size={20} className={rank.color} /><span className={rank.color}>{rank.title}</span></div>
                 </div>
                 <div className="w-full space-y-4 max-w-4xl">
+                    <div className="rounded-2xl border border-violet-400/25 bg-slate-950/65 px-4 py-3 shadow-[0_10px_24px_rgba(76,29,149,0.18)] backdrop-blur-sm">
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-black uppercase tracking-[0.22em] text-violet-200">Current Player</div>
+                          <div className="truncate text-lg font-black text-white md:text-xl">{getCurrentActivePlayer()?.name ?? 'Player'}</div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {playerProfiles.map((profile) => {
+                            const isActive = profile.id === activePlayerId;
+                            return (
+                              <GameButton
+                                key={profile.id}
+                                onClick={() => activatePlayerProfile(profile.id)}
+                                size="sm"
+                                variant="outline"
+                                className={isActive
+                                  ? 'border-violet-300 bg-violet-500/20 text-white'
+                                  : 'border-slate-600 text-slate-200 hover:border-violet-300 hover:bg-violet-900/15'}
+                                disabled={isActive}
+                              >
+                                {profile.name}
+                              </GameButton>
+                            );
+                          })}
+                          <GameButton
+                            onClick={openPlayerProfileSettings}
+                            size="sm"
+                            variant="outline"
+                            className="border-violet-400/50 text-violet-100 hover:border-violet-300 hover:bg-violet-900/20"
+                          >
+                            <Volume2 size={16} /> 管理
+                          </GameButton>
+                        </div>
+                      </div>
+                    </div>
                      <GameButton onClick={openWeakReviewHub} className={`w-full ${weakCount > 0 ? 'bg-gradient-to-r from-orange-600 to-red-600 border-orange-400 text-white animate-pulse' : 'bg-slate-700 border-slate-500 text-slate-400'}`} size="lg" disabled={weakCount === 0}><div className="flex items-center justify-center gap-2"><Flame size={24} className={weakCount > 0 ? "text-yellow-300" : "text-slate-500"} /><span className="font-bold">{weakCount > 0 ? `苦手復習を開く (Weakness: ${weakCount})` : "苦手な単語はありません"}</span></div></GameButton>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         {DIFFICULTIES.map(diff => (
@@ -5089,7 +5160,14 @@ export default function App() {
                           </GameButton>
                         ))}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-8">
+                    <GameButton
+                      onClick={openProgressTransferSettings}
+                      variant="outline"
+                      className="hidden"
+                    >
+                      <ClipboardList size={18} /> 学習データ保存／読み込み
+                    </GameButton>
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-4">
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'monster-book' }))} variant="outline" className="px-2"><BookOpen size={20} /> 図鑑</GameButton>
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'rank-list' }))} variant="outline" className="px-2 text-yellow-300 border-yellow-700/50 hover:border-yellow-400"><Crown size={20} /> 称号</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'score-view' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Records</GameButton>
@@ -5097,7 +5175,10 @@ export default function App() {
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'settings' }))} variant="outline" className="px-2 border-slate-600 text-slate-300"><Volume2 size={16} /> ゲーム設定</GameButton>
                         <GameButton onClick={() => setShowHelp(true)} variant="outline" className="px-2 border-slate-600 text-slate-300"><AlertCircle size={16} /> ヘルプ</GameButton>
                     </div>
-                    <div className="mt-4 flex justify-center">
+                    <div className="mt-4 flex flex-wrap justify-center gap-3">
+                        <GameButton onClick={openProgressTransferSettings} variant="outline" className="border-cyan-500/50 text-cyan-100 hover:border-cyan-300 hover:bg-cyan-900/20">
+                          <ClipboardList size={16} /> 学習データ保存／読み込み
+                        </GameButton>
                         <GameButton onClick={handleResetHistory} variant="outline" className="border-red-700/60 text-red-300 hover:border-red-500 hover:bg-red-950/40">
                           <RotateCcw size={16} /> 履歴をリセット
                         </GameButton>
