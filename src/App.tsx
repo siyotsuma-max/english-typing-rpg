@@ -94,7 +94,7 @@ type ReviewQueueEntry = {
   missCount: number;
 };
 
-type AutoPlaySource = 'weak' | 'selected';
+type AutoPlaySource = 'all' | 'weak' | 'selected';
 
 type AutoPlaySettings = {
   source: AutoPlaySource;
@@ -1273,7 +1273,7 @@ const getDefaultWeakQuestionStat = (): WeakQuestionStat => ({
 });
 
 const getDefaultAutoPlaySettings = (): AutoPlaySettings => ({
-  source: 'weak',
+  source: 'all',
   playText: true,
   playTranslation: true,
   playExample: true,
@@ -1363,9 +1363,12 @@ const normalizeAutoPlaySettings = (value: unknown): AutoPlaySettings => {
   const defaults = getDefaultAutoPlaySettings();
   if (!value || typeof value !== 'object') return defaults;
   const typedValue = value as Partial<AutoPlaySettings> & Record<string, unknown>;
+  const normalizedSource: AutoPlaySource = typedValue.source === 'all' || typedValue.source === 'weak' || typedValue.source === 'selected'
+    ? typedValue.source
+    : defaults.source;
 
   return {
-    source: typedValue.source === 'selected' ? 'selected' : defaults.source,
+    source: normalizedSource,
     playText: typeof typedValue.playText === 'boolean' ? typedValue.playText : defaults.playText,
     playTranslation: typeof typedValue.playTranslation === 'boolean' ? typedValue.playTranslation : defaults.playTranslation,
     playExample: typeof typedValue.playExample === 'boolean' ? typedValue.playExample : defaults.playExample,
@@ -4121,7 +4124,11 @@ export default function App() {
       .sort((a, b) => ((weakQuestionStats[b.text]?.missCount ?? 0) - (weakQuestionStats[a.text]?.missCount ?? 0)) || ((weakQuestionStats[b.text]?.lastMissedAt ?? 0) - (weakQuestionStats[a.text]?.lastMissedAt ?? 0)))
       .slice(0, 10);
     const reviewTargetQuestions = questionListFilter === 'weak' ? visibleQuestions : weakQuestionsInView;
-    const autoPlayTargetQuestions = autoPlaySettings.source === 'weak' ? weakQuestionsInView : selectedQuestionsInView;
+    const autoPlayTargetQuestions = autoPlaySettings.source === 'all'
+      ? visiblePlayableQuestions
+      : autoPlaySettings.source === 'weak'
+        ? weakQuestionsInView
+        : selectedQuestionsInView;
     const autoPlayJapaneseVoice = getJapaneseSpeechVoice();
     const autoPlayPlayableQuestionCount = autoPlayTargetQuestions.filter(q => {
       if (autoPlaySettings.playText || autoPlaySettings.playTranslation) return true;
@@ -4451,6 +4458,12 @@ export default function App() {
                   <p className="text-sm font-bold text-cyan-200">1. 再生元</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
+                      onClick={() => updateAutoPlaySetting('source', 'all')}
+                      className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${autoPlaySettings.source === 'all' ? 'border-emerald-300 bg-emerald-500/20 text-emerald-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
+                    >
+                      このレベル全部 ({visiblePlayableQuestions.length})
+                    </button>
+                    <button
                       onClick={() => updateAutoPlaySetting('source', 'weak')}
                       className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${autoPlaySettings.source === 'weak' ? 'border-orange-300 bg-orange-500/20 text-orange-100' : 'border-slate-600 bg-slate-900/70 text-slate-300 hover:border-slate-500 hover:text-white'}`}
                     >
@@ -4464,6 +4477,11 @@ export default function App() {
                     </button>
                   </div>
                   <p className="mt-4 text-sm font-bold text-cyan-200">2. 再生する内容</p>
+                  {autoPlaySettings.source !== 'all' && autoPlayTargetQuestions.length === 0 && visiblePlayableQuestions.length > 0 && (
+                    <p className="mt-3 text-xs text-amber-200">
+                      このレベルでは、まだ対象語がありません。「このレベル全部」を選ぶと自動再生できます。
+                    </p>
+                  )}
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     {[
                       { key: 'playText', label: '用語', checked: autoPlaySettings.playText },
