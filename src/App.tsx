@@ -52,6 +52,9 @@ type MonsterVisualStyle = {
 interface Question {
   text: string;
   translation: string;
+  basicMeaning?: string;
+  exampleEn?: string;
+  exampleJa?: string;
 }
 
 interface BattleLogItem {
@@ -108,8 +111,45 @@ type AutoPlayNowPlayingPart = 'text' | 'translation' | 'example';
 type AutoPlayNowPlaying = {
   questionText: string;
   translation: string;
+  basicMeaning?: string;
   example: string | null;
   activePart: AutoPlayNowPlayingPart;
+};
+
+type ProgressExportPayload = {
+  formatVersion: number;
+  app: 'english-typing-rpg';
+  exportedAt: string;
+  player?: {
+    id: string;
+    name: string;
+    data: PlayerProfileData;
+  };
+  data?: PlayerProfileData;
+};
+
+type PlayerProfileData = {
+  defeatedMonsterIds?: string[];
+  bestScores?: Record<string, number>;
+  maxKeystrokes?: number;
+  weakQuestions?: Question[];
+  weakQuestionStats?: Record<string, WeakQuestionStat>;
+  manualQuestionStatuses?: Record<string, ManualQuestionStatus>;
+  reviewQueue?: ReviewQueueEntry[];
+  dailyProgress?: DailyProgress;
+  bgmVolumeLevel?: number;
+  speechVoiceMode?: SpeechVoiceMode;
+  speechRatePercent?: number;
+  autoPlaySettings?: AutoPlaySettings;
+  selectedQuestionKeysByScope?: Record<string, string[]>;
+  savedSelectionLists?: SavedSelectionList[];
+};
+
+type PlayerProfile = {
+  id: string;
+  name: string;
+  updatedAt: number;
+  data: PlayerProfileData;
 };
 
 type SavedSelectionList = {
@@ -1188,6 +1228,8 @@ const STORAGE_KEYS = {
   autoPlaySettings: 'etyping_auto_play_settings',
   selectedQuestionKeysByScope: 'etyping_selected_question_keys_by_scope',
   savedSelectionLists: 'etyping_saved_selection_lists',
+  playerProfiles: 'etyping_player_profiles',
+  activePlayerId: 'etyping_active_player_id',
 } as const;
 
 const safeLoadJson = <T,>(key: string, fallback: T): T => {
@@ -1377,6 +1419,125 @@ const normalizeReviewQueue = (entries: ReviewQueueEntry[] | unknown) => (
     })
     .filter((entry): entry is ReviewQueueEntry => entry !== null)
 );
+
+const normalizeDailyProgress = (value: unknown): DailyProgress => {
+  const todayKey = getTodayKey();
+  if (!value || typeof value !== 'object') return createDailyProgress(todayKey);
+
+  const typedValue = value as Partial<DailyProgress>;
+  const date = typeof typedValue.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(typedValue.date)
+    ? typedValue.date
+    : todayKey;
+  const questionCount = Number.isFinite(typedValue.questionCount) ? Math.max(0, Number(typedValue.questionCount)) : 0;
+
+  return { date, questionCount };
+};
+
+const normalizeQuestionArray = (value: unknown): Question[] => (
+  Array.isArray(value)
+    ? value.flatMap((item) => {
+      if (!item || typeof item !== 'object') return [];
+      const typedItem = item as Partial<Question>;
+      if (typeof typedItem.text !== 'string' || typeof typedItem.translation !== 'string') return [];
+
+      const nextQuestion: Question = {
+        text: typedItem.text,
+        translation: typedItem.translation,
+      };
+
+      if (typeof typedItem.basicMeaning === 'string' && typedItem.basicMeaning.trim()) {
+        nextQuestion.basicMeaning = typedItem.basicMeaning.trim();
+      }
+      if (typeof typedItem.exampleEn === 'string' && typedItem.exampleEn.trim()) {
+        nextQuestion.exampleEn = typedItem.exampleEn.trim();
+      }
+      if (typeof typedItem.exampleJa === 'string' && typedItem.exampleJa.trim()) {
+        nextQuestion.exampleJa = typedItem.exampleJa.trim();
+      }
+
+      return [nextQuestion];
+    })
+    : []
+);
+
+const normalizePlayerProfileData = (value: unknown): PlayerProfileData => {
+  const typedValue = typeof value === 'object' && value !== null ? value as Partial<PlayerProfileData> : {};
+
+  return {
+    defeatedMonsterIds: normalizeDefeatedMonsterIds(typedValue.defeatedMonsterIds ?? []),
+    bestScores: normalizeBestScores(typedValue.bestScores ?? {}),
+    maxKeystrokes: normalizeMaxKeystrokes(typedValue.maxKeystrokes),
+    weakQuestions: normalizeQuestionArray(typedValue.weakQuestions ?? []),
+    weakQuestionStats: normalizeWeakQuestionStats(typedValue.weakQuestionStats ?? {}),
+    manualQuestionStatuses: normalizeManualQuestionStatuses(typedValue.manualQuestionStatuses ?? {}),
+    reviewQueue: normalizeReviewQueue(typedValue.reviewQueue ?? []),
+    dailyProgress: normalizeDailyProgress(typedValue.dailyProgress ?? createDailyProgress()),
+    bgmVolumeLevel: normalizeBgmVolumeLevel(typedValue.bgmVolumeLevel),
+    speechVoiceMode: normalizeSpeechVoiceMode(typedValue.speechVoiceMode),
+    speechRatePercent: normalizeSpeechRatePercent(typedValue.speechRatePercent),
+    autoPlaySettings: normalizeAutoPlaySettings(typedValue.autoPlaySettings ?? getDefaultAutoPlaySettings()),
+    selectedQuestionKeysByScope: normalizeSelectedQuestionKeysByScope(typedValue.selectedQuestionKeysByScope ?? {}),
+    savedSelectionLists: normalizeSavedSelectionLists(typedValue.savedSelectionLists ?? []),
+  };
+};
+
+const normalizePlayerProfiles = (value: unknown): PlayerProfile[] => (
+  Array.isArray(value)
+    ? value.flatMap((item) => {
+      if (!item || typeof item !== 'object') return [];
+      const typedItem = item as Partial<PlayerProfile>;
+      if (typeof typedItem.id !== 'string' || typedItem.id.trim().length === 0) return [];
+
+      return [{
+        id: typedItem.id,
+        name: typeof typedItem.name === 'string' && typedItem.name.trim().length > 0 ? typedItem.name.trim() : 'Player',
+        updatedAt: Number.isFinite(typedItem.updatedAt) ? Number(typedItem.updatedAt) : 0,
+        data: normalizePlayerProfileData(typedItem.data ?? {}),
+      }];
+    })
+    : []
+);
+
+const normalizeBestScores = (value: unknown): Record<string, number> => (
+  Object.fromEntries(
+    Object.entries(typeof value === 'object' && value !== null ? value : {}).flatMap(([key, score]) => (
+      Number.isFinite(score) ? [[key, Math.max(0, Number(score))]] : []
+    ))
+  )
+);
+
+const normalizeMaxKeystrokes = (value: unknown): number => (
+  Number.isFinite(value) ? Math.max(0, Number(value)) : 0
+);
+
+const normalizeBgmVolumeLevel = (value: unknown): number => (
+  Number.isFinite(value) && Number(value) >= 0 && Number(value) < BGM_VOLUME_LEVELS.length
+    ? Number(value)
+    : 3
+);
+
+const normalizeSpeechVoiceMode = (value: unknown): SpeechVoiceMode => (
+  SPEECH_VOICE_OPTIONS.some((option) => option.id === value)
+    ? value as SpeechVoiceMode
+    : 'us_female'
+);
+
+const normalizeSpeechRatePercent = (value: unknown): number => (
+  Number.isFinite(value) ? Math.min(250, Math.max(50, Number(value))) : 100
+);
+
+const isProgressExportPayload = (value: unknown): value is ProgressExportPayload => {
+  if (!value || typeof value !== 'object') return false;
+  const typedValue = value as Partial<ProgressExportPayload>;
+  return typedValue.app === 'english-typing-rpg'
+    && typeof typedValue.formatVersion === 'number'
+    && typedValue.formatVersion >= 1
+    && typeof typedValue.exportedAt === 'string'
+    && (
+      (!!typedValue.player && typeof typedValue.player === 'object' && typeof typedValue.player.id === 'string')
+      || (!!typedValue.data && typeof typedValue.data === 'object')
+    );
+};
 
 const MONSTER_VISUALS: Partial<Record<string, MonsterVisualStyle>> = {
   m1_5: { primary: 'halo', accentColor: '#FFD1F3' },
@@ -1754,6 +1915,7 @@ const GameButton = ({ onClick, children, className = "", variant = "primary", di
 type QuestionListRowProps = {
   question: Question;
   idx: number;
+  displayIndex: number;
   questionKey: string;
   isWeakQuestion: boolean;
   stats?: WeakQuestionStat;
@@ -1769,6 +1931,7 @@ type QuestionListRowProps = {
 const QuestionListRow = React.memo(function QuestionListRow({
   question,
   idx,
+  displayIndex,
   questionKey,
   isWeakQuestion,
   stats,
@@ -1788,6 +1951,9 @@ const QuestionListRow = React.memo(function QuestionListRow({
     <div key={`${questionKey}-${idx}`} className={`p-3 rounded-lg border transition-colors group ${manualStatus.excluded ? 'bg-slate-950/80 border-slate-600 opacity-85' : isWeakQuestion ? 'bg-orange-950/40 border-orange-500/40 hover:border-orange-400/70' : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50'}`}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-4 min-w-0">
+          <div className="mt-1 min-w-[2.75rem] rounded-full border border-slate-600 bg-slate-900/80 px-2 py-1 text-center font-mono text-[11px] font-bold tracking-[0.18em] text-slate-400">
+            {String(displayIndex).padStart(3, '0')}
+          </div>
           <label className="mt-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-950/40 text-cyan-100 transition-colors hover:bg-cyan-900/40">
             <input
               type="checkbox"
@@ -1820,9 +1986,16 @@ const QuestionListRow = React.memo(function QuestionListRow({
             </div>
           </div>
         </div>
-        <span className="text-slate-300 font-bold text-sm md:text-base text-right flex-shrink-0">{question.translation}</span>
+        <div className="text-right flex-shrink-0">
+          <div className="text-slate-300 font-bold text-sm md:text-base">{question.translation}</div>
+          {question.basicMeaning && (
+            <div className="mt-0.5 text-[10px] font-medium text-slate-500 md:text-[11px]">
+              Basic: {question.basicMeaning}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="mt-3 ml-12 flex flex-wrap items-center gap-2 md:justify-end">
+      <div className="mt-3 ml-[6.75rem] flex flex-wrap items-center gap-2 md:justify-end">
         <span className="text-[11px] font-bold text-slate-400">手動設定</span>
         {LEARNING_LEVELS.map(level => (
           <button
@@ -1841,7 +2014,7 @@ const QuestionListRow = React.memo(function QuestionListRow({
         </button>
       </div>
       {example && (
-        <div className="mt-3 ml-12 rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
+        <div className="mt-3 ml-[6.75rem] rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">Example</p>
           <p className="mt-1 text-xs md:text-sm text-slate-200">{example}</p>
         </div>
@@ -1899,6 +2072,9 @@ export default function App() {
   const [selectedQuestionKeysByScope, setSelectedQuestionKeysByScope] = useState<Record<string, string[]>>({});
   const [savedSelectionLists, setSavedSelectionLists] = useState<SavedSelectionList[]>([]);
   const [selectionListName, setSelectionListName] = useState('');
+  const [playerProfiles, setPlayerProfiles] = useState<PlayerProfile[]>([]);
+  const [activePlayerId, setActivePlayerId] = useState('');
+  const [newPlayerName, setNewPlayerName] = useState('');
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [autoPlayStatusText, setAutoPlayStatusText] = useState('待機中');
   const sessionWeakQuestionsRef = useRef<Question[] | null>(null);
@@ -1917,7 +2093,9 @@ export default function App() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [lastSolvedQuestion, setLastSolvedQuestion] = useState<Question | null>(null);
   const [showFinalBossIntro, setShowFinalBossIntro] = useState(false);
+  const [progressTransferStatus, setProgressTransferStatus] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const progressImportInputRef = useRef<HTMLInputElement>(null);
   const speechPreviewTimeoutRef = useRef<number | null>(null);
   const autoPlayTimeoutRef = useRef<number | null>(null);
   const autoPlayRunIdRef = useRef(0);
@@ -1926,6 +2104,8 @@ export default function App() {
   const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
   const recentReviewAppearanceRef = useRef<boolean[]>([]);
   const shownFinalBossIntroKeyRef = useRef<string | null>(null);
+  const profilesReadyRef = useRef(false);
+  const profileHydratingRef = useRef(false);
 
   const updateSelectedDifficulty = (difficulty: Difficulty, screen?: GameState['screen']) => {
     setGameState(prev => ({
@@ -1940,6 +2120,160 @@ export default function App() {
     setBookDifficulty(difficulty);
     setBookLevel(prev => getSafeLevelForDifficulty(difficulty, prev));
   };
+
+  const persistPlayerProfiles = useCallback((profiles: PlayerProfile[], nextActivePlayerId: string) => {
+    localStorage.setItem(STORAGE_KEYS.playerProfiles, JSON.stringify(profiles));
+    localStorage.setItem(STORAGE_KEYS.activePlayerId, nextActivePlayerId);
+  }, []);
+
+  const readLegacyWorkingSetFromLocalStorage = useCallback((): PlayerProfileData => {
+    const savedWeak = normalizeQuestionArray(safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []));
+    const savedWeakStats = normalizeWeakQuestionStats(safeLoadJson<Record<string, WeakQuestionStat>>(STORAGE_KEYS.weakQuestionStats, {}));
+    const savedManualStatuses = normalizeManualQuestionStatuses(safeLoadJson<Record<string, ManualQuestionStatus>>(STORAGE_KEYS.manualQuestionStatuses, {}));
+    const savedReviewQueue = normalizeReviewQueue(safeLoadJson<ReviewQueueEntry[]>(STORAGE_KEYS.reviewQueue, []));
+    const savedDailyProgress = normalizeDailyProgress(safeLoadJson<DailyProgress>(STORAGE_KEYS.dailyProgress, createDailyProgress()));
+    const savedAutoPlaySettings = normalizeAutoPlaySettings(safeLoadJson<AutoPlaySettings>(STORAGE_KEYS.autoPlaySettings, getDefaultAutoPlaySettings()));
+    const savedSelectedQuestionKeysByScope = normalizeSelectedQuestionKeysByScope(safeLoadJson<Record<string, string[]>>(STORAGE_KEYS.selectedQuestionKeysByScope, {}));
+    const savedSelectionLists = normalizeSavedSelectionLists(safeLoadJson<SavedSelectionList[]>(STORAGE_KEYS.savedSelectionLists, []));
+
+    const savedMaxKRaw = localStorage.getItem(STORAGE_KEYS.maxKeystrokes);
+    const savedBgmVolumeLevelRaw = localStorage.getItem(STORAGE_KEYS.bgmVolumeLevel);
+    const savedSpeechVoiceModeRaw = localStorage.getItem(STORAGE_KEYS.speechVoiceMode);
+    const savedSpeechRatePercentRaw = localStorage.getItem(STORAGE_KEYS.speechRatePercent);
+
+    return normalizePlayerProfileData({
+      defeatedMonsterIds: safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []),
+      bestScores: safeLoadJson<Record<string, number>>(STORAGE_KEYS.bestScores, {}),
+      maxKeystrokes: savedMaxKRaw ? parseInt(savedMaxKRaw, 10) : 0,
+      weakQuestions: savedWeak,
+      weakQuestionStats: savedWeakStats,
+      manualQuestionStatuses: savedManualStatuses,
+      reviewQueue: savedReviewQueue,
+      dailyProgress: savedDailyProgress,
+      bgmVolumeLevel: savedBgmVolumeLevelRaw ? parseInt(savedBgmVolumeLevelRaw, 10) : 3,
+      speechVoiceMode: savedSpeechVoiceModeRaw ?? 'us_female',
+      speechRatePercent: savedSpeechRatePercentRaw ? parseInt(savedSpeechRatePercentRaw, 10) : 100,
+      autoPlaySettings: savedAutoPlaySettings,
+      selectedQuestionKeysByScope: savedSelectedQuestionKeysByScope,
+      savedSelectionLists,
+    });
+  }, []);
+
+  const writeProfileDataToWorkingSet = useCallback((data: PlayerProfileData) => {
+    const normalizedData = normalizePlayerProfileData(data);
+    localStorage.setItem(STORAGE_KEYS.defeatedMonsters, JSON.stringify(normalizedData.defeatedMonsterIds ?? []));
+    localStorage.setItem(STORAGE_KEYS.bestScores, JSON.stringify(normalizedData.bestScores ?? {}));
+    localStorage.setItem(STORAGE_KEYS.maxKeystrokes, String(normalizedData.maxKeystrokes ?? 0));
+    localStorage.setItem(STORAGE_KEYS.weakQuestions, JSON.stringify(normalizedData.weakQuestions ?? []));
+    localStorage.setItem(STORAGE_KEYS.weakQuestionStats, JSON.stringify(normalizedData.weakQuestionStats ?? {}));
+    localStorage.setItem(STORAGE_KEYS.manualQuestionStatuses, JSON.stringify(normalizedData.manualQuestionStatuses ?? {}));
+    localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(normalizedData.reviewQueue ?? []));
+    localStorage.setItem(STORAGE_KEYS.dailyProgress, JSON.stringify(normalizedData.dailyProgress ?? createDailyProgress()));
+    localStorage.setItem(STORAGE_KEYS.bgmVolumeLevel, String(normalizedData.bgmVolumeLevel ?? 3));
+    localStorage.setItem(STORAGE_KEYS.speechVoiceMode, normalizedData.speechVoiceMode ?? 'us_female');
+    localStorage.setItem(STORAGE_KEYS.speechRatePercent, String(normalizedData.speechRatePercent ?? 100));
+    localStorage.setItem(STORAGE_KEYS.autoPlaySettings, JSON.stringify(normalizedData.autoPlaySettings ?? getDefaultAutoPlaySettings()));
+    localStorage.setItem(STORAGE_KEYS.selectedQuestionKeysByScope, JSON.stringify(normalizedData.selectedQuestionKeysByScope ?? {}));
+    localStorage.setItem(STORAGE_KEYS.savedSelectionLists, JSON.stringify(normalizedData.savedSelectionLists ?? []));
+  }, []);
+
+  const applyProfileDataToState = useCallback((data: PlayerProfileData) => {
+    const normalizedData = normalizePlayerProfileData(data);
+    const todayKey = getTodayKey();
+    const normalizedReviewQueue = (normalizedData.dailyProgress?.date ?? todayKey) === todayKey
+      ? (normalizedData.reviewQueue ?? [])
+      : (normalizedData.reviewQueue ?? []).map((entry) => ({ ...entry, remainingQuestions: 0 }));
+    const normalizedDailyProgress = (normalizedData.dailyProgress?.date ?? todayKey) === todayKey
+      ? normalizedData.dailyProgress ?? createDailyProgress(todayKey)
+      : createDailyProgress(todayKey);
+
+    setGameState((prev) => ({
+      ...prev,
+      defeatedMonsterIds: normalizedData.defeatedMonsterIds ?? [],
+    }));
+    setBestScores(normalizedData.bestScores ?? {});
+    setMaxKeystrokes(normalizedData.maxKeystrokes ?? 0);
+    setWeakQuestions(normalizedData.weakQuestions ?? []);
+    setWeakQuestionStats(normalizedData.weakQuestionStats ?? {});
+    setManualQuestionStatuses(normalizedData.manualQuestionStatuses ?? {});
+    reviewQueueRef.current = normalizedReviewQueue;
+    setDailyProgress(normalizedDailyProgress);
+    setBgmVolumeLevel(normalizedData.bgmVolumeLevel ?? 3);
+    setSpeechVoiceMode(normalizedData.speechVoiceMode ?? 'us_female');
+    setSpeechRatePercent(normalizedData.speechRatePercent ?? 100);
+    setAutoPlaySettings(normalizedData.autoPlaySettings ?? getDefaultAutoPlaySettings());
+    setSelectedQuestionKeysByScope(normalizedData.selectedQuestionKeysByScope ?? {});
+    setSavedSelectionLists(normalizedData.savedSelectionLists ?? []);
+  }, []);
+
+  const getCurrentActivePlayer = useCallback(() => (
+    playerProfiles.find((profile) => profile.id === activePlayerId) ?? null
+  ), [playerProfiles, activePlayerId]);
+
+  const captureCurrentProfileData = useCallback((): PlayerProfileData => normalizePlayerProfileData({
+    defeatedMonsterIds: gameState.defeatedMonsterIds,
+    bestScores,
+    maxKeystrokes,
+    weakQuestions,
+    weakQuestionStats,
+    manualQuestionStatuses,
+    reviewQueue: reviewQueueRef.current,
+    dailyProgress,
+    bgmVolumeLevel,
+    speechVoiceMode,
+    speechRatePercent,
+    autoPlaySettings,
+    selectedQuestionKeysByScope,
+    savedSelectionLists,
+  }), [
+    gameState.defeatedMonsterIds,
+    bestScores,
+    maxKeystrokes,
+    weakQuestions,
+    weakQuestionStats,
+    manualQuestionStatuses,
+    dailyProgress,
+    bgmVolumeLevel,
+    speechVoiceMode,
+    speechRatePercent,
+    autoPlaySettings,
+    selectedQuestionKeysByScope,
+    savedSelectionLists,
+  ]);
+
+  useEffect(() => {
+    const storedProfiles = normalizePlayerProfiles(safeLoadJson<PlayerProfile[]>(STORAGE_KEYS.playerProfiles, []));
+    const storedActivePlayerId = localStorage.getItem(STORAGE_KEYS.activePlayerId) ?? '';
+
+    let nextProfiles = storedProfiles;
+    let nextActivePlayerId = storedActivePlayerId;
+
+    if (nextProfiles.length === 0) {
+      const initialProfile: PlayerProfile = {
+        id: `player-${Date.now()}`,
+        name: 'Player 1',
+        updatedAt: Date.now(),
+        data: readLegacyWorkingSetFromLocalStorage(),
+      };
+      nextProfiles = [initialProfile];
+      nextActivePlayerId = initialProfile.id;
+    } else if (!nextProfiles.some((profile) => profile.id === nextActivePlayerId)) {
+      nextActivePlayerId = nextProfiles[0].id;
+    }
+
+    const activeProfile = nextProfiles.find((profile) => profile.id === nextActivePlayerId) ?? nextProfiles[0];
+
+    profileHydratingRef.current = true;
+    writeProfileDataToWorkingSet(activeProfile.data);
+    setPlayerProfiles(nextProfiles);
+    setActivePlayerId(activeProfile.id);
+    persistPlayerProfiles(nextProfiles, activeProfile.id);
+    profilesReadyRef.current = true;
+
+    window.setTimeout(() => {
+      profileHydratingRef.current = false;
+    }, 0);
+  }, [persistPlayerProfiles, readLegacyWorkingSetFromLocalStorage, writeProfileDataToWorkingSet]);
 
   useEffect(() => {
     const safeLevel = getSafeLevelForDifficulty(gameState.selectedDifficulty, gameState.selectedLevel);
@@ -1958,11 +2292,11 @@ export default function App() {
   useEffect(() => {
     const defeatedMonsterIds = normalizeDefeatedMonsterIds(safeLoadJson<string[]>(STORAGE_KEYS.defeatedMonsters, []));
     const savedScores = safeLoadJson<Record<string, number>>(STORAGE_KEYS.bestScores, {});
-    const savedWeak = safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []);
+    const savedWeak = normalizeQuestionArray(safeLoadJson<Question[]>(STORAGE_KEYS.weakQuestions, []));
     const savedWeakStats = normalizeWeakQuestionStats(safeLoadJson<Record<string, WeakQuestionStat>>(STORAGE_KEYS.weakQuestionStats, {}));
     const savedManualStatuses = normalizeManualQuestionStatuses(safeLoadJson<Record<string, ManualQuestionStatus>>(STORAGE_KEYS.manualQuestionStatuses, {}));
     const savedReviewQueue = normalizeReviewQueue(safeLoadJson<ReviewQueueEntry[]>(STORAGE_KEYS.reviewQueue, []));
-    const savedDailyProgress = safeLoadJson<DailyProgress>(STORAGE_KEYS.dailyProgress, createDailyProgress());
+    const savedDailyProgress = normalizeDailyProgress(safeLoadJson<DailyProgress>(STORAGE_KEYS.dailyProgress, createDailyProgress()));
     const savedAutoPlaySettings = normalizeAutoPlaySettings(safeLoadJson<AutoPlaySettings>(STORAGE_KEYS.autoPlaySettings, getDefaultAutoPlaySettings()));
     const savedSelectedQuestionKeysByScope = normalizeSelectedQuestionKeysByScope(safeLoadJson<Record<string, string[]>>(STORAGE_KEYS.selectedQuestionKeysByScope, {}));
     const savedSelectionLists = normalizeSavedSelectionLists(safeLoadJson<SavedSelectionList[]>(STORAGE_KEYS.savedSelectionLists, []));
@@ -2026,6 +2360,26 @@ export default function App() {
       }
     }
   }, []);
+
+  const persistActivePlayerProfile = useCallback((overrideData?: Partial<PlayerProfileData>) => {
+    if (!profilesReadyRef.current || !activePlayerId || profileHydratingRef.current) return;
+
+    const baseData = captureCurrentProfileData();
+    const nextData = normalizePlayerProfileData({
+      ...baseData,
+      ...overrideData,
+    });
+
+    setPlayerProfiles((prev) => {
+      const nextProfiles = prev.map((profile) => (
+        profile.id === activePlayerId
+          ? { ...profile, updatedAt: Date.now(), data: nextData }
+          : profile
+      ));
+      persistPlayerProfiles(nextProfiles, activePlayerId);
+      return nextProfiles;
+    });
+  }, [activePlayerId, captureCurrentProfileData, persistPlayerProfiles]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.bgmVolumeLevel, bgmVolumeLevel.toString());
@@ -2194,6 +2548,25 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.savedSelectionLists, JSON.stringify(savedSelectionLists));
   }, [savedSelectionLists]);
+
+  useEffect(() => {
+    persistActivePlayerProfile();
+  }, [
+    persistActivePlayerProfile,
+    gameState.defeatedMonsterIds,
+    bestScores,
+    maxKeystrokes,
+    weakQuestions,
+    weakQuestionStats,
+    manualQuestionStatuses,
+    dailyProgress,
+    bgmVolumeLevel,
+    speechVoiceMode,
+    speechRatePercent,
+    autoPlaySettings,
+    selectedQuestionKeysByScope,
+    savedSelectionLists,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -2467,6 +2840,263 @@ export default function App() {
     setSavedSelectionLists(prev => prev.filter(list => list.id !== listId));
   };
 
+  const beginProfileHydration = () => {
+    profileHydratingRef.current = true;
+    window.setTimeout(() => {
+      profileHydratingRef.current = false;
+    }, 0);
+  };
+
+  const activatePlayerProfile = (profileId: string) => {
+    const currentProfile = getCurrentActivePlayer();
+    if (currentProfile) {
+      const currentSnapshot = captureCurrentProfileData();
+      setPlayerProfiles((prev) => {
+        const nextProfiles = prev.map((profile) => (
+          profile.id === currentProfile.id
+            ? { ...profile, updatedAt: Date.now(), data: currentSnapshot }
+            : profile
+        ));
+        persistPlayerProfiles(nextProfiles, profileId);
+        return nextProfiles;
+      });
+    }
+
+    const nextProfile = playerProfiles.find((profile) => profile.id === profileId);
+    if (!nextProfile) return;
+
+    beginProfileHydration();
+    setActivePlayerId(profileId);
+    writeProfileDataToWorkingSet(nextProfile.data);
+    applyProfileDataToState(nextProfile.data);
+    setProgressTransferStatus(`プレイヤーを切り替えました: ${nextProfile.name}`);
+  };
+
+  const createPlayerProfile = () => {
+    const trimmedName = newPlayerName.trim();
+    if (!trimmedName) return;
+
+    const nextProfile: PlayerProfile = {
+      id: `player-${Date.now()}`,
+      name: trimmedName,
+      updatedAt: Date.now(),
+      data: normalizePlayerProfileData({}),
+    };
+
+    beginProfileHydration();
+    setPlayerProfiles((prev) => {
+      const currentProfile = getCurrentActivePlayer();
+      const currentSnapshot = captureCurrentProfileData();
+      const baseProfiles = currentProfile
+        ? prev.map((profile) => (
+          profile.id === currentProfile.id
+            ? { ...profile, updatedAt: Date.now(), data: currentSnapshot }
+            : profile
+        ))
+        : prev;
+      const nextProfiles = [nextProfile, ...baseProfiles];
+      persistPlayerProfiles(nextProfiles, nextProfile.id);
+      return nextProfiles;
+    });
+    setActivePlayerId(nextProfile.id);
+    writeProfileDataToWorkingSet(nextProfile.data);
+    applyProfileDataToState(nextProfile.data);
+    setNewPlayerName('');
+    setProgressTransferStatus(`新しいプレイヤーを作成しました: ${nextProfile.name}`);
+  };
+
+  const deletePlayerProfile = (profileId: string) => {
+    if (playerProfiles.length <= 1) {
+      setProgressTransferStatus('最後の1人は削除できません。');
+      return;
+    }
+
+    const remainingProfiles = playerProfiles.filter((profile) => profile.id !== profileId);
+    const nextActiveProfile = remainingProfiles.find((profile) => profile.id === activePlayerId) ?? remainingProfiles[0];
+
+    beginProfileHydration();
+    setPlayerProfiles(remainingProfiles);
+    setActivePlayerId(nextActiveProfile.id);
+    persistPlayerProfiles(remainingProfiles, nextActiveProfile.id);
+    writeProfileDataToWorkingSet(nextActiveProfile.data);
+    applyProfileDataToState(nextActiveProfile.data);
+    setProgressTransferStatus(`プレイヤーを削除しました。現在のプレイヤー: ${nextActiveProfile.name}`);
+  };
+
+  const buildProgressExportPayload = (): ProgressExportPayload => ({
+    formatVersion: 2,
+    app: 'english-typing-rpg',
+    exportedAt: new Date().toISOString(),
+    player: {
+      id: activePlayerId || `player-${Date.now()}`,
+      name: getCurrentActivePlayer()?.name ?? 'Player',
+      data: captureCurrentProfileData(),
+    },
+  });
+
+  const downloadProgressSnapshot = () => {
+    try {
+      const payload = buildProgressExportPayload();
+      const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = payload.exportedAt.replace(/[:.]/g, '-');
+      const playerName = (payload.player?.name ?? 'player').replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'player';
+      link.href = url;
+      link.download = `english-typing-rpg-progress-${playerName}-${timestamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setProgressTransferStatus(`学習データを書き出しました: ${payload.player?.name ?? 'Player'}`);
+    } catch (error) {
+      console.error('Failed to export progress data:', error);
+      setProgressTransferStatus('学習データの書き出しに失敗しました。');
+    }
+  };
+
+  const applyImportedProgressSnapshot = (payload: ProgressExportPayload) => {
+    const importedData = payload.data ?? {};
+    const todayKey = getTodayKey();
+    const defeatedMonsterIds = normalizeDefeatedMonsterIds(importedData.defeatedMonsterIds ?? []);
+    const importedBestScores = normalizeBestScores(importedData.bestScores ?? {});
+    const importedMaxKeystrokes = normalizeMaxKeystrokes(importedData.maxKeystrokes);
+    const importedWeakQuestions = normalizeQuestionArray(importedData.weakQuestions ?? []);
+    const importedWeakQuestionStats = normalizeWeakQuestionStats(importedData.weakQuestionStats ?? {});
+    const importedManualStatuses = normalizeManualQuestionStatuses(importedData.manualQuestionStatuses ?? {});
+    const importedReviewQueue = normalizeReviewQueue(importedData.reviewQueue ?? []);
+    const importedDailyProgress = normalizeDailyProgress(importedData.dailyProgress ?? createDailyProgress(todayKey));
+    const normalizedReviewQueue = importedDailyProgress.date === todayKey
+      ? importedReviewQueue
+      : importedReviewQueue.map((entry) => ({ ...entry, remainingQuestions: 0 }));
+    const normalizedDailyProgress = importedDailyProgress.date === todayKey
+      ? importedDailyProgress
+      : createDailyProgress(todayKey);
+    const importedBgmVolumeLevel = normalizeBgmVolumeLevel(importedData.bgmVolumeLevel);
+    const importedSpeechVoiceMode = normalizeSpeechVoiceMode(importedData.speechVoiceMode);
+    const importedSpeechRatePercent = normalizeSpeechRatePercent(importedData.speechRatePercent);
+    const importedAutoPlaySettings = normalizeAutoPlaySettings(importedData.autoPlaySettings ?? getDefaultAutoPlaySettings());
+    const importedSelectedQuestionKeysByScope = normalizeSelectedQuestionKeysByScope(importedData.selectedQuestionKeysByScope ?? {});
+    const importedSavedSelectionLists = normalizeSavedSelectionLists(importedData.savedSelectionLists ?? []);
+
+    stopAutoPlay('学習データの読み込みに合わせて停止しました');
+
+    setGameState((prev) => ({
+      ...prev,
+      defeatedMonsterIds,
+    }));
+    localStorage.setItem(STORAGE_KEYS.defeatedMonsters, JSON.stringify(defeatedMonsterIds));
+
+    setBestScores(importedBestScores);
+    localStorage.setItem(STORAGE_KEYS.bestScores, JSON.stringify(importedBestScores));
+
+    setMaxKeystrokes(importedMaxKeystrokes);
+    localStorage.setItem(STORAGE_KEYS.maxKeystrokes, String(importedMaxKeystrokes));
+
+    setWeakQuestions(importedWeakQuestions);
+    localStorage.setItem(STORAGE_KEYS.weakQuestions, JSON.stringify(importedWeakQuestions));
+
+    setWeakQuestionStats(importedWeakQuestionStats);
+    localStorage.setItem(STORAGE_KEYS.weakQuestionStats, JSON.stringify(importedWeakQuestionStats));
+
+    setManualQuestionStatuses(importedManualStatuses);
+    localStorage.setItem(STORAGE_KEYS.manualQuestionStatuses, JSON.stringify(importedManualStatuses));
+
+    reviewQueueRef.current = normalizedReviewQueue;
+    localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(normalizedReviewQueue));
+
+    setDailyProgress(normalizedDailyProgress);
+    localStorage.setItem(STORAGE_KEYS.dailyProgress, JSON.stringify(normalizedDailyProgress));
+
+    setBgmVolumeLevel(importedBgmVolumeLevel);
+    localStorage.setItem(STORAGE_KEYS.bgmVolumeLevel, String(importedBgmVolumeLevel));
+
+    setSpeechVoiceMode(importedSpeechVoiceMode);
+    localStorage.setItem(STORAGE_KEYS.speechVoiceMode, importedSpeechVoiceMode);
+
+    setSpeechRatePercent(importedSpeechRatePercent);
+    localStorage.setItem(STORAGE_KEYS.speechRatePercent, String(importedSpeechRatePercent));
+
+    setAutoPlaySettings(importedAutoPlaySettings);
+    localStorage.setItem(STORAGE_KEYS.autoPlaySettings, JSON.stringify(importedAutoPlaySettings));
+
+    setSelectedQuestionKeysByScope(importedSelectedQuestionKeysByScope);
+    localStorage.setItem(STORAGE_KEYS.selectedQuestionKeysByScope, JSON.stringify(importedSelectedQuestionKeysByScope));
+
+    setSavedSelectionLists(importedSavedSelectionLists);
+    localStorage.setItem(STORAGE_KEYS.savedSelectionLists, JSON.stringify(importedSavedSelectionLists));
+
+    setProgressTransferStatus(`学習データを読み込みました: ${payload.exportedAt}`);
+  };
+
+  void applyImportedProgressSnapshot;
+
+  const importPlayerProgressSnapshot = (payload: ProgressExportPayload) => {
+    const importedProfile: PlayerProfile = payload.player
+      ? {
+        id: payload.player.id || `player-${Date.now()}`,
+        name: payload.player.name?.trim() || 'Imported Player',
+        updatedAt: Date.now(),
+        data: normalizePlayerProfileData(payload.player.data ?? {}),
+      }
+      : {
+        id: `player-${Date.now()}`,
+        name: 'Imported Player',
+        updatedAt: Date.now(),
+        data: normalizePlayerProfileData(payload.data ?? {}),
+      };
+
+    stopAutoPlay('学習データの読み込みに合わせて停止しました');
+    beginProfileHydration();
+
+    setPlayerProfiles((prev) => {
+      const currentProfile = getCurrentActivePlayer();
+      const currentSnapshot = captureCurrentProfileData();
+      const baseProfiles = currentProfile
+        ? prev.map((profile) => (
+          profile.id === currentProfile.id
+            ? { ...profile, updatedAt: Date.now(), data: currentSnapshot }
+            : profile
+        ))
+        : prev;
+      const exists = baseProfiles.some((profile) => profile.id === importedProfile.id);
+      const nextProfiles = exists
+        ? baseProfiles.map((profile) => (profile.id === importedProfile.id ? importedProfile : profile))
+        : [importedProfile, ...baseProfiles];
+      persistPlayerProfiles(nextProfiles, importedProfile.id);
+      return nextProfiles;
+    });
+
+    setActivePlayerId(importedProfile.id);
+    writeProfileDataToWorkingSet(importedProfile.data);
+    applyProfileDataToState(importedProfile.data);
+    setProgressTransferStatus(`学習データを読み込みました: ${importedProfile.name}`);
+  };
+
+  const handleImportProgressFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!isProgressExportPayload(parsed)) {
+        setProgressTransferStatus('対応していない学習データです。');
+        return;
+      }
+
+      importPlayerProgressSnapshot(parsed);
+    } catch (error) {
+      console.error('Failed to import progress data:', error);
+      setProgressTransferStatus('学習データの読み込みに失敗しました。');
+    }
+  };
+
+  const openProgressImportPicker = () => {
+    progressImportInputRef.current?.click();
+  };
+
   const clearSpeechPreviewTimeout = () => {
     if (speechPreviewTimeoutRef.current !== null) {
       window.clearTimeout(speechPreviewTimeoutRef.current);
@@ -2560,6 +3190,7 @@ export default function App() {
 
   const persistReviewQueue = () => {
     localStorage.setItem(STORAGE_KEYS.reviewQueue, JSON.stringify(reviewQueueRef.current));
+    persistActivePlayerProfile({ reviewQueue: reviewQueueRef.current });
   };
 
   const getReviewDelay = (missCount: number) => {
@@ -2616,7 +3247,22 @@ export default function App() {
   };
 
   const confirmResetHistory = () => {
-    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+    [
+      STORAGE_KEYS.defeatedMonsters,
+      STORAGE_KEYS.bestScores,
+      STORAGE_KEYS.maxKeystrokes,
+      STORAGE_KEYS.weakQuestions,
+      STORAGE_KEYS.weakQuestionStats,
+      STORAGE_KEYS.manualQuestionStatuses,
+      STORAGE_KEYS.reviewQueue,
+      STORAGE_KEYS.dailyProgress,
+      STORAGE_KEYS.bgmVolumeLevel,
+      STORAGE_KEYS.speechVoiceMode,
+      STORAGE_KEYS.speechRatePercent,
+      STORAGE_KEYS.autoPlaySettings,
+      STORAGE_KEYS.selectedQuestionKeysByScope,
+      STORAGE_KEYS.savedSelectionLists,
+    ].forEach(key => localStorage.removeItem(key));
     setBestScores({});
     setMaxKeystrokes(0);
     setWeakQuestions([]);
@@ -2641,6 +3287,7 @@ export default function App() {
       battleStartScore: 0,
       battleStartKeystrokes: 0,
     }));
+    setProgressTransferStatus('現在のプレイヤーの学習データをリセットしました。');
   };
 
   const handleGameEnd = (result: BattleResult, finalScore: number, history: any[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], playWinSound: boolean = true) => {
@@ -3536,6 +4183,7 @@ export default function App() {
             nowPlaying: {
               questionText: question.text,
               translation: question.translation,
+              basicMeaning: question.basicMeaning,
               example: example ?? null,
               activePart: 'text',
             },
@@ -3551,6 +4199,7 @@ export default function App() {
             nowPlaying: {
               questionText: question.text,
               translation: question.translation,
+              basicMeaning: question.basicMeaning,
               example: example ?? null,
               activePart: 'translation',
             },
@@ -3566,6 +4215,7 @@ export default function App() {
             nowPlaying: {
               questionText: question.text,
               translation: question.translation,
+              basicMeaning: question.basicMeaning,
               example,
               activePart: 'example',
             },
@@ -3590,6 +4240,7 @@ export default function App() {
         <QuestionListRow
           key={questionKey}
           idx={idx}
+          displayIndex={idx + 1}
           question={q}
           questionKey={questionKey}
           isWeakQuestion={weakQuestionTexts.has(q.text)}
@@ -3860,6 +4511,11 @@ export default function App() {
                         <div className={`rounded-lg border px-3 py-2 text-sm transition-colors ${autoPlayNowPlaying.activePart === 'translation' ? 'border-emerald-300 bg-emerald-500/15 text-emerald-50' : 'border-slate-700 bg-slate-900/70 text-slate-300'}`}>
                           <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">和訳</div>
                           <div className="mt-1 break-words font-semibold">{autoPlayNowPlaying.translation}</div>
+                          {autoPlayNowPlaying.basicMeaning && (
+                            <div className="mt-1 break-words text-[11px] font-medium text-slate-400">
+                              Basic: {autoPlayNowPlaying.basicMeaning}
+                            </div>
+                          )}
                         </div>
                         {autoPlayNowPlaying.example && (
                           <div className={`rounded-lg border px-3 py-2 text-sm transition-colors ${autoPlayNowPlaying.activePart === 'example' ? 'border-violet-300 bg-violet-500/15 text-violet-50' : 'border-slate-700 bg-slate-900/70 text-slate-300'}`}>
@@ -4123,7 +4779,14 @@ export default function App() {
                               </div>
                              </div>
                             </div>
-                           <span className="text-slate-300 font-bold text-sm md:text-base text-right flex-shrink-0">{q.translation}</span>
+                           <div className="text-right flex-shrink-0">
+                             <div className="text-slate-300 font-bold text-sm md:text-base">{q.translation}</div>
+                             {q.basicMeaning && (
+                               <div className="mt-0.5 text-[10px] font-medium text-slate-500 md:text-[11px]">
+                                 Basic: {q.basicMeaning}
+                               </div>
+                             )}
+                           </div>
                          </div>
                           <div className="mt-3 ml-12 flex flex-wrap items-center gap-2 md:justify-end">
                             <span className="text-[11px] font-bold text-slate-400">{'\u624b\u52d5\u8a2d\u5b9a'}</span>
@@ -4254,6 +4917,88 @@ export default function App() {
               />
               <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4 text-sm text-slate-300">
                 現在の設定: <span className="font-black text-white">{speechRatePercent}%</span>
+              </div>
+            </div>
+          </Box>
+          <Box title="Player Profiles" className="w-full mt-6">
+            <div className="space-y-5">
+              <div className="rounded-xl border border-violet-500/20 bg-violet-950/10 p-4 text-sm text-slate-300">
+                <p className="font-bold text-violet-200">現在のプレイヤー</p>
+                <p className="mt-2 text-lg font-black text-white">{getCurrentActivePlayer()?.name ?? 'Player'}</p>
+                <p className="mt-1 text-xs text-slate-400">端末内でプレイヤーを切り替えて、それぞれ別の学習状態を持てます。</p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  value={newPlayerName}
+                  onChange={(e) => setNewPlayerName(e.target.value)}
+                  placeholder="新しいプレイヤー名"
+                  className="flex-1 rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                />
+                <GameButton
+                  onClick={createPlayerProfile}
+                  size="sm"
+                  className="bg-violet-600 border-violet-400 text-white hover:bg-violet-500"
+                  disabled={newPlayerName.trim().length === 0}
+                >
+                  新規作成
+                </GameButton>
+              </div>
+              <div className="space-y-2">
+                {playerProfiles.map((profile) => {
+                  const isActive = profile.id === activePlayerId;
+                  return (
+                    <div key={profile.id} className={`flex flex-col gap-3 rounded-xl border px-3 py-3 md:flex-row md:items-center md:justify-between ${isActive ? 'border-violet-400/40 bg-violet-500/10' : 'border-slate-700 bg-slate-950/70'}`}>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white">{profile.name}</span>
+                          {isActive && <span className="rounded-full border border-violet-300/40 bg-violet-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-100">Active</span>}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-400">更新: {profile.updatedAt ? new Date(profile.updatedAt).toLocaleString('ja-JP') : '未使用'}</div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <GameButton onClick={() => activatePlayerProfile(profile.id)} size="sm" variant="outline" className="border-cyan-500/40 text-cyan-200 hover:bg-cyan-900/20" disabled={isActive}>
+                          切り替える
+                        </GameButton>
+                        <GameButton onClick={() => deletePlayerProfile(profile.id)} size="sm" variant="outline" className="border-red-500/40 text-red-200 hover:bg-red-900/20" disabled={playerProfiles.length <= 1}>
+                          削除
+                        </GameButton>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Box>
+          <Box title="Progress Transfer" className="w-full mt-6">
+            <div className="space-y-5">
+              <p className="text-sm text-slate-300">
+                学習データを JSON ファイルとして保存し、別端末で読み込めます。分かる項目だけ復元するので、将来データ項目が増減しても壊れにくい方式です。
+              </p>
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/10 p-4 text-sm text-slate-300">
+                <p className="font-bold text-cyan-200">引き継げる主な内容</p>
+                <p className="mt-2">苦手語、ミス統計、手動設定、除外設定、復習キュー、日次進捗、保存済み選択リスト、自動再生設定</p>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <GameButton onClick={downloadProgressSnapshot} className="sm:flex-1 bg-cyan-600 border-cyan-400 text-white hover:bg-cyan-500">
+                  <ClipboardList size={18} /> 学習データを書き出す
+                </GameButton>
+                <GameButton onClick={openProgressImportPicker} variant="outline" className="sm:flex-1 border-emerald-500/40 text-emerald-200 hover:bg-emerald-900/20">
+                  <BookOpen size={18} /> 学習データを読み込む
+                </GameButton>
+              </div>
+              <input
+                ref={progressImportInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="hidden"
+                onChange={handleImportProgressFile}
+              />
+              <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-4 text-xs text-slate-400">
+                <p>保存形式: `english-typing-rpg-progress-*.json`</p>
+                <p className="mt-1">読み込み時は未知の項目を無視し、足りない項目は既定値で補います。</p>
+                {progressTransferStatus && (
+                  <p className="mt-3 font-bold text-cyan-200">{progressTransferStatus}</p>
+                )}
               </div>
             </div>
           </Box>
@@ -4686,7 +5431,16 @@ export default function App() {
                    </button>
                  </div>
                  <div className="text-center mb-2 min-h-[24px]">
-                   {showJapanese && <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>}
+                   {showJapanese && (
+                     <div>
+                       <p className="text-blue-300 text-lg md:text-xl font-bold drop-shadow-md">{gameState.currentQuestion.translation}</p>
+                       {gameState.currentQuestion.basicMeaning && (
+                         <p className="mt-1 text-[11px] font-medium text-slate-400 md:text-xs">
+                           Basic: {gameState.currentQuestion.basicMeaning}
+                         </p>
+                       )}
+                     </div>
+                   )}
                  </div>
                  <div
                   className={`relative bg-black/40 rounded-xl border border-slate-700 shadow-inner ${questionPresentation.panelClass}`}
@@ -4712,7 +5466,12 @@ export default function App() {
                          Previous
                        </span>
                        <span className="font-mono text-sm font-bold text-white md:text-base">{lastSolvedQuestion.text}</span>
-                       <span className="text-xs font-bold text-emerald-100 md:text-sm">{lastSolvedQuestion.translation}</span>
+                       <div className="flex flex-col">
+                         <span className="text-xs font-bold text-emerald-100 md:text-sm">{lastSolvedQuestion.translation}</span>
+                         {lastSolvedQuestion.basicMeaning && (
+                           <span className="text-[10px] font-medium text-slate-400 md:text-[11px]">Basic: {lastSolvedQuestion.basicMeaning}</span>
+                         )}
+                       </div>
                        {previousQuestionExample && (
                          <>
                            <span className="hidden text-slate-500 md:inline">|</span>

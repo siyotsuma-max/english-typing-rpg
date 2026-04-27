@@ -1,0 +1,222 @@
+[
+  {
+    "sourceText": "accuse A of B",
+    "text": "accuse A of B",
+    "level": "1",
+    "translation": "AをBのことで非難する",
+    "exampleJa": "",
+    "exampleEn": "They accused the company of hiding important data.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "act on ～",
+    "text": "act on",
+    "level": "1",
+    "translation": "に基づいて行動する",
+    "exampleJa": "",
+    "exampleEn": "We should act on the doctor's advice immediately.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "act out ～",
+    "text": "act out",
+    "level": "1",
+    "translation": "演じる / 表に出す",
+    "exampleJa": "",
+    "exampleEn": "The students acted out the scene on stage.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "add up to ～",
+    "text": "add up to",
+    "level": "1",
+    "translation": "合計でになる / 意味をなす",
+    "exampleJa": "",
+    "exampleEn": "The small expenses add up to a large amount.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "air out ～",
+    "text": "air out",
+    "level": "1",
+    "translation": "風を通す / 外気にさらす",
+    "exampleJa": "",
+    "exampleEn": "She opened the windows to air out the room.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "answer for ～",
+    "text": "answer for",
+    "level": "1",
+    "translation": "の責任を負う",
+    "exampleJa": "",
+    "exampleEn": "The manager must answer for the mistake.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "attribute A to B",
+    "text": "attribute A to B",
+    "level": "1",
+    "translation": "AをBのせいだと考える",
+    "exampleJa": "",
+    "exampleEn": "Researchers attributed the change to warmer weather.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "back up ～",
+    "text": "back up",
+    "level": "1",
+    "translation": "支援する / 裏付ける / バックアップする",
+    "exampleJa": "",
+    "exampleEn": "The data back up her conclusion.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "bank on ～",
+    "text": "bank on",
+    "level": "1",
+    "translation": "を当てにする",
+    "exampleJa": "",
+    "exampleEn": "You can bank on her to finish the work on time.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "be committed to ～",
+    "text": "be committed to",
+    "level": "1",
+    "translation": "に尽力している / 専念している",
+    "exampleJa": "",
+    "exampleEn": "The team is committed to improving safety.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "（be） free of ～",
+    "text": "be free of",
+    "level": "1",
+    "translation": "がない / を免れている",
+    "exampleJa": "",
+    "exampleEn": "The water is free of harmful chemicals.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "be obsessed with ～",
+    "text": "be obsessed with",
+    "level": "1",
+    "translation": "に取りつかれている",
+    "exampleJa": "",
+    "exampleEn": "He is obsessed with collecting rare books.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "be subject to ～",
+    "text": "be subject to",
+    "level": "1",
+    "translation": "を受けやすい / に従う",
+    "exampleJa": "",
+    "exampleEn": "Prices are subject to change without notice.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "break away from ～",
+    "text": "break away from",
+    "level": "1",
+    "translation": "から離脱する",
+    "exampleJa": "",
+    "exampleEn": "The runner broke away from the group near the end.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "break off ～",
+    "text": "break off",
+    "level": "1",
+    "translation": "打ち切る / 折って取る",
+    "exampleJa": "",
+    "exampleEn": "They decided to break off the negotiations.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "bring down ～",
+    "text": "bring down",
+    "level": "1",
+    "translation": "下げる / 打ち倒す",
+    "exampleJa": "",
+    "exampleEn": "The company hopes to bring down costs this year.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "bring off ～",
+    "text": "bring off",
+    "level": "1",
+    "translation": "成し遂げる",
+    "exampleJa": "",
+    "exampleEn": "They brought off a difficult project successfully.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "bring on ～",
+    "text": "bring on",
+    "level": "1",
+    "translation": "引き起こす / もたらす",
+    "exampleJa": "",
+    "exampleEn": "Stress can bring on headaches.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "bring out ～",
+    "text": "bring out",
+    "level": "1",
+    "translation": "引き出す / 発売する",
+    "exampleJa": "",
+    "exampleEn": "Good teachers bring out the best in students.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  },
+  {
+    "sourceText": "bump into ～",
+    "text": "bump into",
+    "level": "1",
+    "translation": "に偶然出会う",
+    "exampleJa": "",
+    "exampleEn": "I bumped into an old friend at the station.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch32"
+  }
+]

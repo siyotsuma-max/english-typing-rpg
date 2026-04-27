@@ -1,0 +1,222 @@
+[
+  {
+    "sourceText": "stir up ～",
+    "text": "stir up",
+    "level": "1",
+    "translation": "かき立てる / かき混ぜる",
+    "exampleJa": "",
+    "exampleEn": "The speech stirred up strong emotions.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "talk down to A",
+    "text": "talk down to A",
+    "level": "1",
+    "translation": "Aを見下した話し方をする",
+    "exampleJa": "",
+    "exampleEn": "You should not talk down to your students.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "talk A into doing",
+    "text": "talk A into doing",
+    "level": "1",
+    "translation": "Aを説得してさせる",
+    "exampleJa": "",
+    "exampleEn": "She talked him into joining the trip.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "talk up ～",
+    "text": "talk up",
+    "level": "1",
+    "translation": "を盛んにほめる / 宣伝する",
+    "exampleJa": "",
+    "exampleEn": "The media talked up the new product.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "tell on ～",
+    "text": "tell on",
+    "level": "1",
+    "translation": "に告げ口する / に悪影響を及ぼす",
+    "exampleJa": "",
+    "exampleEn": "The long hours are starting to tell on him.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "throw off ～",
+    "text": "throw off",
+    "level": "1",
+    "translation": "振り払う / 取り除く",
+    "exampleJa": "",
+    "exampleEn": "She tried to throw off her anxiety.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "throw up （～）",
+    "text": "throw up",
+    "level": "1",
+    "translation": "吐く / 急に生じる",
+    "exampleJa": "",
+    "exampleEn": "The project threw up several unexpected problems.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "tidy up ～",
+    "text": "tidy up",
+    "level": "1",
+    "translation": "片づける",
+    "exampleJa": "",
+    "exampleEn": "Please tidy up the room before dinner.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "tie up ～",
+    "text": "tie up",
+    "level": "1",
+    "translation": "縛る / 時間を取る / 提携する",
+    "exampleJa": "",
+    "exampleEn": "The meeting tied up the staff for most of the day.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "tip over （～）",
+    "text": "tip over",
+    "level": "1",
+    "translation": "ひっくり返る / ひっくり返す",
+    "exampleJa": "",
+    "exampleEn": "The vase tipped over in the wind.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "touch up ～",
+    "text": "touch up",
+    "level": "1",
+    "translation": "手直しする / 修整する",
+    "exampleJa": "",
+    "exampleEn": "She touched up the photo before printing it.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "track down ～",
+    "text": "track down",
+    "level": "1",
+    "translation": "追跡して見つける",
+    "exampleJa": "",
+    "exampleEn": "The reporter tracked down the original source.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "trip up （A）",
+    "text": "trip up",
+    "level": "1",
+    "translation": "つまずかせる / 失敗させる",
+    "exampleJa": "",
+    "exampleEn": "A small detail tripped up the team.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "tune in （to ～）",
+    "text": "tune in to",
+    "level": "1",
+    "translation": "にチャンネルを合わせる / 注意を向ける",
+    "exampleJa": "",
+    "exampleEn": "Many listeners tuned in to the live broadcast.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "tune up （～）",
+    "text": "tune up",
+    "level": "1",
+    "translation": "調整する",
+    "exampleJa": "",
+    "exampleEn": "He tuned up the engine before the trip.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "turn around （～）",
+    "text": "turn around",
+    "level": "1",
+    "translation": "好転させる / 振り向く",
+    "exampleJa": "",
+    "exampleEn": "The new manager turned the business around.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "turn away ～",
+    "text": "turn away",
+    "level": "1",
+    "translation": "追い返す / 顔をそむける",
+    "exampleJa": "",
+    "exampleEn": "The shelter could not turn away anyone in need.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "turn in （～）",
+    "text": "turn in",
+    "level": "1",
+    "translation": "提出する / 寝る / 引き渡す",
+    "exampleJa": "",
+    "exampleEn": "Please turn in your report by Friday.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "walk off ［away］ with ～",
+    "text": "walk off with",
+    "level": "1",
+    "translation": "を持ち去る / を楽々手に入れる",
+    "exampleJa": "",
+    "exampleEn": "Someone walked off with my umbrella.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  },
+  {
+    "sourceText": "want for ～",
+    "text": "want for",
+    "level": "1",
+    "translation": "を欠く",
+    "exampleJa": "",
+    "exampleEn": "The town never wanted for fresh water.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch40"
+  }
+]

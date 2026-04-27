@@ -1,6 +1,6 @@
 type DifficultyKey = 'Eiken5' | 'Eiken4' | 'EikenPre1';
 type LevelKey = 1 | 2 | 3;
-type QuestionLike = { text: string };
+type QuestionLike = { text: string; exampleEn?: string };
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const withArticle = (text: string) => `${/^[aeiou]/i.test(text) ? 'an' : 'a'} ${text}`;
@@ -865,6 +865,8 @@ export const getQuestionExample = (
   level: LevelKey,
   question: QuestionLike
 ): string | null => {
+  if (question.exampleEn?.trim()) return question.exampleEn;
+
   if (difficulty === 'Eiken5') {
     if (level === 1) return getEiken5Level1FallbackExample(question.text);
     if (level === 2) return getEiken5Level2FallbackExample(question.text);

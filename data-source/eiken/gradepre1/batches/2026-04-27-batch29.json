@@ -1,0 +1,134 @@
+[
+  {
+    "sourceText": "cumulative",
+    "text": "cumulative",
+    "level": "1",
+    "translation": "累積する / 累積的な",
+    "exampleJa": "",
+    "exampleEn": "The cumulative effect of small changes was significant.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "savage",
+    "text": "savage",
+    "level": "1",
+    "translation": "激しい / 残酷な",
+    "exampleJa": "",
+    "exampleEn": "The town was hit by a savage storm.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "admirable",
+    "text": "admirable",
+    "level": "1",
+    "translation": "立派な / 賞賛に値する",
+    "exampleJa": "",
+    "exampleEn": "Her patience was truly admirable.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "informative",
+    "text": "informative",
+    "level": "1",
+    "translation": "有益な / 情報に富む",
+    "exampleJa": "",
+    "exampleEn": "The lecture was short but informative.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "proportional",
+    "text": "proportional",
+    "level": "1",
+    "translation": "比例した / 釣り合った",
+    "exampleJa": "",
+    "exampleEn": "The payment is proportional to the amount of work.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "simultaneous",
+    "text": "simultaneous",
+    "level": "1",
+    "translation": "同時の",
+    "exampleJa": "",
+    "exampleEn": "The two events happened almost simultaneously.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "uneasy",
+    "text": "uneasy",
+    "level": "1",
+    "translation": "不安な / 落ち着かない",
+    "exampleJa": "",
+    "exampleEn": "I felt uneasy about the sudden silence.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "unequal",
+    "text": "unequal",
+    "level": "1",
+    "translation": "不平等な / 等しくない",
+    "exampleJa": "",
+    "exampleEn": "The two sides entered the debate under unequal conditions.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "pessimistic",
+    "text": "pessimistic",
+    "level": "1",
+    "translation": "悲観的な",
+    "exampleJa": "",
+    "exampleEn": "He is pessimistic about the short-term outlook.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "repetitive",
+    "text": "repetitive",
+    "level": "1",
+    "translation": "繰り返しの多い",
+    "exampleJa": "",
+    "exampleEn": "The task is simple but repetitive.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "respiratory",
+    "text": "respiratory",
+    "level": "1",
+    "translation": "呼吸器の",
+    "exampleJa": "",
+    "exampleEn": "Air pollution can cause respiratory problems.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  },
+  {
+    "sourceText": "coherent",
+    "text": "coherent",
+    "level": "1",
+    "translation": "一貫した / 筋の通った",
+    "exampleJa": "",
+    "exampleEn": "She gave a coherent explanation of the plan.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch29"
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "sourceText": "wash away ～",
+    "text": "wash away",
+    "level": "2",
+    "translation": "洗い流す / 消し去る",
+    "exampleJa": "",
+    "exampleEn": "The heavy rain washed away the footprints.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch41"
+  },
+  {
+    "sourceText": "wash down ～",
+    "text": "wash down",
+    "level": "2",
+    "translation": "水などで飲み下す",
+    "exampleJa": "",
+    "exampleEn": "She washed the pills down with a glass of water.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch41"
+  },
+  {
+    "sourceText": "watch over ～",
+    "text": "watch over",
+    "level": "2",
+    "translation": "見守る / 世話をする",
+    "exampleJa": "",
+    "exampleEn": "An older nurse watched over the children.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch41"
+  },
+  {
+    "sourceText": "weigh on ～",
+    "text": "weigh on",
+    "level": "2",
+    "translation": "重くのしかかる / 心を悩ませる",
+    "exampleJa": "",
+    "exampleEn": "The uncertainty weighed on everyone in the office.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch41"
+  },
+  {
+    "sourceText": "win over ～",
+    "text": "win over",
+    "level": "2",
+    "translation": "味方に引き入れる / 納得させる",
+    "exampleJa": "",
+    "exampleEn": "Her honesty won over the audience.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch41"
+  }
+]

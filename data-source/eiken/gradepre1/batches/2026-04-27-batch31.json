@@ -1,0 +1,145 @@
+[
+  {
+    "sourceText": "get around to doing",
+    "text": "get around to doing",
+    "level": "1",
+    "translation": "やっとする",
+    "exampleJa": "",
+    "exampleEn": "I finally got around to cleaning the garage.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "kick in",
+    "text": "kick in",
+    "level": "1",
+    "translation": "効き始める / 発動する",
+    "exampleJa": "",
+    "exampleEn": "The heating system kicked in after sunset.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "let up",
+    "text": "let up",
+    "level": "1",
+    "translation": "弱まる / やむ",
+    "exampleJa": "",
+    "exampleEn": "The rain did not let up all afternoon.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "lift off",
+    "text": "lift off",
+    "level": "1",
+    "translation": "離陸する",
+    "exampleJa": "",
+    "exampleEn": "The helicopter lifted off smoothly.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "over the hump",
+    "text": "over the hump",
+    "level": "1",
+    "translation": "山場を越えて",
+    "exampleJa": "",
+    "exampleEn": "We are over the hump and should finish soon.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "refrain from doing",
+    "text": "refrain from doing",
+    "level": "1",
+    "translation": "するのを控える",
+    "exampleJa": "",
+    "exampleEn": "Please refrain from using your phone during the performance.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "set in",
+    "text": "set in",
+    "level": "1",
+    "translation": "始まる / 定着する",
+    "exampleJa": "",
+    "exampleEn": "Winter has begun to set in early this year.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "set out to do",
+    "text": "set out to do",
+    "level": "1",
+    "translation": "するつもりで始める",
+    "exampleJa": "",
+    "exampleEn": "They set out to build a better service.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "sit by",
+    "text": "sit by",
+    "level": "1",
+    "translation": "傍観する",
+    "exampleJa": "",
+    "exampleEn": "We cannot just sit by and do nothing.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "slip by",
+    "text": "slip by",
+    "level": "1",
+    "translation": "いつの間にか過ぎる",
+    "exampleJa": "",
+    "exampleEn": "The summer vacation slipped by quickly.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "spring up",
+    "text": "spring up",
+    "level": "1",
+    "translation": "突然現れる",
+    "exampleJa": "",
+    "exampleEn": "New cafes have sprung up around the station.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "the other way around",
+    "text": "the other way around",
+    "level": "1",
+    "translation": "逆に",
+    "exampleJa": "",
+    "exampleEn": "I thought he was the teacher, but it was the other way around.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  },
+  {
+    "sourceText": "wander off",
+    "text": "wander off",
+    "level": "1",
+    "translation": "ふらりと離れる",
+    "exampleJa": "",
+    "exampleEn": "The child wandered off from the group.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch31"
+  }
+]

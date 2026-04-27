@@ -1,0 +1,102 @@
+[
+  {
+    "text": "counter",
+    "translation": "反対する / 対抗する",
+    "basicMeaning": "カウンター、反論"
+  },
+  {
+    "text": "mine",
+    "translation": "鉱山",
+    "basicMeaning": "私のもの"
+  },
+  {
+    "text": "resume",
+    "translation": "職務経歴書 / 履歴書",
+    "basicMeaning": "resume = 再開する は別語"
+  },
+  {
+    "text": "post",
+    "translation": "役職 / 地位",
+    "basicMeaning": "郵便、掲示する / 投稿する"
+  },
+  {
+    "text": "engage",
+    "translation": "従事する / 取り組む",
+    "basicMeaning": "婚約する、引きつける"
+  },
+  {
+    "text": "import",
+    "translation": "輸入する",
+    "basicMeaning": "輸入、重要性"
+  },
+  {
+    "text": "root",
+    "translation": "根源 / 原因",
+    "basicMeaning": "根"
+  },
+  {
+    "text": "firm",
+    "translation": "会社",
+    "basicMeaning": "堅い、しっかりした"
+  },
+  {
+    "text": "toll",
+    "translation": "通行料",
+    "basicMeaning": "犠牲、被害"
+  },
+  {
+    "text": "plot",
+    "translation": "筋書き",
+    "basicMeaning": "区画、陰謀を企てる"
+  },
+  {
+    "text": "reception",
+    "translation": "反応 / 受け止められ方",
+    "basicMeaning": "受付、歓迎会"
+  },
+  {
+    "text": "bargain",
+    "translation": "格安品 / 掘り出し物",
+    "basicMeaning": "交渉する"
+  },
+  {
+    "text": "leave",
+    "translation": "去る / 離れる",
+    "basicMeaning": "残しておく、休暇"
+  },
+  {
+    "text": "aside",
+    "translation": "わきへ / 別にして",
+    "basicMeaning": "余談"
+  },
+  {
+    "text": "resort",
+    "translation": "頼る",
+    "basicMeaning": "行楽地 / 保養地"
+  },
+  {
+    "text": "strangle",
+    "translation": "締めつける",
+    "basicMeaning": "首を絞める"
+  },
+  {
+    "text": "assault",
+    "translation": "暴行",
+    "basicMeaning": "襲う"
+  },
+  {
+    "text": "blow up",
+    "translation": "爆発する / 爆破する",
+    "basicMeaning": "ふくらませる"
+  },
+  {
+    "text": "come off",
+    "translation": "うまくいく",
+    "basicMeaning": "取れる、はがれる"
+  },
+  {
+    "text": "crack up",
+    "translation": "大笑いする",
+    "basicMeaning": "ひびが入る、壊れる"
+  }
+]

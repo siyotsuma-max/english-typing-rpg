@@ -5,6 +5,9 @@ import eikenGradePre1Json from './questionSets/eiken/gradepre1.json';
 export type Question = {
   text: string;
   translation: string;
+  basicMeaning?: string;
+  exampleEn?: string;
+  exampleJa?: string;
 };
 
 export type DifficultyKey = 'Eiken5' | 'Eiken4' | 'EikenPre1';

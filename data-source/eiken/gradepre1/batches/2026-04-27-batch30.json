@@ -1,0 +1,167 @@
+[
+  {
+    "sourceText": "all but",
+    "text": "all but",
+    "level": "1",
+    "translation": "ほとんど",
+    "exampleJa": "",
+    "exampleEn": "The old bridge was all but destroyed in the storm.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "aspire to do",
+    "text": "aspire to do",
+    "level": "1",
+    "translation": "することを熱望する",
+    "exampleJa": "",
+    "exampleEn": "Many students aspire to study abroad someday.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "back down",
+    "text": "back down",
+    "level": "1",
+    "translation": "譲歩する / 引き下がる",
+    "exampleJa": "",
+    "exampleEn": "He refused to back down during the debate.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "back off",
+    "text": "back off",
+    "level": "1",
+    "translation": "手を引く / 距離を置く",
+    "exampleJa": "",
+    "exampleEn": "The company backed off from the risky proposal.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "be destined to do",
+    "text": "be destined to do",
+    "level": "1",
+    "translation": "する運命にある",
+    "exampleJa": "",
+    "exampleEn": "She seemed destined to become a great musician.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "blast off",
+    "text": "blast off",
+    "level": "1",
+    "translation": "発射する / 離陸する",
+    "exampleJa": "",
+    "exampleEn": "The rocket blasted off right on schedule.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "bounce back",
+    "text": "bounce back",
+    "level": "1",
+    "translation": "立ち直る / 回復する",
+    "exampleJa": "",
+    "exampleEn": "The team bounced back after the early loss.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "branch off",
+    "text": "branch off",
+    "level": "1",
+    "translation": "分岐する",
+    "exampleJa": "",
+    "exampleEn": "A narrow path branches off to the left.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "chip in",
+    "text": "chip in",
+    "level": "1",
+    "translation": "お金を出し合う / 手伝う",
+    "exampleJa": "",
+    "exampleEn": "Everyone chipped in to buy a gift for the coach.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "come through",
+    "text": "come through",
+    "level": "1",
+    "translation": "切り抜ける / 期待に応える",
+    "exampleJa": "",
+    "exampleEn": "She came through for us when we needed help most.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "die down",
+    "text": "die down",
+    "level": "1",
+    "translation": "弱まる / 静まる",
+    "exampleJa": "",
+    "exampleEn": "The wind died down by evening.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "drag on",
+    "text": "drag on",
+    "level": "1",
+    "translation": "長引く",
+    "exampleJa": "",
+    "exampleEn": "The meeting dragged on for hours.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "face off",
+    "text": "face off",
+    "level": "1",
+    "translation": "対決する",
+    "exampleJa": "",
+    "exampleEn": "The two finalists will face off tomorrow.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "fall away",
+    "text": "fall away",
+    "level": "1",
+    "translation": "減少する / 衰える",
+    "exampleJa": "",
+    "exampleEn": "Public interest soon fell away.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  },
+  {
+    "sourceText": "for the time being",
+    "text": "for the time being",
+    "level": "1",
+    "translation": "当分の間",
+    "exampleJa": "",
+    "exampleEn": "For the time being, the office will stay closed.",
+    "status": "ready",
+    "issues": "",
+    "notes": "curated_batch30"
+  }
+]
