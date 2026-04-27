@@ -1,0 +1,708 @@
+sourceText,text,level,translation,exampleJa,exampleEn,status,issues,notes
+picture,picture,1,絵、写真,,,ready,,curated_batch03_translation
+computer,computer,1,コンピューター,,,ready,,curated_batch01
+magazine,magazine,1,雑誌,,,ready,,curated_batch01
+letter,letter,1,手紙,,,ready,,curated_batch03_translation
+lunchtime,lunchtime,1,昼食の時間,,,ready,,matched_existing_exact
+homework,homework,1,宿題,,,ready,,matched_existing_exact
+test,test,1,テスト,,,ready,,matched_existing_exact
+classmate,classmate,1,クラスメート,,,ready,,curated_batch01
+lesson,lesson,1,レッスン,,,ready,,matched_existing_exact
+subject,subject,1,教科,,,ready,,matched_existing_exact
+science,science,1,科学,,,ready,,matched_existing_exact
+history,history,1,歴史,,,ready,,matched_existing_exact
+speech,speech,1,スピーチ、発表,,,ready,,curated_batch03_translation
+report,report,1,レポート、報告,,,ready,,curated_batch03_translation
+textbook,textbook,1,教科書,,,ready,,curated_batch01
+notebook,notebook,1,ノート,,,ready,,curated_batch01
+cafeteria,cafeteria,1,食堂,,,ready,,matched_existing_exact
+library,library,1,図書館,,,ready,,matched_existing_exact
+gym,gym,1,体育館,,,ready,,curated_batch01
+college,college,1,大学（college）,,,ready,,matched_existing_exact
+university,university,1,総合大学,,,ready,,matched_existing_exact
+course,course,1,講座、コース,,,ready,,curated_batch03_translation
+contest,contest,1,コンテスト,,,ready,,matched_existing_exact
+group,group,1,グループ,,,ready,,matched_existing_exact
+member,member,1,メンバー,,,ready,,matched_existing_exact
+restaurant,restaurant,1,レストラン,,,ready,,matched_existing_exact
+bookstore,bookstore,1,本屋,,,ready,,curated_batch01
+museum,museum,1,博物館,,,ready,,matched_existing_exact
+station,station,1,駅,,,ready,,matched_existing_exact
+airport,airport,1,空港,,,ready,,matched_existing_exact
+bike,bike,1,自転車,,,ready,,curated_batch01
+hospital,hospital,1,病院,,,ready,,matched_existing_exact
+hotel,hotel,1,ホテル,,,ready,,matched_existing_exact
+apartment,apartment,1,アパート,,,ready,,curated_batch01
+garden,garden,1,庭,,,ready,,curated_batch01
+town,town,1,町,,,ready,,curated_batch01
+building,building,1,建物,,,ready,,curated_batch01
+company,company,1,会社,,,ready,,matched_existing_exact
+office,office,1,事務所,,,ready,,curated_batch01
+party,party,1,パーティー,,,ready,,curated_batch01
+shopping,shopping,1,買い物,,,ready,,matched_existing_exact
+present,present,1,贈り物、プレゼント,,,ready,,curated_batch03_translation
+weekend,weekend,1,週末,,,ready,,curated_batch01
+holiday,holiday,1,休日,,,ready,,curated_batch01
+program,program,1,番組,,,ready,,matched_existing_exact
+picnic,picnic,1,ピクニック,,,ready,,curated_batch01
+fishing,fishing,1,釣り,,,ready,,matched_existing_exact
+hobby,hobby,1,趣味,,,ready,,matched_existing_exact
+fever,fever,1,熱,,,ready,,matched_existing_exact
+dentist,dentist,1,歯医者,,,ready,,curated_batch01
+scientist,scientist,1,科学者,,,ready,,curated_batch01
+pilot,pilot,1,パイロット,,,ready,,curated_batch01
+actor,actor,1,俳優,,,ready,,matched_existing_exact
+volunteer,volunteer,1,ボランティア,,,ready,,matched_existing_exact
+grandmother,grandmother,1,祖母,,,ready,,curated_batch01
+grandfather,grandfather,1,祖父,,,ready,,curated_batch01
+husband,husband,1,夫,,,ready,,matched_existing_exact
+aunt,aunt,1,おば,,,ready,,curated_batch01
+vegetable,vegetable,1,野菜,,,ready,,curated_batch01
+toast,toast,1,トースト,,,ready,,matched_existing_exact
+hamburger,hamburger,1,ハンバーガー,,,ready,,curated_batch01
+pancake,pancake,1,パンケーキ,,,ready,,matched_existing_exact
+chocolate,chocolate,1,チョコレート,,,ready,,curated_batch01
+popcorn,popcorn,1,ポップコーン,,,ready,,matched_existing_exact
+beach,beach,1,浜辺,,,ready,,curated_batch01
+mountain,mountain,1,山,,,ready,,curated_batch01
+rose,rose,1,バラ,,,ready,,curated_batch01
+practice,practice,1,練習、練習すること,,,ready,,curated_batch03_translation
+violin,violin,1,バイオリン,,,ready,,curated_batch01
+concert,concert,1,コンサート,,,ready,,curated_batch01
+musical,musical,1,ミュージカル,,,ready,,matched_existing_exact
+purple,purple,1,紫色の,,,ready,,curated_batch01
+Spain,Spain,1,スペイン,,,ready,,matched_existing_exact
+England,England,1,イングランド,,,ready,,matched_existing_exact
+Africa,Africa,1,アフリカ,,,ready,,matched_existing_exact
+India,India,1,インド,,,ready,,matched_existing_exact
+basketball,basketball,1,バスケットボール,,,ready,,curated_batch01
+volleyball,volleyball,1,バレーボール,,,ready,,curated_batch01
+badminton,badminton,1,バドミントン,,,ready,,curated_batch01
+jogging,jogging,1,ジョギング,,,ready,,matched_existing_exact
+e-mail,e-mail,1,電子メール,,,ready,,matched_existing_exact
+information,information,1,情報,,,ready,,matched_existing_exact
+future,future,1,未来,,,ready,,matched_existing_exact
+cell phone,cell phone,2,携帯電話,,,ready,,curated_batch01
+event,event,1,行事,,,ready,,matched_existing_exact
+culture,culture,1,文化,,,ready,,matched_existing_exact
+center,center,1,中心,,,ready,,matched_existing_exact
+meeting,meeting,1,会議,,,ready,,matched_existing_exact
+sale,sale,1,セール,,,ready,,matched_existing_exact
+race,race,1,競争,,,ready,,matched_existing_exact
+example,example,1,例,,,ready,,matched_existing_exact
+postcard,postcard,1,はがき,,,ready,,curated_batch01
+poster,poster,1,ポスター,,,ready,,matched_existing_exact
+robot,robot,1,ロボット,,,ready,,matched_existing_exact
+bring,bring,1,持ってくる,,,ready,,matched_existing_exact
+forget,forget,1,忘れる,,,ready,,matched_existing_exact
+swim,swim,1,泳ぐ,,,ready,,matched_existing_exact
+paint,paint,1,絵を描く,,,ready,,matched_existing_exact
+arrive,arrive,1,着く,,,ready,,matched_existing_exact
+wear,wear,1,身につけている,,,ready,,matched_existing_exact
+change,change,1,変える,,,ready,,matched_existing_exact
+become,become,1,になる,,,ready,,matched_existing_exact
+catch,catch,1,つかまえる,,,ready,,matched_existing_exact
+order,order,1,注文する,,,ready,,matched_existing_exact
+break,break,1,壊す,,,ready,,matched_existing_exact
+fall,fall,1,秋,,,ready,,curated_batch03_translation
+turn,turn,1,曲がる,,,ready,,matched_existing_exact
+first,first,1,最初の,,,ready,,curated_batch01
+favorite,favorite,1,いちばん好きな、お気に入りの,,,ready,,curated_batch03_translation
+lucky,lucky,1,運のよい,,,ready,,curated_batch01
+sunny,sunny,1,晴れた,,,ready,,curated_batch01
+cloudy,cloudy,1,くもった,,,ready,,curated_batch01
+snowy,snowy,1,雪の降る,,,ready,,curated_batch01
+beautiful,beautiful,1,美しい,,,ready,,curated_batch01
+cute,cute,1,かわいい,,,ready,,curated_batch01
+interesting,interesting,1,おもしろい,,,ready,,curated_batch01
+special,special,1,特別な,,,ready,,curated_batch03_translation
+useful,useful,1,役に立つ,,,ready,,matched_existing_exact
+careful,careful,1,注意深い、気をつけるべき,,,ready,,curated_batch03_translation
+difficult,difficult,1,難しい,,,ready,,curated_batch01
+expensive,expensive,1,高価な,,,ready,,matched_existing_exact
+delicious,delicious,1,おいしい,,,ready,,matched_existing_exact
+different,different,1,ちがった、別の,,,ready,,curated_batch03_translation
+dear,dear,1,親愛なる,,,ready,,curated_batch03_translation
+usually,usually,1,たいてい,,,ready,,curated_batch01
+tonight,tonight,1,今夜,,,ready,,matched_existing_exact
+once,once,1,一度,,,ready,,matched_existing_exact
+still,still,1,まだ,,,ready,,matched_existing_exact
+easily,easily,1,簡単に,,,ready,,matched_existing_exact
+another,another,1,もう一つの、別の,,,ready,,curated_batch03_translation
+everyone,everyone,1,みんな,,,ready,,matched_existing_exact
+shower,shower,1,シャワー,,,ready,,matched_existing_exact
+bath,bath,1,風呂,,,ready,,matched_existing_exact
+bathroom,bathroom,1,浴室、洗面所,,,ready,,curated_batch01
+towel,towel,1,タオル,,,ready,,matched_existing_exact
+newspaper,newspaper,1,新聞,,,ready,,curated_batch01
+photo,photo,1,写真,,,ready,,matched_existing_exact
+comic,comic,1,漫画,,,ready,,matched_existing_exact
+knife,knife,1,ナイフ,,,ready,,curated_batch01
+wallet,wallet,1,財布,,,ready,,matched_existing_exact
+calendar,calendar,1,カレンダー,,,ready,,curated_batch01
+ruler,ruler,1,定規,,,ready,,curated_batch01
+toy,toy,1,おもちゃ,,,ready,,matched_existing_exact
+doghouse,doghouse,1,犬小屋,,,ready,,matched_existing_exact
+noon,noon,1,正午,,,ready,,curated_batch01
+dictionary,dictionary,1,辞書,,,ready,,curated_batch01
+classroom,classroom,1,教室,,,ready,,curated_batch01
+blackboard,blackboard,1,黒板,,,ready,,matched_existing_exact
+eraser,eraser,1,消しゴム,,,ready,,curated_batch01
+uniform,uniform,1,制服,,,ready,,matched_existing_exact
+drama,drama,1,ドラマ,,,ready,,matched_existing_exact
+social studies,social studies,2,社会科,,,ready,,curated_batch03_translation
+plane,plane,1,飛行機,,,ready,,curated_batch01
+airplane,airplane,1,飛行機,,,ready,,matched_existing_exact
+taxi,taxi,1,タクシー,,,ready,,curated_batch01
+supermarket,supermarket,1,スーパーマーケット,,,ready,,curated_batch01
+café,cafe,1,カフェ、喫茶店,,,ready,,curated_batch03_translation
+post office,post office,2,郵便局,,,ready,,curated_batch01
+stadium,stadium,1,スタジアム,,,ready,,curated_batch01
+theater,theater,1,劇場,,,ready,,curated_batch01
+hometown,hometown,1,故郷,,,ready,,matched_existing_exact
+vacation,vacation,1,休暇,,,ready,,matched_existing_exact
+travel,travel,1,旅行すること,,,ready,,matched_existing_exact
+festival,festival,1,祭り,,,ready,,curated_batch01
+homestay,homestay,1,ホームステイ,,,ready,,matched_existing_exact
+tent,tent,1,テント,,,ready,,matched_existing_exact
+painting,painting,1,絵画,,,ready,,matched_existing_exact
+comedy,comedy,1,喜劇,,,ready,,matched_existing_exact
+stomachache,stomachache,1,腹痛,,,ready,,matched_existing_exact
+headache,headache,1,頭痛,,,ready,,matched_existing_exact
+pianist,pianist,1,ピアニスト,,,ready,,curated_batch01
+waiter,waiter,1,ウェイター,,,ready,,curated_batch01
+farmer,farmer,1,農家、農場で働く人,,,ready,,curated_batch01
+sir,sir,1,〜さん,,,ready,,curated_batch01
+children,children,1,子どもたち,,,ready,,curated_batch01
+daughter,daughter,1,娘,,,ready,,curated_batch01
+cousin,cousin,1,いとこ,,,ready,,matched_existing_exact
+wedding,wedding,1,結婚式,,,ready,,matched_existing_exact
+dessert,dessert,1,デザート,,,ready,,matched_existing_exact
+ice cream,ice cream,2,アイスクリーム,,,ready,,curated_batch01
+doughnut,doughnut,1,ドーナツ,,,ready,,matched_existing_exact
+pie,pie,1,パイ,,,ready,,matched_existing_exact
+sandwich,sandwich,1,サンドイッチ,,,ready,,curated_batch01
+spaghetti,spaghetti,1,スパゲッティ,,,ready,,matched_existing_exact
+pasta,pasta,1,パスタ,,,ready,,matched_existing_exact
+noodle,noodle,1,麺,,,ready,,matched_existing_exact
+beef,beef,1,牛肉,,,ready,,matched_existing_exact
+steak,steak,1,ステーキ,,,ready,,matched_existing_exact
+sausage,sausage,1,ソーセージ,,,ready,,matched_existing_exact
+strawberry,strawberry,1,いちご,,,ready,,matched_existing_exact
+pineapple,pineapple,1,パイナップル,,,ready,,matched_existing_exact
+pumpkin,pumpkin,1,かぼちゃ,,,ready,,matched_existing_exact
+onion,onion,1,たまねぎ,,,ready,,matched_existing_exact
+season,season,1,季節,,,ready,,matched_existing_exact
+autumn,autumn,1,秋,,,ready,,matched_existing_exact
+ocean,ocean,1,海,,,ready,,matched_existing_exact
+turtle,turtle,1,カメ,,,ready,,matched_existing_exact
+hamster,hamster,1,ハムスター,,,ready,,curated_batch01
+musician,musician,1,音楽家,,,ready,,matched_existing_exact
+pop music,pop music,2,ポップ音楽,,,ready,,curated_batch01
+flute,flute,1,フルート,,,ready,,curated_batch01
+trumpet,trumpet,1,トランペット,,,ready,,matched_existing_exact
+clothes,clothes,1,服,,,ready,,matched_existing_exact
+sweater,sweater,1,セーター,,,ready,,curated_batch01
+umbrella,umbrella,1,かさ,,,ready,,curated_batch01
+passport,passport,1,パスポート,,,ready,,matched_existing_exact
+Christmas,Christmas,1,クリスマス,,,ready,,curated_batch01
+prize,prize,1,賞,,,ready,,matched_existing_exact
+haircut,haircut,1,散髪,,,ready,,matched_existing_exact
+machine,machine,1,機械,,,ready,,matched_existing_exact
+begin,begin,1,始める,,,ready,,matched_existing_exact
+remember,remember,1,覚えている,,,ready,,matched_existing_exact
+understand,understand,1,理解する,,,ready,,matched_existing_exact
+enter,enter,1,入る,,,ready,,matched_existing_exact
+surprise,surprise,1,驚かせる,,,ready,,matched_existing_exact
+happen,happen,1,起こる,,,ready,,matched_existing_exact
+relax,relax,1,くつろぐ,,,ready,,matched_existing_exact
+medium,medium,1,中くらいの、Mサイズの,,,ready,,curated_batch03_translation
+healthy,healthy,1,健康な,,,ready,,matched_existing_exact
+excited,excited,1,わくわくした,,,ready,,matched_existing_exact
+exciting,exciting,1,わくわくする,,,ready,,curated_batch01
+boring,boring,1,退屈な,,,ready,,matched_existing_exact
+thirsty,thirsty,1,のどがかわいた,,,ready,,curated_batch01
+dirty,dirty,1,きたない,,,ready,,curated_batch01
+low,low,1,低い,,,ready,,curated_batch01
+junior,junior,1,年下の,,,ready,,matched_existing_exact
+quick,quick,1,すばやい,,,ready,,matched_existing_exact
+professional,professional,1,専門的な、プロの,,,ready,,curated_batch03_translation
+twice,twice,1,二回,,,ready,,matched_existing_exact
+o'clock,o'clock,1,〜時,,,ready,,curated_batch01
+someday,someday,1,いつか,,,ready,,matched_existing_exact
+slowly,slowly,1,ゆっくりと,,,ready,,matched_existing_exact
+ago,ago,1,前に,,,ready,,matched_existing_exact
+during,during,1,〜の間に（期間中）,,,ready,,matched_existing_exact
+shall,shall,1,しましょうか,,,ready,,matched_existing_exact
+a.m.,a.m.,1,午前,,,ready,,matched_existing_exact
+p.m.,p.m.,1,午後,,,ready,,matched_existing_exact
+want to do,want to do,2,〜したい,,,ready,,curated_batch01
+like doing ［to do］,like to do,2,〜するのが好きだ,,,ready,,curated_batch02
+want to be ～,want to be,2,になりたい,,,ready,,matched_existing_comparable
+need to do,need to do,2,〜する必要がある,,,ready,,curated_batch01
+go （back） home,go back home,2,家に帰る,,,ready,,curated_batch02
+get home,get home,2,家に着く,,,ready,,matched_existing_exact
+come home,come home,2,家に帰ってくる,,,ready,,matched_existing_exact
+do one's homework,do one's homework,2,宿題をする,,,ready,,curated_batch01
+take A to B,take my bag to school,2,学校へかばんを持っていく,,,ready,,curated_batch02
+look for ～,look for my key,2,自分のかぎを探す,,,ready,,curated_batch02
+leave （A） for B,leave Tokyo for Osaka,2,東京を出て大阪へ向かう,,,ready,,curated_batch02
+have a good time,have a good time,2,楽しく過ごす,,,ready,,matched_existing_exact
+wait for ～,wait for the train,2,電車を待つ,,,ready,,curated_batch02
+stay in ［at］ ～,stay in a tent,2,テントに泊まる,,,ready,,curated_batch02
+stay with ～,stay with my cousin,2,いとこの家に泊まる,,,ready,,curated_batch02
+get up,get up,2,起きる,,,ready,,matched_existing_exact
+wake up,wake up,2,目を覚ます、起きる,,,ready,,matched_existing_exact
+take a trip,take a trip,2,旅行をする,,,ready,,matched_existing_exact
+go on a trip,go on a trip,2,旅行に行く,,,ready,,matched_existing_exact
+speak to ～,speak to my mother,2,母に話しかける,,,ready,,curated_batch02
+talk to ～,talk to my mother,2,母に話す,,,ready,,curated_batch02
+talk with ～,talk with my father,2,父と話す,,,ready,,curated_batch02
+listen to ～,listen to English,2,英語を聞く,,,ready,,curated_batch02
+hear about ～,hear about the festival,2,そのお祭りのことを聞く,,,ready,,curated_batch02
+go doing,go doing,2,〜しに行く,,,ready,,curated_batch01
+finish doing,finish doing,2,〜し終える,,,ready,,curated_batch01
+enjoy doing,enjoy doing,2,〜するのを楽しむ,,,ready,,curated_batch01
+go back to ～,go back to my room,2,自分の部屋に戻る,,,ready,,curated_batch02
+come back to ～,come back to school,2,学校へ戻ってくる,,,ready,,curated_batch02
+get back,get back,2,戻る,,,ready,,matched_existing_exact
+come back from ～,come back from China,2,中国から帰ってくる,,,ready,,curated_batch02
+arrive at ～,arrive at the airport,2,空港に着く,,,ready,,curated_batch02
+arrive in ～,arrive in Kyoto,2,京都に着く,,,ready,,curated_batch02
+get to ～,get to the library,2,図書館に着く,,,ready,,curated_batch02
+start doing ［to do］,start to study,2,勉強し始める,,,ready,,curated_batch02
+stop doing,stop doing,2,〜するのをやめる,,,ready,,curated_batch01
+take a picture,take a picture,2,写真を撮る,,,ready,,matched_existing_exact
+walk to ～,walk to the library,2,図書館へ歩いて行く,,,ready,,curated_batch02
+ask ～ for help,ask for help,2,助けを求める,,,ready,,matched_existing_comparable
+help A with B,help my friend with homework,2,友達の宿題を手伝う,,,ready,,curated_batch02
+ask for ～,ask for water,2,水を求める,,,ready,,curated_batch02
+have a cold,have a cold,2,かぜをひいている,,,ready,,matched_existing_exact
+take a bath,take a bath,2,風呂に入る,,,ready,,matched_existing_exact
+take a shower,take a shower,2,シャワーを浴びる,,,ready,,matched_existing_exact
+take a walk,take a walk,2,散歩する,,,ready,,matched_existing_exact
+go out,go out,2,外出する,,,ready,,matched_existing_exact
+say goodbye to ～,say goodbye to my teacher,2,先生にさよならを言う,,,ready,,curated_batch02
+stay （at） home,stay at home,2,家にいる,,,ready,,matched_existing_comparable
+think of ～,think of my family,2,家族のことを思う,,,ready,,curated_batch02
+become friends with ～,become friends with Tom,2,トムと友達になる,,,ready,,curated_batch02
+catch a cold,catch a cold,2,かぜをひく,,,ready,,matched_existing_exact
+get off ～,get off the train,2,電車を降りる,,,ready,,curated_batch02
+give up,give up,2,あきらめる,,,ready,,matched_existing_exact
+have no idea,have no idea,2,まったくわからない,,,ready,,matched_existing_exact
+go around ［round］ ～,go around the lake,2,湖のまわりを回る,,,ready,,curated_batch02
+look around,look around,2,見回す,,,ready,,matched_existing_exact
+move to A （from B）,move to Tokyo from Osaka,2,大阪から東京へ引っ越す,,,ready,,curated_batch02
+write to ～,write to my teacher,2,先生に手紙を書く,,,ready,,curated_batch02
+write back,write back,2,返事を書く,,,ready,,matched_existing_exact
+slow down,slow down,2,ゆっくり進む,,,ready,,matched_existing_exact
+worry about ～,worry about homework,2,宿題のことで心配する,,,ready,,curated_batch02
+look like ～,look like my mother,2,母に似ている,,,ready,,curated_batch02
+believe in ～,believe in my dream,2,自分の夢を信じる,,,ready,,curated_batch02
+play catch,play catch,2,キャッチボールをする,,,ready,,matched_existing_exact
+feel better,feel better,2,気分がよくなる,,,ready,,matched_existing_exact
+a lot of ～,a lot of books,2,たくさんの本,,,ready,,curated_batch02
+be late for ～,be late for class,2,授業に遅れる,,,ready,,curated_batch02
+be careful,be careful,2,気をつける,,,ready,,matched_existing_exact
+be interested in ～,be interested in music,2,音楽に興味がある,,,ready,,curated_batch02
+kind of ～,kind of,2,一種の,,,ready,,matched_existing_comparable
+a glass of ～,a glass of milk,2,一杯のミルク,,,ready,,curated_batch02
+a cup of ～,a cup of coffee,2,一杯のコーヒー,,,ready,,curated_batch02
+in the morning,in the morning,2,朝に,,,ready,,matched_existing_exact
+in the afternoon,in the afternoon,2,午後に,,,ready,,matched_existing_exact
+in the future,in the future,2,将来,,,ready,,matched_existing_exact
+how long,how long,2,どのくらい長く,,,ready,,matched_existing_exact
+all day （long）,all day long,2,一日中,,,ready,,matched_existing_comparable
+for a long time,for a long time,2,長い間,,,ready,,matched_existing_exact
+last week,last week,2,先週,,,ready,,matched_existing_exact
+after work,after work,2,仕事のあとで,,,ready,,matched_existing_exact
+for example,for example,2,たとえば,,,ready,,matched_existing_exact
+as ～ as ...,as busy as my mother,2,母と同じくらい忙しい,,,ready,,curated_batch02
+a lot,a lot,2,たくさん,,,ready,,matched_existing_exact
+from A to B,from Tokyo to Kyoto,2,東京から京都まで,,,ready,,curated_batch02
+～ years old,twelve years old,2,12歳,,,ready,,curated_batch02
+in front of ～,in front of the library,2,図書館の前に,,,ready,,curated_batch02
+next to ～,next to the park,2,公園のとなりに,,,ready,,curated_batch02
+out of ～,out of the room,2,部屋の外へ,,,ready,,curated_batch02
+both A and B,both soccer and tennis,2,サッカーとテニスの両方,,,ready,,curated_batch02
+one day,one day,2,ある日,,,ready,,matched_existing_exact
+（on） the first day,on the first day,2,最初の日に,,,ready,,matched_existing_comparable
+on vacation,on vacation,2,休暇中で,,,ready,,matched_existing_exact
+on foot,on foot,2,歩いて,,,ready,,matched_existing_exact
+（just） around the corner,just around the corner,2,すぐ近くに,,,ready,,curated_batch02
+by the way,by the way,2,ところで,,,ready,,matched_existing_exact
+more and more,more and more,2,ますます,,,ready,,matched_existing_exact
+for free,for free,2,無料で,,,ready,,matched_existing_exact
+right now,right now,2,今すぐ,,,ready,,matched_existing_exact
+all over the world,all over the world,2,世界中で,,,ready,,matched_existing_exact
+have to do,have to do,2,〜しなければならない,,,ready,,curated_batch01
+Nice to meet you.,Nice to meet you.,3,はじめまして。,,,draft,,level3_curated_out
+How are you?,How are you?,3,お元気ですか。,,,draft,,level3_curated_out
+"I'm fine, thanks.","I'm fine, thanks.",3,元気です、ありがとう。,,,draft,,level3_curated_out
+Have a good day.,Have a good day.,3,よい一日を。,,,draft,,level3_curated_out
+Have fun.,Have fun.,3,楽しんでね。,,,draft,,level3_curated_out
+See you later.,See you later.,3,またあとで。,,,draft,,level3_curated_out
+See you tomorrow.,See you tomorrow.,3,また明日。,,,draft,,level3_curated_out
+Take care.,Take care.,3,気をつけて。,,,draft,,level3_curated_out
+I'm home.,I'm home.,3,ただいま。,,,draft,,level3_curated_out
+Good night.,Good night.,3,おやすみなさい。,,,draft,,level3_curated_out
+May［Can］ I help you?,Can I help you?,3,何かお探しですか。,,,ready,,curated_batch03_translation
+How much is this shirt?,How much is this shirt?,3,このシャツはいくらですか。,,,ready,,matched_existing_exact
+I'm looking for a present.,I'm looking for a present.,3,贈り物を探しています。,,,ready,,matched_existing_exact
+I want to buy some flowers.,I want to buy some flowers.,3,花をいくつか買いたいです。,,,ready,,matched_existing_exact
+These are on sale.,These are on sale.,3,これらはセール中です。,,,ready,,matched_existing_exact
+It's two thousand yen.,It's two thousand yen.,3,2000円です。,,,ready,,matched_existing_exact
+I'll take it.,I'll take it.,3,それをください。,,,ready,,matched_existing_exact
+Anything else?,Anything else?,3,ほかに何かありますか。,,,ready,,matched_existing_exact
+"That's all, thanks.","That's all, thanks.",3,それで全部です、ありがとう。,,,ready,,matched_existing_exact
+Here you are.,Here you are.,3,はい、どうぞ。,,,ready,,matched_existing_exact
+Excuse me.,Excuse me.,3,すみません。,,,draft,,level3_curated_out
+Can I have some more water?,Can I have some more water?,3,水をもう少しいただけますか。,,,ready,,matched_existing_exact
+Would you like something to drink?,Would you like something to drink?,3,何か飲み物はいかがですか。,,,ready,,matched_existing_exact
+Would you like tea or coffee?,Would you like tea or coffee?,3,紅茶とコーヒーのどちらがよいですか。,,,ready,,matched_existing_exact
+I'll have grape juice.,I'll have grape juice.,3,ぶどうジュースをください。,,,ready,,matched_existing_exact
+I'd like a hot dog.,I'd like a hot dog.,3,ホットドッグをください。,,,ready,,matched_existing_exact
+It looks good.,It looks good.,3,おいしそうです。,,,ready,,matched_existing_exact
+"No, thank you. I'm full.","No, thank you. I'm full.",3,いいえ、結構です。おなかがいっぱいです。,,,ready,,matched_existing_exact
+"Attention, please.","Attention, please.",3,ご注意ください。,,,ready,,matched_existing_exact
+It's warm today.,It's warm today.,3,今日は暖かいです。,,,ready,,matched_existing_exact
+It's going to rain soon.,It's going to rain soon.,3,もうすぐ雨が降りそうです。,,,ready,,matched_existing_exact
+Is it raining outside?,Is it raining outside?,3,外では雨が降っていますか。,,,ready,,matched_existing_exact
+It's raining now.,It's raining now.,3,今、雨が降っています。,,,ready,,matched_existing_exact
+How was the weather in New York?,How was the weather in New York?,3,ニューヨークの天気はどうでしたか。,,,ready,,matched_existing_exact
+It snowed a lot last night.,It snowed a lot last night.,3,昨夜はたくさん雪が降りました。,,,ready,,matched_existing_exact
+Where is the post office?,Where is the post office?,3,郵便局はどこですか。,,,ready,,matched_existing_exact
+Which bus goes to the airport?,Which bus goes to the airport?,3,どのバスが空港へ行きますか。,,,ready,,matched_existing_exact
+How can I get to the museum?,How can I get to the museum?,3,どうやって博物館へ行けますか。,,,ready,,matched_existing_exact
+I'll show you the way.,I'll show you the way.,3,道を案内します。,,,ready,,matched_existing_exact
+It takes about fifteen minutes.,It takes about fifteen minutes.,3,だいたい15分かかります。,,,ready,,matched_existing_exact
+What happened （to you）?,What happened to you?,3,あなた、どうしたのですか。,,,ready,,curated_batch03_translation
+What's wrong （with you）?,What's wrong with you?,3,あなた、具合でも悪いのですか。,,,ready,,curated_batch03_translation
+I can't find my car key.,I can't find my car key.,3,車の鍵が見つかりません。,,,ready,,matched_existing_exact
+I lost my train ticket.,I lost my train ticket.,3,電車の切符をなくしました。,,,ready,,matched_existing_exact
+How do you feel now?,How do you feel now?,3,今の気分はどうですか。,,,ready,,matched_existing_exact
+"I feel much better, thanks.","I feel much better, thanks.",3,ずっとよくなりました、ありがとう。,,,ready,,matched_existing_exact
+Not very good.,Not very good.,3,あまりよくありません。,,,ready,,matched_existing_exact
+I have a cold.,I have a cold.,3,かぜをひいています。,,,ready,,matched_existing_exact
+I have to go now.,I have to go now.,3,もう行かなければなりません。,,,ready,,matched_existing_exact
+How long will you stay in New York?,How long will you stay in New York?,3,ニューヨークにはどのくらい滞在する予定ですか。,,,ready,,matched_existing_exact
+How often do you practice?,How often do you practice?,3,どのくらいの頻度で練習しますか。,,,ready,,matched_existing_exact
+Once ［Twice］ a week.,Twice a week.,3,週に二回です。,,,ready,,curated_batch02
+We'll be late for school!,We'll be late for school!,3,学校に遅れてしまいます。,,,ready,,matched_existing_exact
+What time will the movie start?,What time will the movie start?,3,映画は何時に始まりますか。,,,ready,,matched_existing_exact
+"Just a minute ［moment］, please.","Just a moment, please.",3,少々お待ちください。,,,ready,,curated_batch03_translation
+I'll call back later.,I'll call back later.,3,あとでかけ直します。,,,ready,,matched_existing_exact
+Good luck.,Good luck.,3,がんばって。,,,draft,,level3_curated_out
+I hope so.,I hope so.,3,そうだといいですね。,,,draft,,level3_curated_out
+"I think so, too.","I think so, too.",3,私もそう思います。,,,draft,,level3_curated_out
+"I'm sorry, but I don't know.","I'm sorry, but I don't know.",3,すみませんが、わかりません。,,,ready,,matched_existing_exact
+I'm not sure.,I'm not sure.,3,よくわかりません。,,,ready,,matched_existing_exact
+I'd like to see a movie.,I'd like to see a movie.,3,映画を見たいです。,,,ready,,matched_existing_exact
+It was fun!,It was fun!,3,楽しかったです。,,,draft,,level3_curated_out
+That's wonderful.,That's wonderful.,3,それはすばらしいですね。,,,draft,,level3_curated_out
+No problem.,No problem.,3,問題ありません。,,,draft,,level3_curated_out
+Sure.,Sure.,3,もちろんです。,,,draft,,level3_curated_out
+Thank you.,Thank you.,3,ありがとうございます。,,,draft,,level3_curated_out
+Thanks a lot.,Thanks a lot.,3,本当にありがとうございます。,,,draft,,level3_curated_out
+You're welcome.,You're welcome.,3,どういたしまして。,,,draft,,level3_curated_out
+Not at all.,Not at all.,3,とんでもないです。,,,draft,,level3_curated_out
+Thank you for your help.,Thank you for your help.,3,手伝ってくれてありがとう。,,,ready,,matched_existing_exact
+Thank you for coming to our school festival.,Thank you for coming to our school festival.,3,学校祭に来てくれてありがとう。,,,draft,,level3_curated_out
+That's great.,That's great.,3,それはすごいですね。,,,draft,,level3_curated_out
+Sounds good ［nice］.,Sounds nice.,3,すてきですね。,,,ready,,curated_batch03_translation
+That's a good idea!,That's a good idea!,3,それはいい考えですね。,,,ready,,matched_existing_exact
+That's OK.,That's OK.,3,それで大丈夫です。,,,draft,,level3_curated_out
+"No, not really.","No, not really.",3,いいえ、そうでもありません。,,,draft,,level3_curated_out
+That's too bad.,That's too bad.,3,それは残念ですね。,,,ready,,matched_existing_exact
+Did you enjoy the baseball game yesterday?,Did you enjoy the baseball game yesterday?,3,昨日の野球の試合は楽しめましたか。,,,draft,,level3_curated_out
+Did you sleep well?,Did you sleep well?,3,よく眠れましたか。,,,ready,,matched_existing_exact
+How was your trip to China?,How was your trip to China?,3,中国への旅行はどうでしたか。,,,ready,,matched_existing_exact
+What do you think of her idea?,What do you think of her idea?,3,彼女の考えをどう思いますか。,,,ready,,matched_existing_exact
+What kind of music do you like?,What kind of music do you like?,3,どんな音楽が好きですか。,,,ready,,matched_existing_exact
+What movie do you like the best?,What movie do you like the best?,3,どの映画が一番好きですか。,,,ready,,matched_existing_exact
+Where can I buy a ticket?,Where can I buy a ticket?,3,どこで切符を買えますか。,,,ready,,matched_existing_exact
+Could you show me your textbook?,Could you show me your textbook?,3,あなたの教科書を見せてくれますか。,,,ready,,matched_existing_exact
+Do you need anything from the supermarket?,Do you need anything from the supermarket?,3,スーパーで何か必要なものはありますか。,,,draft,,level3_curated_out
+Do you want to come with us?,Do you want to come with us?,3,私たちと一緒に来ますか。,,,ready,,matched_existing_exact
+Would you like to see a movie tonight?,Would you like to see a movie tonight?,3,今夜映画を見ませんか。,,,ready,,matched_existing_exact
+How about sending a Christmas card to her?,How about sending a Christmas card to her?,3,彼女にクリスマスカードを送るのはどうですか。,,,draft,,level3_curated_out
+Let's go and see a movie.,Let's go and see a movie.,3,映画を見に行きましょう。,,,ready,,matched_existing_exact
+Let's have lunch.,Let's have lunch.,3,昼食にしましょう。,,,ready,,matched_existing_exact
+Shall I open the window?,Shall I open the window?,3,窓を開けましょうか。,,,ready,,matched_existing_exact
+Shall we go for dinner tomorrow?,Shall we go for dinner tomorrow?,3,明日夕食に行きませんか。,,,ready,,matched_existing_exact
+Why not?,Why not?,3,いいですね。,,,ready,,matched_existing_exact
+Clean your room now.,Clean your room now.,3,今すぐ部屋を片づけなさい。,,,ready,,matched_existing_exact
+Come to my house next Sunday.,Come to my house next Sunday.,3,次の日曜日に私の家に来てください。,,,ready,,matched_existing_exact
+Don't forget to wash your hands.,Don't forget to wash your hands.,3,手を洗うのを忘れないでください。,,,ready,,matched_existing_exact
+"Hurry up, or we'll be late.","Hurry up, or we'll be late.",3,急ぎなさい、さもないと遅れます。,,,ready,,matched_existing_exact
+Please write back soon.,Please write back soon.,3,どうかすぐに返事を書いてください。,,,ready,,matched_existing_exact
+,math,1,数学,,,ready,,existing_only
+,tour,1,ツアー,,,ready,,existing_only
+,ticket,1,チケット,,,ready,,existing_only
+,guide,1,ガイド,,,ready,,existing_only
+,flight,1,フライト,,,ready,,existing_only
+,nature,1,自然,,,ready,,existing_only
+,earth,1,地球,,,ready,,existing_only
+,plant,1,植物,,,ready,,existing_only
+,forest,1,森,,,ready,,existing_only
+,river,1,川,,,ready,,existing_only
+,weather,1,天気,,,ready,,existing_only
+,environment,1,環境,,,ready,,existing_only
+,garbage,1,ゴミ,,,ready,,existing_only
+,recycle,1,リサイクル,,,ready,,existing_only
+,energy,1,エネルギー,,,ready,,existing_only
+,save,1,節約する、救う,,,ready,,existing_only
+,peace,1,平和,,,ready,,existing_only
+,dream,1,夢,,,ready,,existing_only
+,brush,1,ブラシ,,,ready,,existing_only
+,video,1,ビデオ,,,ready,,existing_only
+,suitcase,1,スーツケース,,,ready,,existing_only
+,key,1,鍵,,,ready,,existing_only
+,pet,1,ペット,,,ready,,existing_only
+,now,1,今,,,ready,,existing_only
+,class,1,授業,,,ready,,existing_only
+,club,1,クラブ,,,ready,,existing_only
+,store,1,店,,,ready,,existing_only
+,road,1,道路,,,ready,,existing_only
+,place,1,場所,,,ready,,existing_only
+,movie,1,映画,,,ready,,existing_only
+,trip,1,旅行、旅,,,ready,,existing_only
+,cheese,1,チーズ,,,ready,,existing_only
+,soup,1,スープ,,,ready,,existing_only
+,menu,1,メニュー,,,ready,,existing_only
+,sound,1,音,,,ready,,existing_only
+,thing,1,もの,,,ready,,existing_only
+,word,1,単語,,,ready,,existing_only
+,money,1,お金,,,ready,,existing_only
+,line,1,列,,,ready,,existing_only
+,end,1,終わり,,,ready,,existing_only
+,front,1,前,,,ready,,existing_only
+,way,1,方法,,,ready,,existing_only
+,plan,1,計画,,,ready,,existing_only
+,go,1,行く,,,ready,,existing_only
+,like,1,好きである,,,ready,,existing_only
+,buy,1,買う,,,ready,,existing_only
+,get,1,手に入れる,,,ready,,existing_only
+,visit,1,訪れる,,,ready,,existing_only
+,come,1,来る,,,ready,,existing_only
+,see,1,見る、会う,,,ready,,existing_only
+,take,1,取る,,,ready,,existing_only
+,make,1,作る,,,ready,,existing_only
+,look,1,見る、目を向ける,,,ready,,existing_only
+,meet,1,会う,,,ready,,existing_only
+,talk,1,話す、会話する,,,ready,,existing_only
+,say,1,言う,,,ready,,existing_only
+,tell,1,伝える,,,ready,,existing_only
+,speak,1,話す、言葉を話す,,,ready,,existing_only
+,listen,1,聞く,,,ready,,existing_only
+,hear,1,聞こえる,,,ready,,existing_only
+,ask,1,尋ねる,,,ready,,existing_only
+,answer,1,答える,,,ready,,existing_only
+,stay,1,滞在する,,,ready,,existing_only
+,live,1,住む,,,ready,,existing_only
+,wake,1,目を覚ます（wake）,,,ready,,existing_only
+,work,1,働く,,,ready,,existing_only
+,eat,1,食べる,,,ready,,existing_only
+,drink,1,飲む,,,ready,,existing_only
+,give,1,与える,,,ready,,existing_only
+,love,1,愛する,,,ready,,existing_only
+,find,1,見つける,,,ready,,existing_only
+,need,1,必要とする,,,ready,,existing_only
+,feel,1,感じる,,,ready,,existing_only
+,enjoy,1,楽しむ,,,ready,,existing_only
+,finish,1,終える,,,ready,,existing_only
+,lose,1,失う,,,ready,,existing_only
+,write,1,書く,,,ready,,existing_only
+,read,1,読む,,,ready,,existing_only
+,cut,1,切る,,,ready,,existing_only
+,run,1,走る,,,ready,,existing_only
+,call,1,電話する,,,ready,,existing_only
+,drive,1,運転する,,,ready,,existing_only
+,ride,1,乗る,,,ready,,existing_only
+,join,1,参加する,,,ready,,existing_only
+,invite,1,招待する,,,ready,,existing_only
+,know,1,知っている,,,ready,,existing_only
+,show,1,見せる,,,ready,,existing_only
+,wash,1,洗う,,,ready,,existing_only
+,teach,1,教える,,,ready,,existing_only
+,think,1,考える,,,ready,,existing_only
+,hope,1,望む,,,ready,,existing_only
+,worry,1,心配する,,,ready,,existing_only
+,try,1,試す,,,ready,,existing_only
+,hurry,1,急ぐ,,,ready,,existing_only
+,put,1,置く,,,ready,,existing_only
+,sell,1,売る,,,ready,,existing_only
+,stop,1,止まる,,,ready,,existing_only
+,sing,1,歌う,,,ready,,existing_only
+,last,1,最後の,,,ready,,existing_only
+,late,1,遅い,,,ready,,existing_only
+,early,1,早い,,,ready,,existing_only
+,next,1,次の,,,ready,,existing_only
+,half,1,半分,,,ready,,existing_only
+,open,1,開いた,,,ready,,existing_only
+,dark,1,暗い,,,ready,,existing_only
+,own,1,自分の,,,ready,,existing_only
+,soon,1,すぐに,,,ready,,existing_only
+,when,1,いつ,,,ready,,existing_only
+,maybe,1,たぶん,,,ready,,existing_only
+,later,1,あとで,,,ready,,existing_only
+,off,1,離れて,,,ready,,existing_only
+,at,1,で,,,ready,,existing_only
+,in,1,の中に,,,ready,,existing_only
+,for,1,のために,,,ready,,existing_only
+,on,1,〜の上に接して,,,ready,,existing_only
+,of,1,の,,,ready,,existing_only
+,with,1,と一緒に,,,ready,,existing_only
+,after,1,のあとで,,,ready,,existing_only
+,by,1,のそばに,,,ready,,existing_only
+,under,1,の下に,,,ready,,existing_only
+,over,1,〜の上方に、〜をこえて,,,ready,,existing_only
+,around,1,のまわりに,,,ready,,existing_only
+,beside,1,のとなりに,,,ready,,existing_only
+,between,1,〜の間に（2つの間）,,,ready,,existing_only
+,until,1,まで,,,ready,,existing_only
+,and,1,そして,,,ready,,existing_only
+,but,1,しかし,,,ready,,existing_only
+,because,1,なぜなら,,,ready,,existing_only
+,if,1,もし,,,ready,,existing_only
+,or,1,または,,,ready,,existing_only
+,will,1,〜だろう、〜するつもりだ,,,ready,,existing_only
+,may,1,かもしれない,,,ready,,existing_only
+,should,1,すべきだ,,,ready,,existing_only
+,could,1,できた,,,ready,,existing_only
+,would,1,〜だろうに、〜でしょう,,,ready,,existing_only
+,must,1,しなければならない,,,ready,,existing_only
+,something,1,何か,,,ready,,existing_only
+,anything,1,何でも,,,ready,,existing_only
+,better,1,よりよい,,,ready,,existing_only
+,best,1,最もよい,,,ready,,existing_only
+,more,1,もっと多くの,,,ready,,existing_only
+,than,1,より,,,ready,,existing_only
+,paper,1,紙,,,ready,,existing_only
+,question,1,質問,,,ready,,existing_only
+,grade,1,学年,,,ready,,existing_only
+,hall,1,ホール,,,ready,,existing_only
+,farm,1,農場,,,ready,,existing_only
+,corner,1,角,,,ready,,existing_only
+,gift,1,贈り物,,,ready,,existing_only
+,wife,1,妻,,,ready,,existing_only
+,candy,1,キャンディー,,,ready,,existing_only
+,cookie,1,クッキー,,,ready,,existing_only
+,cherry,1,さくらんぼ,,,ready,,existing_only
+,lake,1,湖,,,ready,,existing_only
+,band,1,バンド,,,ready,,existing_only
+,drum,1,ドラム,,,ready,,existing_only
+,tie,1,ネクタイ,,,ready,,existing_only
+,glasses,1,眼鏡,,,ready,,existing_only
+,gray,1,灰色の,,,ready,,existing_only
+,dollar,1,ドル,,,ready,,existing_only
+,yen,1,円,,,ready,,existing_only
+,Italy,1,イタリア,,,ready,,existing_only
+,Korea,1,韓国,,,ready,,existing_only
+,Mexico,1,メキシコ,,,ready,,existing_only
+,London,1,ロンドン,,,ready,,existing_only
+,Hawaii,1,ハワイ,,,ready,,existing_only
+,golf,1,ゴルフ,,,ready,,existing_only
+,football,1,フットボール,,,ready,,existing_only
+,bowling,1,ボウリング,,,ready,,existing_only
+,match,1,試合,,,ready,,existing_only
+,ice-skating,1,スケート,,,ready,,existing_only
+,surfing,1,サーフィン,,,ready,,existing_only
+,wrestling,1,レスリング,,,ready,,existing_only
+,idea,1,考え,,,ready,,existing_only
+,news,1,ニュース,,,ready,,existing_only
+,problem,1,問題,,,ready,,existing_only
+,Internet,1,インターネット,,,ready,,existing_only
+,website,1,ウェブサイト,,,ready,,existing_only
+,mail,1,郵便,,,ready,,existing_only
+,message,1,伝言,,,ready,,existing_only
+,language,1,言語,,,ready,,existing_only
+,stamp,1,切手,,,ready,,existing_only
+,life,1,生活,,,ready,,existing_only
+,list,1,一覧,,,ready,,existing_only
+,size,1,大きさ,,,ready,,existing_only
+,part,1,部分,,,ready,,existing_only
+,seat,1,席,,,ready,,existing_only
+,leave,1,去る,,,ready,,existing_only
+,sleep,1,眠る,,,ready,,existing_only
+,send,1,送る,,,ready,,existing_only
+,learn,1,学ぶ,,,ready,,existing_only
+,dance,1,踊る,,,ready,,existing_only
+,move,1,動く,,,ready,,existing_only
+,sit,1,座る,,,ready,,existing_only
+,win,1,勝つ,,,ready,,existing_only
+,carry,1,運ぶ,,,ready,,existing_only
+,draw,1,描く,,,ready,,existing_only
+,smile,1,ほほえむ,,,ready,,existing_only
+,check,1,確かめる,,,ready,,existing_only
+,share,1,分け合う,,,ready,,existing_only
+,miss,1,逃す,,,ready,,existing_only
+,close,1,近い,,,ready,,existing_only
+,full,1,いっぱいの,,,ready,,existing_only
+,o’clock,1,時ちょうど,,,ready,,existing_only
+,already,1,すでに,,,ready,,existing_only
+,outside,1,外で,,,ready,,existing_only
+,before,1,の前に,,,ready,,existing_only
+,mine,1,私のもの,,,ready,,existing_only
+,everything,1,すべて,,,ready,,existing_only
+,most,1,ほとんどの,,,ready,,existing_only
+,want to,2,したい,,,ready,,existing_only
+,like doing,2,するのが好き,,,ready,,existing_only
+,need to,2,する必要がある,,,ready,,existing_only
+,go home,2,家に帰る,,,ready,,existing_only
+,do my homework,2,宿題をする,,,ready,,existing_only
+,take someone to school,2,だれかを学校へ連れていく,,,ready,,existing_only
+,look for something,2,何かを探す,,,ready,,existing_only
+,leave home for school,2,家を出て学校へ向かう,,,ready,,existing_only
+,wait for the bus,2,バスを待つ,,,ready,,existing_only
+,stay at a hotel,2,ホテルに泊まる,,,ready,,existing_only
+,stay with my aunt,2,おばの家に泊まる,,,ready,,existing_only
+,speak to my teacher,2,先生に話しかける,,,ready,,existing_only
+,talk to my friend,2,友達に話す,,,ready,,existing_only
+,talk with my mother,2,母と話す,,,ready,,existing_only
+,listen to music,2,音楽を聞く,,,ready,,existing_only
+,hear about the news,2,そのニュースについて耳にする,,,ready,,existing_only
+,go shopping,2,買い物に行く,,,ready,,existing_only
+,finish reading,2,読み終える,,,ready,,existing_only
+,enjoy playing tennis,2,テニスをするのを楽しむ,,,ready,,existing_only
+,go back to school,2,学校へ戻る,,,ready,,existing_only
+,come back to Japan,2,日本へ戻ってくる,,,ready,,existing_only
+,come back from school,2,学校から帰ってくる,,,ready,,existing_only
+,arrive at the station,2,駅に着く,,,ready,,existing_only
+,arrive in Tokyo,2,東京に着く,,,ready,,existing_only
+,get to school,2,学校に着く,,,ready,,existing_only
+,start studying,2,勉強し始める,,,ready,,existing_only
+,stop talking,2,話すのをやめる,,,ready,,existing_only
+,walk to school,2,歩いて学校へ行く,,,ready,,existing_only
+,ask my teacher for help,2,先生に助けを求める,,,ready,,existing_only
+,help my mother with dinner,2,夕食のしたくで母を手伝う,,,ready,,existing_only
+,say goodbye to my friend,2,友達にさよならを言う,,,ready,,existing_only
+,think of my future,2,自分の将来について考える,,,ready,,existing_only
+,become friends with him,2,彼と友達になる,,,ready,,existing_only
+,get off the bus,2,バスを降りる,,,ready,,existing_only
+,go around the park,2,公園を回る,,,ready,,existing_only
+,move to Tokyo,2,東京へ引っ越す,,,ready,,existing_only
+,write to my friend,2,友達に手紙を書く,,,ready,,existing_only
+,worry about my test,2,テストのことを心配する,,,ready,,existing_only
+,look like my father,2,父に似ている,,,ready,,existing_only
+,believe in yourself,2,自分を信じる,,,ready,,existing_only
+,a lot of people,2,たくさんの人,,,ready,,existing_only
+,be late for school,2,学校に遅れる,,,ready,,existing_only
+,be interested in science,2,科学に興味がある,,,ready,,existing_only
+,a glass of water,2,一杯の水,,,ready,,existing_only
+,a cup of tea,2,一杯のお茶,,,ready,,existing_only
+,as tall as my father,2,父と同じくらい背が高い,,,ready,,existing_only
+,from Tokyo to Osaka,2,東京から大阪まで,,,ready,,existing_only
+,ten years old,2,10歳,,,ready,,existing_only
+,in front of the station,2,駅の前に,,,ready,,existing_only
+,next to the school,2,学校のとなりに,,,ready,,existing_only
+,out of the box,2,箱の外へ,,,ready,,existing_only
+,both dogs and cats,2,犬も猫も両方,,,ready,,existing_only
+,around the corner,2,すぐ近くに,,,ready,,existing_only
+,have to study,2,勉強しなければならない,,,ready,,existing_only
+,May I help you?,3,お手伝いしましょうか。,,,draft,,level3_curated_out
+,What happened?,3,何が起こったのですか。,,,draft,,level3_curated_out
+,What's wrong?,3,どこか具合が悪いのですか。,,,draft,,level3_curated_out
+,Once a week.,3,週に一回です。,,,draft,,level3_curated_out
+,"Just a minute, please.",3,ちょっと待ってください。,,,draft,,level3_curated_out
+,Sounds good.,3,よさそうですね。,,,draft,,level3_curated_out

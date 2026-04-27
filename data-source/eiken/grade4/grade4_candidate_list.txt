@@ -1,0 +1,437 @@
+picture
+computer
+magazine
+letter
+lunchtime
+homework
+test
+classmate
+lesson
+subject
+science
+history
+speech
+report
+textbook
+notebook
+cafeteria
+library
+gym
+college
+university
+course
+contest
+group
+member
+restaurant
+bookstore
+museum
+station
+airport
+bike
+hospital
+hotel
+apartment
+garden
+town
+building
+company
+office
+party
+shopping
+present
+weekend
+holiday
+program
+picnic
+fishing
+hobby
+fever
+dentist
+scientist
+pilot
+actor
+volunteer
+grandmother
+grandfather
+husband
+aunt
+vegetable
+toast
+hamburger
+pancake
+chocolate
+popcorn
+beach
+mountain
+rose
+practice
+violin
+concert
+musical
+purple
+Spain
+England
+Africa
+India
+basketball
+volleyball
+badminton
+jogging
+e-mail
+information
+future
+cell phone
+event
+culture
+center
+meeting
+sale
+race
+example
+postcard
+poster
+robot
+bring
+forget
+swim
+paint
+arrive
+wear
+change
+become
+catch
+order
+break
+fall
+turn
+first
+favorite
+lucky
+sunny
+cloudy
+snowy
+beautiful
+cute
+interesting
+special
+useful
+careful
+difficult
+expensive
+delicious
+different
+dear
+usually
+tonight
+once
+still
+easily
+another
+everyone
+shower
+bath
+bathroom
+towel
+newspaper
+photo
+comic
+knife
+wallet
+calendar
+ruler
+toy
+doghouse
+noon
+dictionary
+classroom
+blackboard
+eraser
+uniform
+drama
+social studies
+plane
+airplane
+taxi
+supermarket
+café
+post office
+stadium
+theater
+hometown
+vacation
+travel
+festival
+homestay
+tent
+painting
+comedy
+stomachache
+headache
+pianist
+waiter
+farmer
+sir
+children
+daughter
+cousin
+wedding
+dessert
+ice cream
+doughnut
+pie
+sandwich
+spaghetti
+pasta
+noodle
+beef
+steak
+sausage
+strawberry
+pineapple
+pumpkin
+onion
+season
+autumn
+ocean
+turtle
+hamster
+musician
+pop music
+flute
+trumpet
+clothes
+sweater
+umbrella
+passport
+Christmas
+prize
+haircut
+machine
+begin
+remember
+understand
+enter
+surprise
+happen
+relax
+medium
+healthy
+excited
+exciting
+boring
+thirsty
+dirty
+low
+junior
+quick
+professional
+twice
+o'clock
+someday
+slowly
+ago
+during
+shall
+a.m.
+p.m.
+want to do
+like doing ［to do］
+want to be ～
+need to do
+go （back） home
+get home
+come home
+do one's homework
+take A to B
+look for ～
+leave （A） for B
+have a good time
+wait for ～
+stay in ［at］ ～
+stay with ～
+get up
+wake up
+take a trip
+go on a trip
+speak to ～
+talk to ～
+talk with ～
+listen to ～
+hear about ～
+go doing
+finish doing
+enjoy doing
+go back to ～
+come back to ～
+get back
+come back from ～
+arrive at ～
+arrive in ～
+get to ～
+start doing ［to do］
+stop doing
+take a picture
+walk to ～
+ask ～ for help
+help A with B
+ask for ～
+have a cold
+take a bath
+take a shower
+take a walk
+go out
+say goodbye to ～
+stay （at） home
+think of ～
+become friends with ～
+catch a cold
+get off ～
+give up
+have no idea
+go around ［round］ ～
+look around
+move to A （from B）
+write to ～
+write back
+slow down
+worry about ～
+look like ～
+believe in ～
+play catch
+feel better
+a lot of ～
+be late for ～
+be careful
+be interested in ～
+kind of ～
+a glass of ～
+a cup of ～
+in the morning
+in the afternoon
+in the future
+how long
+all day （long）
+for a long time
+last week
+after work
+for example
+as ～ as ...
+a lot
+from A to B
+～ years old
+in front of ～
+next to ～
+out of ～
+both A and B
+one day
+（on） the first day
+on vacation
+on foot
+（just） around the corner
+by the way
+more and more
+for free
+right now
+all over the world
+have to do
+Nice to meet you.
+How are you?
+I'm fine, thanks.
+Have a good day.
+Have fun.
+See you later.
+See you tomorrow.
+Take care.
+I'm home.
+Good night.
+May［Can］ I help you?
+How much is this shirt?
+I'm looking for a present.
+I want to buy some flowers.
+These are on sale.
+It's two thousand yen.
+I'll take it.
+Anything else?
+That's all, thanks.
+Here you are.
+Excuse me.
+Can I have some more water?
+Would you like something to drink?
+Would you like tea or coffee?
+I'll have grape juice.
+I'd like a hot dog.
+It looks good.
+No, thank you. I'm full.
+Attention, please.
+It's warm today.
+It's going to rain soon.
+Is it raining outside?
+It's raining now.
+How was the weather in New York?
+It snowed a lot last night.
+Where is the post office?
+Which bus goes to the airport?
+How can I get to the museum?
+I'll show you the way.
+It takes about fifteen minutes.
+What happened （to you）?
+What's wrong （with you）?
+I can't find my car key.
+I lost my train ticket.
+How do you feel now?
+I feel much better, thanks.
+Not very good.
+I have a cold.
+I have to go now.
+How long will you stay in New York?
+How often do you practice?
+Once ［Twice］ a week.
+We'll be late for school!
+What time will the movie start?
+Just a minute ［moment］, please.
+I'll call back later.
+Good luck.
+I hope so.
+I think so, too.
+I'm sorry, but I don't know.
+I'm not sure.
+I'd like to see a movie.
+It was fun!
+That's wonderful.
+No problem.
+Sure.
+Thank you.
+Thanks a lot.
+You're welcome.
+Not at all.
+Thank you for your help.
+Thank you for coming to our school festival.
+That's great.
+Sounds good ［nice］.
+That's a good idea!
+That's OK.
+No, not really.
+That's too bad.
+Did you enjoy the baseball game yesterday?
+Did you sleep well?
+How was your trip to China?
+What do you think of her idea?
+What kind of music do you like?
+What movie do you like the best?
+Where can I buy a ticket?
+Could you show me your textbook?
+Do you need anything from the supermarket?
+Do you want to come with us?
+Would you like to see a movie tonight?
+How about sending a Christmas card to her?
+Let's go and see a movie.
+Let's have lunch.
+Shall I open the window?
+Shall we go for dinner tomorrow?
+Why not?
+Clean your room now.
+Come to my house next Sunday.
+Don't forget to wash your hands.
+Hurry up, or we'll be late.
+Please write back soon.

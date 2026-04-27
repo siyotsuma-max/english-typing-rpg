@@ -349,6 +349,264 @@ const getEiken5Level2FallbackExample = (text: string) => {
   ]);
 };
 
+const EIKEN4_LEVEL1_EXACT_EXAMPLES: Record<string, string> = {
+  picture: 'She drew a picture of her dog.',
+  computer: 'My brother uses a computer for homework.',
+  magazine: 'I bought a music magazine at the station.',
+  letter: 'I got a letter from my grandmother yesterday.',
+  classmate: 'I studied with my classmate after school.',
+  textbook: 'Open your textbook to page twelve.',
+  notebook: 'Please write your name in your notebook.',
+  gym: 'We played basketball in the gym.',
+  bookstore: 'I bought this dictionary at the bookstore.',
+  apartment: 'My aunt lives in an apartment near the station.',
+  office: 'My father works in an office near the park.',
+  report: 'I finished my report last night.',
+  speech: 'She gave a speech in front of the class.',
+  course: 'She is taking an English course this summer.',
+  present: 'This present is for my sister.',
+  fall: 'Fall is my favorite season.',
+  dear: 'Dear Emi, thank you for your letter.',
+  cafe: 'We had lunch at a small cafe.',
+  "o'clock": 'The movie starts at seven o\'clock.',
+  cell: 'Please turn off your cell phone.',
+  'cell phone': 'Please turn off your cell phone.',
+  social: 'My favorite subject is social studies.',
+  'social studies': 'My favorite subject is social studies.',
+  pop: 'My brother likes pop music.',
+  'pop music': 'My brother likes pop music.',
+  practice: 'Soccer practice starts at four.',
+  concert: 'We went to a piano concert yesterday.',
+  musical: 'We saw a school musical last week.',
+  weekend: 'We visited my grandmother last weekend.',
+  holiday: 'It was a holiday, so the school was closed.',
+  festival: 'We enjoyed the school festival very much.',
+  hometown: 'My hometown is near the ocean.',
+  medium: 'This T-shirt is a medium size.',
+  professional: 'She wants to be a professional player someday.',
+  autumn: 'Autumn is cool and beautiful here.',
+  favorite: 'This is my favorite book.',
+  different: 'My bag is different from yours.',
+  careful: 'Be careful on the stairs.',
+  special: 'Today is a special day for our family.',
+  another: 'Can I have another notebook?',
+  party: 'We had a birthday party for Ken.',
+  theater: 'We saw a movie at the theater.',
+};
+
+const EIKEN4_LEVEL2_EXACT_EXAMPLES: Record<string, string> = {
+  'want to do': 'I want to play tennis after school.',
+  'like to do': 'I like to listen to music at night.',
+  'need to do': 'We need to finish our homework today.',
+  'go back home': 'I go back home at six every day.',
+  "do one's homework": 'I do my homework before dinner.',
+  'go doing': 'We go shopping on Sundays.',
+  'finish doing': 'She finished cleaning her room.',
+  'enjoy doing': 'I enjoy reading comic books.',
+  'stop doing': 'Please stop talking now.',
+  'take my bag to school': 'I take my bag to school every morning.',
+  'look for my key': 'I am looking for my key now.',
+  'leave Tokyo for Osaka': 'We will leave Tokyo for Osaka tomorrow.',
+  'have a good time': 'We had a good time at the party.',
+  'wait for the train': 'Please wait for the train here.',
+  'stay in a tent': 'We stayed in a tent by the lake.',
+  'stay with my cousin': 'I will stay with my cousin this summer.',
+  'get up': 'I get up at six every morning.',
+  'wake up': 'I wake up early on school days.',
+  'take a trip': 'My family will take a trip next month.',
+  'go on a trip': 'We will go on a trip to Kyoto in spring.',
+  'speak to my mother': 'I need to speak to my mother now.',
+  'talk to my mother': 'I talked to my mother after dinner.',
+  'talk with my father': 'I often talk with my father on Sundays.',
+  'listen to English': 'We listen to English in class every day.',
+  'hear about the festival': 'I heard about the festival from my friend.',
+  'go back to my room': 'I went back to my room after lunch.',
+  'come back to school': 'Please come back to school by three.',
+  'get back': 'My father will get back late tonight.',
+  'come back from China': 'She came back from China yesterday.',
+  'arrive at the airport': 'We arrived at the airport early.',
+  'arrive in Kyoto': 'They arrived in Kyoto before noon.',
+  'get to the library': 'How can I get to the library?',
+  'start to study': 'I start to study at seven every evening.',
+  'take a picture': 'Let\'s take a picture together.',
+  'walk to the library': 'We walked to the library after school.',
+  'ask for help': 'Please ask for help if you need it.',
+  'help my friend with homework': 'I helped my friend with homework after class.',
+  'have a cold': 'I have a cold today.',
+  'take a bath': 'I take a bath before I go to bed.',
+  'take a shower': 'He takes a shower every morning.',
+  'take a walk': 'We took a walk in the park.',
+  'go out': 'I do not want to go out in the rain.',
+  'say goodbye to my teacher': 'I said goodbye to my teacher at the gate.',
+  'stay at home': 'My brother stayed at home yesterday.',
+  'think of my family': 'I often think of my family when I travel.',
+  'become friends with Tom': 'I became friends with Tom last year.',
+  'catch a cold': 'Do not stay outside too long, or you will catch a cold.',
+  'get off the train': 'We got off the train at the next station.',
+  'give up': 'Do not give up so easily.',
+  'have no idea': 'I have no idea what he means.',
+  'go around the lake': 'We went around the lake by bike.',
+  'look around': 'Let\'s look around the museum first.',
+  'move to Tokyo from Osaka': 'My uncle moved to Tokyo from Osaka.',
+  'write to my teacher': 'Please write to your teacher soon.',
+  'write back': 'She wrote back the next day.',
+  'slow down': 'Please slow down near the school.',
+  'worry about homework': 'Do not worry about your homework too much.',
+  'look like my mother': 'She looks like my mother.',
+  'believe in my dream': 'I believe in my dream.',
+  'play catch': 'The boys are playing catch in the park.',
+  'feel better': 'I feel much better today.',
+  'a lot of books': 'There are a lot of books in the library.',
+  'be late for class': 'We will be late for class.',
+  'be careful': 'Be careful with that glass.',
+  'be interested in music': 'She is interested in music.',
+  'kind of': 'What kind of movie do you like?',
+  'a glass of milk': 'I drink a glass of milk every morning.',
+  'a cup of coffee': 'My father had a cup of coffee after lunch.',
+  'in the morning': 'I study English in the morning.',
+  'in the afternoon': 'We play baseball in the afternoon.',
+  'in the future': 'I want to be a pilot in the future.',
+  'how long': 'How long will you stay there?',
+  'all day long': 'It rained all day long.',
+  'for a long time': 'I waited for a long time.',
+  'last week': 'We went to the museum last week.',
+  'after work': 'My mother goes shopping after work.',
+  'for example': 'Many fruits, for example apples, are sweet.',
+  'as busy as my mother': 'She is as busy as my mother.',
+  'a lot': 'Thank you a lot for your help.',
+  'from Tokyo to Kyoto': 'It takes two hours from Tokyo to Kyoto.',
+  'twelve years old': 'My sister is twelve years old.',
+  'in front of the library': 'Please wait in front of the library.',
+  'next to the park': 'My house is next to the park.',
+  'out of the room': 'The cat ran out of the room.',
+  'both soccer and tennis': 'I like both soccer and tennis.',
+  'one day': 'I want to visit Spain one day.',
+  'the first day': 'I was nervous on the first day.',
+  'on vacation': 'My family is in Okinawa on vacation.',
+  'on foot': 'We went to school on foot.',
+  'just around the corner': 'The post office is just around the corner.',
+  'by the way': 'By the way, where is your brother?',
+  'more and more': 'English is becoming more and more important.',
+  'for free': 'Children can get in for free.',
+  'right now': 'I am busy right now.',
+  'all over the world': 'People all over the world use the internet.',
+  'have to do': 'I have to clean my room today.',
+};
+
+const EIKEN4_LEVEL1_SUBJECTS = new Set(['science', 'history', 'social studies']);
+const EIKEN4_LEVEL1_SCHOOL_PLACES = new Set(['library', 'gym', 'cafeteria', 'classroom']);
+const EIKEN4_LEVEL1_SCHOOL_ITEMS = new Set(['textbook', 'notebook', 'dictionary', 'eraser', 'blackboard', 'ruler']);
+const EIKEN4_LEVEL1_SCHOOL_WORDS = new Set(['classmate', 'lesson', 'subject', 'speech', 'report', 'college', 'university', 'course', 'contest', 'group', 'member', 'uniform', 'drama']);
+const EIKEN4_LEVEL1_PLACES = new Set(['restaurant', 'bookstore', 'museum', 'station', 'airport', 'hospital', 'hotel', 'apartment', 'garden', 'town', 'building', 'company', 'office', 'stadium', 'theater', 'hometown', 'post office', 'supermarket']);
+const EIKEN4_LEVEL1_TRAVEL = new Set(['bike', 'plane', 'airplane', 'taxi', 'passport', 'vacation', 'travel', 'homestay', 'tent']);
+const EIKEN4_LEVEL1_PEOPLE = new Set(['grandmother', 'grandfather', 'husband', 'aunt', 'children', 'daughter', 'cousin', 'sir']);
+const EIKEN4_LEVEL1_JOBS = new Set(['dentist', 'scientist', 'pilot', 'actor', 'volunteer', 'pianist', 'waiter', 'farmer', 'musician']);
+const EIKEN4_LEVEL1_FOODS = new Set(['vegetable', 'toast', 'hamburger', 'pancake', 'chocolate', 'popcorn', 'dessert', 'ice cream', 'doughnut', 'pie', 'sandwich', 'spaghetti', 'pasta', 'noodle', 'beef', 'steak', 'sausage', 'strawberry', 'pineapple', 'pumpkin', 'onion']);
+const EIKEN4_LEVEL1_NATURE = new Set(['beach', 'mountain', 'rose', 'season', 'autumn', 'ocean', 'turtle']);
+const EIKEN4_LEVEL1_MUSIC = new Set(['violin', 'concert', 'musical', 'painting', 'comedy', 'pop music', 'flute', 'trumpet']);
+const EIKEN4_LEVEL1_SPORTS = new Set(['basketball', 'volleyball', 'badminton', 'jogging', 'fishing']);
+const EIKEN4_LEVEL1_HOME_ITEMS = new Set(['picture', 'computer', 'magazine', 'letter', 'cell phone', 'shower', 'bath', 'bathroom', 'towel', 'newspaper', 'photo', 'comic', 'knife', 'wallet', 'calendar', 'toy', 'doghouse', 'machine', 'umbrella']);
+const EIKEN4_LEVEL1_BODY_HEALTH = new Set(['fever', 'stomachache', 'headache']);
+const EIKEN4_LEVEL1_COUNTRIES = new Set(['Spain', 'England', 'India']);
+const EIKEN4_LEVEL1_REGIONS = new Set(['Africa']);
+const EIKEN4_LEVEL1_ADJECTIVES = new Set([
+  ...EIKEN5_LEVEL1_ADJECTIVES,
+  'delicious', 'special', 'useful', 'careful', 'difficult', 'expensive', 'different', 'dear',
+  'healthy', 'excited', 'exciting', 'boring', 'junior', 'quick', 'professional',
+]);
+const EIKEN4_LEVEL1_ADVERBS = new Set([...EIKEN5_LEVEL1_ADVERBS, 'usually', 'tonight', 'once', 'still', 'easily', 'slowly', 'someday', 'ago', 'during']);
+const EIKEN4_LEVEL1_VERBS = new Set(['bring', 'forget', 'swim', 'paint', 'arrive', 'wear', 'change', 'become', 'catch', 'order', 'break', 'turn', 'remember', 'understand', 'enter', 'surprise', 'happen', 'relax', 'begin']);
+
+const getEiken4Level1FallbackExample = (text: string) => {
+  if (EIKEN4_LEVEL1_EXACT_EXAMPLES[text]) return EIKEN4_LEVEL1_EXACT_EXAMPLES[text];
+  if (EIKEN4_LEVEL1_SUBJECTS.has(text)) return `My favorite subject is ${text}.`;
+  if (EIKEN4_LEVEL1_SCHOOL_PLACES.has(text)) return pickExample(text, [
+    `I went to the ${text} after school.`,
+    `We met in the ${text} this morning.`,
+    `Our teacher was waiting in the ${text}.`,
+  ]);
+  if (EIKEN4_LEVEL1_SCHOOL_ITEMS.has(text)) return pickExample(text, [
+    `Please put your ${text} on the desk.`,
+    `I left my ${text} in the classroom.`,
+    `We need a ${text} for today’s class.`,
+  ]);
+  if (EIKEN4_LEVEL1_SCHOOL_WORDS.has(text)) return pickExample(text, [
+    `We learned about ${text} in class.`,
+    `Our teacher talked about ${text} today.`,
+    `I use ${text} at school.`,
+  ]);
+  if (EIKEN4_LEVEL1_PLACES.has(text)) return pickExample(text, [
+    `We visited the ${text} yesterday.`,
+    `The ${text} is near the station.`,
+    `I waited for my friend at the ${text}.`,
+  ]);
+  if (EIKEN4_LEVEL1_TRAVEL.has(text)) return pickExample(text, [
+    `We used the ${text} on our trip.`,
+    `I need my ${text} for the trip.`,
+    `The ${text} is ready for tomorrow.`,
+  ]);
+  if (EIKEN4_LEVEL1_PEOPLE.has(text)) return `My ${text} is very kind.`;
+  if (EIKEN4_LEVEL1_JOBS.has(text)) return pickExample(text, [
+    `My uncle is a ${text}.`,
+    `That ${text} works very hard.`,
+    `I talked with a ${text} yesterday.`,
+  ]);
+  if (EIKEN4_LEVEL1_FOODS.has(text)) return pickExample(text, [
+    `I had ${text} for lunch.`,
+    `My mother made ${text} for us.`,
+    `The children were eating ${text}.`,
+  ]);
+  if (EIKEN4_LEVEL1_NATURE.has(text)) return pickExample(text, [
+    `We saw the ${text} on our trip.`,
+    `The ${text} looked beautiful today.`,
+    `I like the ${text} very much.`,
+  ]);
+  if (EIKEN4_LEVEL1_MUSIC.has(text)) return pickExample(text, [
+    `She likes ${text} very much.`,
+    `We enjoyed the ${text} at school.`,
+    `I practiced the ${text} after dinner.`,
+  ]);
+  if (EIKEN4_LEVEL1_SPORTS.has(text)) return `We enjoyed ${text} after school.`;
+  if (EIKEN4_LEVEL1_HOME_ITEMS.has(text)) return pickExample(text, [
+    `I left my ${text} on the table.`,
+    `Please put the ${text} in your bag.`,
+    `I bought a new ${text} yesterday.`,
+  ]);
+  if (EIKEN4_LEVEL1_BODY_HEALTH.has(text)) return `I had a ${text} yesterday.`;
+  if (EIKEN4_LEVEL1_COUNTRIES.has(text)) return `I want to visit ${text} someday.`;
+  if (EIKEN4_LEVEL1_REGIONS.has(text)) return `${text} is a very large region.`;
+  if (EIKEN4_LEVEL1_ADVERBS.has(text)) return pickExample(text, [
+    `I ${text} study after dinner.`,
+    `We will go there ${text}.`,
+    `She can finish it ${text}.`,
+  ]);
+  if (EIKEN4_LEVEL1_ADJECTIVES.has(text)) return pickExample(text, [
+    `The book is ${text}.`,
+    `This question looks ${text}.`,
+    `The food was ${text}.`,
+  ]);
+  if (EIKEN4_LEVEL1_VERBS.has(text)) return pickExample(text, [
+    `I can ${text} it today.`,
+    `We will ${text} after school.`,
+    `Please do not ${text} that.`,
+  ]);
+  return getEiken5Level1FallbackExample(text);
+};
+
+const getEiken4Level2FallbackExample = (text: string) => {
+  if (EIKEN4_LEVEL2_EXACT_EXAMPLES[text]) return EIKEN4_LEVEL2_EXACT_EXAMPLES[text];
+  if (/^[A-Z].*[.!?]$/.test(text)) return text;
+  if (text.startsWith('be ')) return `It is important to ${text}.`;
+  if (text.startsWith('in ') || text.startsWith('on ') || text.startsWith('by ') || text.startsWith('from ') || text.startsWith('next ') || text.startsWith('out ')) {
+    return `We used "${text}" in class today.`;
+  }
+  return pickExample(text, [
+    `I ${text}.`,
+    `We ${text} after school.`,
+    `They often ${text} together.`,
+  ]);
+};
+
 const PRE1_LEVEL1_EXAMPLES: Record<string, string> = {
   abundant: 'Fresh water is abundant here.',
   accelerate: 'The project accelerated after the funding arrived.',
@@ -871,6 +1129,12 @@ export const getQuestionExample = (
     if (level === 1) return getEiken5Level1FallbackExample(question.text);
     if (level === 2) return getEiken5Level2FallbackExample(question.text);
     return question.text || null;
+  }
+
+  if (difficulty === 'Eiken4') {
+    if (level === 1) return getEiken4Level1FallbackExample(question.text);
+    if (level === 2) return getEiken4Level2FallbackExample(question.text);
+    return null;
   }
 
   if (difficulty !== 'EikenPre1' || level === 3) return null;
