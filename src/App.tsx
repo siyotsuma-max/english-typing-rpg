@@ -11,6 +11,7 @@ type Mode = 'guide' | 'challenge' | 'weakness';
 type InputMode = 'voice-text' | 'text-only' | 'voice-only';
 type BattleResult = 'win' | 'lose' | 'draw' | null;
 type SpeechVoiceMode = 'random' | 'us_female' | 'us_male' | 'uk_female' | 'uk_male';
+type BossStage = 0 | 1 | 2 | 3 | 4;
 
 // Monster Types for Visuals
 type MonsterType = 'slime' | 'beast' | 'wing' | 'ghost' | 'robot' | 'boss' | 'object';
@@ -198,6 +199,7 @@ interface GameState {
   battleLog: BattleLogItem[];
   battleStartScore: number;
   battleStartKeystrokes: number;
+  bossStage: BossStage;
 }
 
 type DailyProgress = {
@@ -239,20 +241,64 @@ const getBattleDamageMultiplier = (mode: Mode, inputMode: InputMode) => {
 const DEFAULT_BATTLE_QUESTION_LIMIT = 10;
 const FINAL_BOSS_QUESTION_LIMIT = 20;
 const FINAL_BOSS_HP_MULTIPLIER = 1.6;
+const HIDDEN_BOSS_COUNT = 3;
+const HIDDEN_BOSS_QUESTION_LIMITS: Record<Exclude<BossStage, 0 | 1>, number> = {
+  2: 30,
+  3: 40,
+  4: 50,
+};
+const HIDDEN_BOSS_HP_MULTIPLIERS: Record<Exclude<BossStage, 0 | 1>, number> = {
+  2: 3,
+  3: 4,
+  4: 5,
+};
 
-const getBattleQuestionLimit = (mode: Mode, isFinalStageMonster: boolean) => {
+const isEndlessChallengeInputMode = (mode: Mode, inputMode: InputMode) => (
+  mode === 'challenge' && (inputMode === 'voice-only' || inputMode === 'text-only')
+);
+
+const getBossStage = (
+  mode: Mode,
+  inputMode: InputMode,
+  stepIndex: number,
+  totalMonsters: number
+): BossStage => {
+  if (mode === 'weakness' || totalMonsters <= 0) return 0;
+
+  if (isEndlessChallengeInputMode(mode, inputMode)) {
+    const hiddenBossStartIndex = Math.max(totalMonsters - HIDDEN_BOSS_COUNT, 0);
+    if (stepIndex >= hiddenBossStartIndex) {
+      return Math.min(4, stepIndex - hiddenBossStartIndex + 2) as BossStage;
+    }
+
+    const finalBossIndex = hiddenBossStartIndex - 1;
+    return stepIndex === finalBossIndex ? 1 : 0;
+  }
+
+  return stepIndex >= Math.max(totalMonsters - 1, 0) ? 1 : 0;
+};
+
+const getBattleQuestionLimit = (mode: Mode, bossStage: BossStage) => {
   if (mode === 'weakness') return DEFAULT_BATTLE_QUESTION_LIMIT;
-  return isFinalStageMonster ? FINAL_BOSS_QUESTION_LIMIT : DEFAULT_BATTLE_QUESTION_LIMIT;
+  if (bossStage === 1) return FINAL_BOSS_QUESTION_LIMIT;
+  if (bossStage === 2 || bossStage === 3 || bossStage === 4) {
+    return HIDDEN_BOSS_QUESTION_LIMITS[bossStage];
+  }
+  return DEFAULT_BATTLE_QUESTION_LIMIT;
 };
 
 const getBattleHp = (
   difficulty: Difficulty,
   baseHp: number,
-  isFinalStageMonster: boolean
+  bossStage: BossStage
 ) => {
   const difficultyHpMultiplier = DIFFICULTY_HP_MULTIPLIERS[difficulty] ?? 1;
-  const finalStageHpMultiplier = isFinalStageMonster ? FINAL_BOSS_HP_MULTIPLIER : 1;
-  return Math.round(baseHp * difficultyHpMultiplier * finalStageHpMultiplier);
+  const bossHpMultiplier = bossStage === 1
+    ? FINAL_BOSS_HP_MULTIPLIER
+    : (bossStage === 2 || bossStage === 3 || bossStage === 4)
+      ? HIDDEN_BOSS_HP_MULTIPLIERS[bossStage]
+      : 1;
+  return Math.round(baseHp * difficultyHpMultiplier * bossHpMultiplier);
 };
 
 const getBattleTuning = (
@@ -260,15 +306,70 @@ const getBattleTuning = (
   mode: Mode,
   inputMode: InputMode,
   baseHp: number,
-  isFinalStageMonster: boolean
+  bossStage: BossStage
 ) => {
-  const monsterHp = getBattleHp(difficulty, baseHp, isFinalStageMonster);
+  const monsterHp = getBattleHp(difficulty, baseHp, bossStage);
 
   return {
     monsterHp,
     damageMultiplier: getBattleDamageMultiplier(mode, inputMode),
-    maxQuestions: getBattleQuestionLimit(mode, isFinalStageMonster),
+    maxQuestions: getBattleQuestionLimit(mode, bossStage),
   };
+};
+
+const getBattleStageIndices = (
+  monsters: Monster[],
+  baseCount: number,
+  mode: Mode,
+  inputMode: InputMode
+) => {
+  const baseIndices = Array.from({ length: Math.min(baseCount, monsters.length) }, (_, index) => index);
+
+  if (!isEndlessChallengeInputMode(mode, inputMode) || monsters.length <= baseIndices.length) {
+    return baseIndices;
+  }
+
+  const hiddenBossIndices = Array.from(
+    { length: Math.min(HIDDEN_BOSS_COUNT, Math.max(monsters.length - baseIndices.length, 0)) },
+    (_, index) => baseIndices.length + index
+  );
+
+  return [...baseIndices, ...hiddenBossIndices];
+};
+
+const getPerfectClearDamageFloor = (bossStage: BossStage, maxMonsterHp: number, maxQuestions: number) => {
+  if (bossStage === 0 || maxQuestions <= 0) return 0;
+  return Math.ceil(maxMonsterHp / maxQuestions);
+};
+
+const getBossIntroLabel = (bossStage: BossStage) => {
+  switch (bossStage) {
+    case 1:
+      return 'ラスボス出現！';
+    case 2:
+      return '裏ボス出現！';
+    case 3:
+      return '裏ボス第二形態！';
+    case 4:
+      return '裏ボス最終形態！';
+    default:
+      return '';
+  }
+};
+
+const getNextBattleAlertLabel = (bossStage: BossStage) => {
+  switch (bossStage) {
+    case 1:
+      return 'NEXT IS THE FINAL BATTLE';
+    case 2:
+      return 'NEXT: HIDDEN BOSS';
+    case 3:
+      return 'NEXT: HIDDEN BOSS II';
+    case 4:
+      return 'NEXT: HIDDEN BOSS III';
+    default:
+      return '';
+  }
 };
 
 const MONSTER_BOOK_INPUT_MODES: InputMode[] = ['voice-text', 'voice-only', 'text-only'];
@@ -337,6 +438,15 @@ const RANKS: RankData[] = [
 const getRankData = (defeatedCount: number): RankData => {
     const sortedRanks = [...RANKS].reverse();
     return sortedRanks.find(r => defeatedCount >= r.threshold) || RANKS[0];
+};
+
+const isEditableEventTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  return tagName === 'input'
+    || tagName === 'textarea'
+    || tagName === 'select'
+    || target.isContentEditable;
 };
 
 const getUniqueKey = (
@@ -615,9 +725,7 @@ const DIFFICULTY_BUTTON_VARIANTS: Record<Difficulty, 'primary' | 'secondary' | '
   Eiken4: 'secondary',
   EikenPre1: 'warning',
 };
-const getAvailableLevels = (difficulty: Difficulty): Level[] => (
-  difficulty === 'EikenPre1' ? [1, 2] : LEVELS
-);
+const getAvailableLevels = (_difficulty: Difficulty): Level[] => LEVELS;
 const getSafeLevelForDifficulty = (difficulty: Difficulty, level: Level): Level => (
   getAvailableLevels(difficulty).includes(level) ? level : getAvailableLevels(difficulty)[0]
 );
@@ -1819,16 +1927,19 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
       { id: 'm1_10', name: 'ゲーム中毒ドラゴン', type: 'boss', color: '#FF4500', baseHp: 500, dialogueStart: "宿題よりゲームだ！", dialogueDefeat: "勉強もします...", theme: "Addiction" },
     ],
     challenge: [
-      { id: 'c1_1', name: '暗黒スライム', type: 'slime', color: '#4B0082', baseHp: 450, dialogueStart: "すべてを飲み込む...", dialogueDefeat: "光が...眩しい...", theme: "Darkness" },
-      { id: 'c1_2', name: '炎の番犬', type: 'beast', color: '#DC143C', baseHp: 620, dialogueStart: "通しはせんぞ！", dialogueDefeat: "見事だ...", theme: "Fire" },
-      { id: 'c1_3', name: 'ストームウイング', type: 'wing', color: '#008080', baseHp: 800, dialogueStart: "風より速く！", dialogueDefeat: "追いつかれたか...", theme: "Wind" },
-      { id: 'c1_4', name: 'カースド・ゴースト', type: 'ghost', color: '#800080', baseHp: 980, dialogueStart: "呪ってやる...", dialogueDefeat: "成仏します...", theme: "Curse" },
-      { id: 'c1_5', name: '鉄壁のガーディアン', type: 'robot', color: '#708090', baseHp: 1150, dialogueStart: "排除シマス。", dialogueDefeat: "システムダウン...", theme: "Steel" },
-      { id: 'c1_6', name: 'ギガント・ゴーレム', type: 'object', color: '#8B4513', baseHp: 1350, dialogueStart: "通さん...", dialogueDefeat: "崩れる...", theme: "Earth" },
-      { id: 'c1_8', name: 'ブラッドファング', type: 'beast', color: '#8B0000', baseHp: 1420, dialogueStart: "血の匂いがするな...", dialogueDefeat: "牙が...届かない...", theme: "Fang" },
-      { id: 'c1_9', name: '奈落のレイス', type: 'ghost', color: '#6A5ACD', baseHp: 1480, dialogueStart: "底まで引きずり込む...", dialogueDefeat: "闇が...薄れていく...", theme: "Abyssal" },
-      { id: 'c1_10', name: '獄炎バリスタ', type: 'object', color: '#B22222', baseHp: 1520, dialogueStart: "焼き払う準備はできた", dialogueDefeat: "砲身が...冷えていく...", theme: "Inferno" },
-      { id: 'c1_7', name: '魔王ドラゴニス', type: 'boss', color: '#2F4F4F', baseHp: 1550, dialogueStart: "我に挑む愚か者よ", dialogueDefeat: "貴様こそ勇者だ...", theme: "Boss" },
+      { id: 'c1_1', name: '暗黒スライム', type: 'slime', color: '#4B0082', baseHp: 420, dialogueStart: "すべてを飲み込む...", dialogueDefeat: "光が...眩しい...", theme: "Darkness" },
+      { id: 'c1_2', name: '炎の番犬', type: 'beast', color: '#DC143C', baseHp: 580, dialogueStart: "通しはせんぞ！", dialogueDefeat: "見事だ...", theme: "Fire" },
+      { id: 'c1_3', name: 'ストームウイング', type: 'wing', color: '#008080', baseHp: 740, dialogueStart: "風より速く！", dialogueDefeat: "追いつかれたか...", theme: "Wind" },
+      { id: 'c1_4', name: 'カースド・ゴースト', type: 'ghost', color: '#800080', baseHp: 900, dialogueStart: "呪ってやる...", dialogueDefeat: "成仏します...", theme: "Curse" },
+      { id: 'c1_5', name: '鉄壁のガーディアン', type: 'robot', color: '#708090', baseHp: 1040, dialogueStart: "排除シマス。", dialogueDefeat: "システムダウン...", theme: "Steel" },
+      { id: 'c1_6', name: 'ギガント・ゴーレム', type: 'object', color: '#8B4513', baseHp: 1200, dialogueStart: "通さん...", dialogueDefeat: "崩れる...", theme: "Earth" },
+      { id: 'c1_8', name: 'ブラッドファング', type: 'beast', color: '#8B0000', baseHp: 1260, dialogueStart: "血の匂いがするな...", dialogueDefeat: "牙が...届かない...", theme: "Fang" },
+      { id: 'c1_9', name: '奈落のレイス', type: 'ghost', color: '#6A5ACD', baseHp: 1310, dialogueStart: "底まで引きずり込む...", dialogueDefeat: "闇が...薄れていく...", theme: "Abyssal" },
+      { id: 'c1_10', name: '獄炎バリスタ', type: 'object', color: '#B22222', baseHp: 1340, dialogueStart: "焼き払う準備はできた", dialogueDefeat: "砲身が...冷えていく...", theme: "Inferno" },
+      { id: 'c1_7', name: '魔王ドラゴニス', type: 'boss', color: '#2F4F4F', baseHp: 1380, dialogueStart: "我に挑む愚か者よ", dialogueDefeat: "貴様こそ勇者だ...", theme: "Boss" },
+      { id: 'c1_11', name: '裏魔竜ヴォイド', type: 'boss', color: '#4C1D95', baseHp: 1380, dialogueStart: "まだ終わりではない。ここからが真の試練だ。", dialogueDefeat: "やるな...だが次で終わると思うな。", theme: "HiddenVoid" },
+      { id: 'c1_12', name: '深淵王ネメシス', type: 'boss', color: '#1D4ED8', baseHp: 1400, dialogueStart: "その集中力、どこまで続くか見せてみろ。", dialogueDefeat: "くっ...さらに上を用意していたのだが。", theme: "HiddenAbyss" },
+      { id: 'c1_13', name: '真冥皇アポカリス', type: 'boss', color: '#7F1D1D', baseHp: 1420, dialogueStart: "全問を貫いてみせろ。最後の壁は私だ。", dialogueDefeat: "見事だ...お前こそ真の覇者。", theme: "HiddenEnd" },
     ]
   },
   2: {
@@ -1855,6 +1966,9 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
       { id: 'c2_9', name: 'ナイトメアクロウ', type: 'wing', color: '#4B0082', baseHp: 2920, dialogueStart: "悪夢を運んでやる", dialogueDefeat: "羽ばたきが...止まる...", theme: "Nightmare" },
       { id: 'c2_10', name: '深海のジャッジ', type: 'ghost', color: '#1E3A5F', baseHp: 2960, dialogueStart: "沈黙の底へ沈め", dialogueDefeat: "判決は...覆ったか...", theme: "Depth" },
       { id: 'c2_7', name: '冥王ハーデス', type: 'boss', color: '#000000', baseHp: 3000, dialogueStart: "絶望を味わえ", dialogueDefeat: "光が戻るのか...", theme: "Death" },
+      { id: 'c2_11', name: '裏冥王レヴナント', type: 'boss', color: '#312E81', baseHp: 3000, dialogueStart: "正確さだけでなく、持久力も試してやろう。", dialogueDefeat: "まだ届くか...ならば次を受けてみろ。", theme: "HiddenRevenant" },
+      { id: 'c2_12', name: '終刻神クロノス', type: 'boss', color: '#0F766E', baseHp: 3000, dialogueStart: "焦るな。崩れるのはお前のほうだ。", dialogueDefeat: "時間さえ押し返すとはな...", theme: "HiddenChronos" },
+      { id: 'c2_13', name: '真絶望アザゼル', type: 'boss', color: '#7C2D12', baseHp: 3000, dialogueStart: "最後まで一つも落とさず来られるか。", dialogueDefeat: "その執念...認めよう。", theme: "HiddenDespair" },
     ]
   },
   3: {
@@ -1881,6 +1995,9 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
       { id: 'c3_9', name: '虚無のコロッサス', type: 'object', color: '#696969', baseHp: 4800, dialogueStart: "存在ごと踏み潰す", dialogueDefeat: "巨体が...崩落する...", theme: "Void" },
       { id: 'c3_10', name: '深紅のキマイラ', type: 'beast', color: '#8B1E3F', baseHp: 4900, dialogueStart: "最後の恐怖を見せてやる", dialogueDefeat: "まだ...届かなかったか...", theme: "Crimson" },
       { id: 'c3_7', name: '終焉のドラゴン', type: 'boss', color: '#8B0000', baseHp: 5000, dialogueStart: "全てを無に還す", dialogueDefeat: "未来を託そう...", theme: "End" },
+      { id: 'c3_11', name: '裏終焉ネビュラス', type: 'boss', color: '#581C87', baseHp: 5000, dialogueStart: "ここから先は、本当に折れない者だけが進める。", dialogueDefeat: "その意志...まだ尽きないのか。", theme: "HiddenNebula" },
+      { id: 'c3_12', name: '深黒皇ディザスター', type: 'boss', color: '#0F172A', baseHp: 5000, dialogueStart: "迷いは一文字で命取りになるぞ。", dialogueDefeat: "完璧さで押し切るとは...。", theme: "HiddenDisaster" },
+      { id: 'c3_13', name: '真終王アポカリプス', type: 'boss', color: '#7F1D1D', baseHp: 5000, dialogueStart: "最後の五十問、すべて通してみせろ。", dialogueDefeat: "これほどとは...完全敗北だ。", theme: "HiddenApocalypse" },
     ]
   }
 };
@@ -2058,6 +2175,7 @@ export default function App() {
     battleLog: [],
     battleStartScore: 0,
     battleStartKeystrokes: 0,
+    bossStage: 0,
   });
 
   const [bestScores, setBestScores] = useState<Record<string, number>>({});
@@ -2096,9 +2214,10 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [lastSolvedQuestion, setLastSolvedQuestion] = useState<Question | null>(null);
-  const [showFinalBossIntro, setShowFinalBossIntro] = useState(false);
+  const [showBossIntro, setShowBossIntro] = useState(false);
   const [progressTransferStatus, setProgressTransferStatus] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const newPlayerNameInputRef = useRef<HTMLInputElement>(null);
   const progressImportInputRef = useRef<HTMLInputElement>(null);
   const playerProfilesSectionRef = useRef<HTMLDivElement>(null);
   const progressTransferSectionRef = useRef<HTMLDivElement>(null);
@@ -2109,7 +2228,7 @@ export default function App() {
   const reviewQueueRef = useRef<ReviewQueueEntry[]>([]);
   const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
   const recentReviewAppearanceRef = useRef<boolean[]>([]);
-  const shownFinalBossIntroKeyRef = useRef<string | null>(null);
+  const shownBossIntroKeyRef = useRef<string | null>(null);
   const profilesReadyRef = useRef(false);
   const profileHydratingRef = useRef(false);
 
@@ -2672,12 +2791,11 @@ export default function App() {
 
   useEffect(() => {
     if (gameState.screen !== 'battle') {
-      setShowFinalBossIntro(false);
+      setShowBossIntro(false);
       return;
     }
 
-    const isFinalMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 1;
-    if (!isFinalMonster) return;
+    if (gameState.bossStage === 0) return;
 
     const introKey = [
       gameState.selectedDifficulty,
@@ -2685,15 +2803,16 @@ export default function App() {
       gameState.mode,
       gameState.inputMode,
       gameState.currentMonsterIndex,
+      gameState.bossStage,
     ].join(':');
 
-    if (shownFinalBossIntroKeyRef.current === introKey) return;
-    shownFinalBossIntroKeyRef.current = introKey;
+    if (shownBossIntroKeyRef.current === introKey) return;
+    shownBossIntroKeyRef.current = introKey;
     soundEngine.playBossComeOut();
-    setShowFinalBossIntro(true);
+    setShowBossIntro(true);
 
     const timer = window.setTimeout(() => {
-      setShowFinalBossIntro(false);
+      setShowBossIntro(false);
     }, 950);
 
     return () => window.clearTimeout(timer);
@@ -2701,6 +2820,7 @@ export default function App() {
     gameState.screen,
     gameState.currentMonsterIndex,
     gameState.totalMonstersInStage,
+    gameState.bossStage,
     gameState.selectedDifficulty,
     gameState.selectedLevel,
     gameState.mode,
@@ -2723,6 +2843,7 @@ export default function App() {
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
+      if (isEditableEventTarget(e.target)) return;
       if (e.key !== 'Escape') return;
       if (showResetConfirm) setShowResetConfirm(false);
       if (showHelp) setShowHelp(false);
@@ -2735,6 +2856,8 @@ export default function App() {
   // Keyboard support for replaying question audio
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+        if (isEditableEventTarget(e.target)) return;
+
         if (gameState.screen === 'battle') {
             const isRightCtrlKey =
                 e.code === 'ControlRight' ||
@@ -2934,6 +3057,15 @@ export default function App() {
     applyProfileDataToState(nextProfile.data);
     setNewPlayerName('');
     setProgressTransferStatus(`新しいプレイヤーを作成しました: ${nextProfile.name}`);
+  };
+
+  const handleNewPlayerNameChange = (value: string) => {
+    setNewPlayerName(value);
+    window.requestAnimationFrame(() => {
+      if (document.activeElement !== newPlayerNameInputRef.current) {
+        newPlayerNameInputRef.current?.focus({ preventScroll: true });
+      }
+    });
   };
 
   const deletePlayerProfile = (profileId: string) => {
@@ -3385,7 +3517,7 @@ export default function App() {
 
     if (mode === 'guide') {
       selectedList = monstersObj.guide;
-      indices = getOrderedStageIndices(selectedList, guideTargetCount, guideTargetCount); 
+      indices = getBattleStageIndices(selectedList, getOrderedStageIndices(selectedList, guideTargetCount, guideTargetCount).length, mode, inputMode);
       totalStageMonsters = indices.length;
     } else if (mode === 'weakness') {
         const activeWeakQuestions = sessionWeakQuestionsRef.current ?? getScopedWeakQuestions(diff, level);
@@ -3397,15 +3529,15 @@ export default function App() {
     } else {
       if (inputMode === 'voice-text') {
         selectedList = monstersObj.guide;
-        indices = getOrderedStageIndices(selectedList, listeningTargetCount, listeningTargetCount);
+        indices = getBattleStageIndices(selectedList, getOrderedStageIndices(selectedList, listeningTargetCount, listeningTargetCount).length, mode, inputMode);
         totalStageMonsters = indices.length;
       } else if (inputMode === 'voice-only') {
         selectedList = monstersObj.challenge;
-        indices = getOrderedStageIndices(selectedList, NORMAL_TARGET_COUNT, NORMAL_TARGET_COUNT);
+        indices = getBattleStageIndices(selectedList, getOrderedStageIndices(selectedList, NORMAL_TARGET_COUNT, NORMAL_TARGET_COUNT).length, mode, inputMode);
         totalStageMonsters = indices.length;
       } else {
         selectedList = monstersObj.challenge;
-        indices = getOrderedStageIndices(selectedList, HARD_TARGET_COUNT, HARD_TARGET_COUNT);
+        indices = getBattleStageIndices(selectedList, getOrderedStageIndices(selectedList, HARD_TARGET_COUNT, HARD_TARGET_COUNT).length, mode, inputMode);
         totalStageMonsters = indices.length;
       }
     }
@@ -3438,11 +3570,11 @@ export default function App() {
     const safeStepIndex = Math.min(Math.max(stepIndex, 0), safeIndices.length - 1);
     const actualMonsterIndex = safeIndices[safeStepIndex] ?? 0;
     const startingMonster = monsterList[actualMonsterIndex] ?? monsterList[0];
-    const isFinalStageMonster = safeStepIndex >= Math.max(totalMonsters - 1, 0);
-    const battleTuning = getBattleTuning(diff, mode, inputMode, startingMonster.baseHp, isFinalStageMonster);
+    const bossStage = getBossStage(mode, inputMode, safeStepIndex, totalMonsters);
+    const battleTuning = getBattleTuning(diff, mode, inputMode, startingMonster.baseHp, bossStage);
     const startingMonsterHp = battleTuning.monsterHp;
     const maxQuestions = battleTuning.maxQuestions;
-    const useBossBattleMusic = startingMonster?.type === 'boss' || isFinalStageMonster;
+    const useBossBattleMusic = startingMonster?.type === 'boss' || bossStage > 0;
     if (!startingMonster) return;
     soundEngine.stopBattleAmbience();
     soundEngine.stopBattleMusic();
@@ -3474,6 +3606,7 @@ export default function App() {
       battleLog: [],
       battleStartScore: currentScore,
       battleStartKeystrokes: currentKeystrokes,
+      bossStage,
     }));
   };
 
@@ -3774,8 +3907,17 @@ export default function App() {
     const baseDamage = charCount * 10;
     const speedMultiplier = getSpeedMultiplier(charsPerSec);
     const damageMultiplier = getBattleDamageMultiplier(gameState.mode, gameState.inputMode);
+    const perfectClearDamageFloor = getPerfectClearDamageFloor(
+      gameState.bossStage,
+      gameState.maxMonsterHp,
+      gameState.maxQuestions
+    );
     let finalDamage = Math.floor(baseDamage * speedMultiplier * damageMultiplier);
-    if (gameState.missCount > 0) { finalDamage = Math.max(1, Math.floor(finalDamage * 0.5)); }
+    if (gameState.missCount > 0) {
+      finalDamage = Math.max(1, Math.floor(finalDamage * 0.5));
+    } else if (perfectClearDamageFloor > 0) {
+      finalDamage = Math.max(finalDamage, perfectClearDamageFloor);
+    }
     const willDefeatMonster = gameState.monsterHp - finalDamage <= 0;
     if (!willDefeatMonster) {
       if (speedMultiplier >= 2.0 && gameState.missCount === 0) { soundEngine.playCritical(); } else { soundEngine.playAttack(); }
@@ -4021,7 +4163,8 @@ export default function App() {
   if (gameState.screen === 'monster-book') {
     const monstersObj = MONSTERS[bookLevel];
     const visibleGuideMonsters = monstersObj.guide.slice(0, getGuideTargetCount(bookDifficulty, bookLevel));
-    const visibleChallengeMonsters = monstersObj.challenge.slice(0, HARD_TARGET_COUNT);
+    const visibleChallengeMonsterIndices = getBattleStageIndices(monstersObj.challenge, HARD_TARGET_COUNT, 'challenge', 'text-only');
+    const visibleChallengeMonsters = visibleChallengeMonsterIndices.map(index => monstersObj.challenge[index]).filter(Boolean);
     const allMonsters = [...visibleGuideMonsters, ...visibleChallengeMonsters];
     const availableBookLevels = getAvailableLevels(bookDifficulty);
     const guideDefeatedCount = countDefeatedMonstersForBook(
@@ -4042,9 +4185,16 @@ export default function App() {
       isMonsterDefeatedForBook(gameState.defeatedMonsterIds, bookDifficulty, bookLevel, 'guide', monsterId)
       || isMonsterDefeatedForBook(gameState.defeatedMonsterIds, bookDifficulty, bookLevel, 'challenge', monsterId)
     );
-    const getBookMonsterHp = (monster: Monster, monsterIndex: number, monsters: Monster[]) => (
-      getBattleHp(bookDifficulty, monster.baseHp, monsterIndex === monsters.length - 1)
-    );
+    const getBookMonsterHp = (
+      monster: Monster,
+      monsterIndex: number,
+      monsters: Monster[],
+      mode: Extract<Mode, 'guide' | 'challenge'>,
+      inputMode: InputMode
+    ) => {
+      const bossStage = getBossStage(mode, inputMode, monsterIndex, monsters.length);
+      return getBattleHp(bookDifficulty, monster.baseHp, bossStage);
+    };
     const totalDefeated = guideDefeatedCount + challengeDefeatedCount;
     return (
       <ScreenContainer className="bg-slate-900">
@@ -4064,7 +4214,7 @@ export default function App() {
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {visibleGuideMonsters.map((m, index, monsters) => {
                       const isDefeated = isMonsterDefeatedInBook(m.id);
-                      const displayHp = getBookMonsterHp(m, index, monsters);
+                      const displayHp = getBookMonsterHp(m, index, monsters, 'guide', 'voice-text');
                       return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-slate-700/50 border-slate-500' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-75"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-blue-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {displayHp}</div><div className="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-75 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-cyan-500/30 bg-cyan-950/70 px-2 py-1 text-[11px] font-black text-cyan-200">HP {displayHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
@@ -4074,7 +4224,7 @@ export default function App() {
                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {visibleChallengeMonsters.map((m, index, monsters) => {
                       const isDefeated = isMonsterDefeatedInBook(m.id);
-                      const displayHp = getBookMonsterHp(m, index, monsters);
+                      const displayHp = getBookMonsterHp(m, index, monsters, 'challenge', 'text-only');
                       return (<div key={m.id} className={`relative p-4 rounded-xl flex flex-col items-center justify-center text-center transition-all border-2 ${isDefeated ? 'bg-red-900/20 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'bg-slate-900/50 border-slate-800 opacity-70'}`}>{isDefeated ? (<><div className="mb-2 scale-90"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-red-300 mb-1">{m.name}</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {displayHp}</div><div className="text-xs text-red-200 bg-red-900/50 px-2 py-1 rounded-full">{m.theme}</div><div className="absolute top-2 right-2 text-yellow-400"><Star size={16} fill="currentColor" /></div></>) : (<><div className="mb-2 scale-90 opacity-30 grayscale filter blur-[1px]"><MonsterAvatar type={m.type} color={m.color} size={100} visualStyle={getMonsterVisualStyle(m)} /></div><div className="font-bold text-sm text-slate-600 mb-1">???</div><div className="mb-1 rounded-full border border-red-500/30 bg-red-950/70 px-2 py-1 text-[11px] font-black text-red-100">HP {displayHp}</div><div className="absolute top-2 right-2 text-slate-700"><Lock size={16} /></div></>)}</div>);
                     })}
                  </div>
@@ -4976,8 +5126,17 @@ export default function App() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <input
+                  ref={newPlayerNameInputRef}
+                  type="text"
                   value={newPlayerName}
-                  onChange={(e) => setNewPlayerName(e.target.value)}
+                  onChange={(e) => handleNewPlayerNameChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                      e.preventDefault();
+                      createPlayerProfile();
+                    }
+                  }}
                   placeholder="新しいプレイヤー名"
                   className="flex-1 rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
                 />
@@ -5261,25 +5420,27 @@ export default function App() {
     const listeningTargetCount = getListeningTargetCount(gameState.selectedDifficulty, gameState.selectedLevel);
     const guideFinalMonsterName = monstersObj.guide[guideTargetCount - 1]?.name ?? '???';
     const listeningFinalMonsterName = monstersObj.guide[listeningTargetCount - 1]?.name ?? '???';
-    const normalFinalMonsterName = monstersObj.challenge[NORMAL_TARGET_COUNT - 1]?.name ?? '???';
-    const hardFinalMonsterName = monstersObj.challenge[HARD_TARGET_COUNT - 1]?.name ?? '???';
+    const normalBattleIndices = getBattleStageIndices(monstersObj.challenge, NORMAL_TARGET_COUNT, 'challenge', 'voice-only');
+    const hardBattleIndices = getBattleStageIndices(monstersObj.challenge, HARD_TARGET_COUNT, 'challenge', 'text-only');
+    const normalFinalMonsterName = monstersObj.challenge[normalBattleIndices[normalBattleIndices.length - 1] ?? NORMAL_TARGET_COUNT - 1]?.name ?? '???';
+    const hardFinalMonsterName = monstersObj.challenge[hardBattleIndices[hardBattleIndices.length - 1] ?? HARD_TARGET_COUNT - 1]?.name ?? '???';
     
-    // Helper to check progress against the LIMITED target count
     const getModeProgress = (list: Monster[], mode: Mode, inputMode: InputMode, targetCount: number) => {
-        // Only check the monsters within the target range for "Complete" status
-        const targetList = list.slice(0, targetCount);
-        const nextMonster = targetList.find(m => !matchesDefeatedMonster(
+        const targetIndices = getBattleStageIndices(list, targetCount, mode, inputMode);
+        const nextMonsterIndex = targetIndices.find(monsterIndex => !matchesDefeatedMonster(
           gameState.defeatedMonsterIds,
           gameState.selectedDifficulty,
           gameState.selectedLevel,
           mode,
           inputMode,
-          m.id
+          list[monsterIndex]?.id ?? ''
         ));
         
         return {
-            nextTargetName: nextMonster?.name || null,
-            isComplete: !nextMonster,
+            nextTargetName: nextMonsterIndex == null
+              ? null
+              : list[nextMonsterIndex]?.name ?? null,
+            isComplete: nextMonsterIndex == null,
         };
     };
 
@@ -5424,8 +5585,11 @@ export default function App() {
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
     const remainingWeakCount = getScopedWeakQuestions(gameState.selectedDifficulty, gameState.selectedLevel).length;
-    const isPenultimateMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 2;
     const isFinalMonster = gameState.currentMonsterIndex === gameState.totalMonstersInStage - 1;
+    const nextBossStage = getBossStage(gameState.mode, gameState.inputMode, gameState.currentMonsterIndex + 1, gameState.totalMonstersInStage);
+    const nextBattleAlertLabel = getNextBattleAlertLabel(nextBossStage);
+    const bossIntroLabel = getBossIntroLabel(gameState.bossStage);
+    const shouldShowNextBattleAlert = nextBossStage > gameState.bossStage && !isFinalMonster;
     const monsterEmotion = gameState.monsterHp <= 0 ? 'win' : flash ? 'damage' : 'normal';
     const comboLabel = getComboLabel(gameState.combo);
     const questionPresentation = getBattleQuestionPresentation(gameState.currentQuestion.text);
@@ -5439,13 +5603,13 @@ export default function App() {
 
     return (
       <ScreenContainer className={isBoss ? "bg-red-950" : "bg-slate-900"}>
-        {showFinalBossIntro && (
+        {showBossIntro && bossIntroLabel && (
           <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
             <div className="absolute inset-0 animate-[finalBossFlash_520ms_ease-out_forwards] bg-white" />
             <div className="absolute inset-0 flex items-center justify-center px-4">
               <div className="animate-[finalBossReveal_900ms_ease-out_forwards] rounded-2xl border border-red-400/60 bg-slate-950/78 px-8 py-5 text-center shadow-[0_0_40px_rgba(248,113,113,0.35)]">
                 <p className="text-xs font-black tracking-[0.45em] text-red-200">WARNING</p>
-                <p className="mt-3 text-3xl font-black tracking-[0.18em] text-white md:text-5xl">ラスボス出現！</p>
+                <p className="mt-3 text-3xl font-black tracking-[0.18em] text-white md:text-5xl">{bossIntroLabel}</p>
               </div>
             </div>
           </div>
@@ -5480,10 +5644,10 @@ export default function App() {
         </div>
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-start mt-4 px-4 pb-20">
             <div className="relative w-full flex flex-col items-center z-10 mb-4">
-                {isPenultimateMonster && !isFinalMonster && (
+                {shouldShowNextBattleAlert && nextBattleAlertLabel && (
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-400/50 bg-gradient-to-r from-red-500/20 to-orange-500/20 px-4 py-1.5 text-sm font-black tracking-[0.18em] text-red-100 shadow-[0_0_20px_rgba(248,113,113,0.22)]">
                     <Skull size={16} className="text-red-300" />
-                    NEXT IS THE FINAL BATTLE
+                    {nextBattleAlertLabel}
                   </div>
                 )}
                 {gameState.combo >= 3 && (

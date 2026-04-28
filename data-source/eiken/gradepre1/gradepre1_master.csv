@@ -1760,3 +1760,153 @@ win over ～,win over,2,味方に引き入れる / 納得させる,,Her honesty 
 ,out of date,2,時代遅れの / 期限切れの,,This data is out of date.,ready,,existing_only
 ,take effect,2,効力を生じる / 発効する,,The new rule takes effect next month.,ready,,existing_only
 ,with the exception of,2,(一部を)除いて,,"With the exception of one student, everyone passed.",ready,,existing_only
+,I can see why you feel that way.,3,そう感じる理由は分かります。,,,ready,,pre1_level3_conversation_batch01
+,That makes a lot of sense.,3,それはとても筋が通っています。,,,ready,,pre1_level3_conversation_batch01
+,I see what you're getting at.,3,言いたいことは分かります。,,,ready,,pre1_level3_conversation_batch01
+,You may have a point there.,3,それは一理あるかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,I agree up to a point.,3,ある程度は賛成です。,,,ready,,pre1_level3_conversation_batch01
+,I'm with you on that.,3,その点は私も同意見です。,,,ready,,pre1_level3_conversation_batch01
+,I can relate to that.,3,その気持ちはよく分かります。,,,ready,,pre1_level3_conversation_batch01
+,That's a fair point.,3,それはもっともな指摘です。,,,ready,,pre1_level3_conversation_batch01
+,I hadn't thought of it that way.,3,そういう見方はしていませんでした。,,,ready,,pre1_level3_conversation_batch01
+,That's a good way to put it.,3,うまい言い方ですね。,,,ready,,pre1_level3_conversation_batch01
+,I'm not entirely sure about that.,3,それについては完全には確信がありません。,,,ready,,pre1_level3_conversation_batch01
+,I'm not so sure I agree.,3,そこは少し意見が違う気がします。,,,ready,,pre1_level3_conversation_batch01
+,That's not always the case.,3,いつもそうとは限りません。,,,ready,,pre1_level3_conversation_batch01
+,I wouldn't go that far.,3,そこまでは言わないです。,,,ready,,pre1_level3_conversation_batch01
+,I'm not convinced that's true.,3,それが本当だとはまだ思えません。,,,ready,,pre1_level3_conversation_batch01
+,That may be true in some cases.,3,場合によってはそうかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,I see it a little differently.,3,私は少し違う見方をしています。,,,ready,,pre1_level3_conversation_batch01
+,That depends on the situation.,3,それは状況次第です。,,,ready,,pre1_level3_conversation_batch01
+,It depends on how you define it.,3,それをどう定義するかによります。,,,ready,,pre1_level3_conversation_batch01
+,It's hard to say for sure.,3,はっきりとは言いにくいです。,,,ready,,pre1_level3_conversation_batch01
+,I'd have to think about that.,3,それは少し考える必要があります。,,,ready,,pre1_level3_conversation_batch01
+,That's an interesting question.,3,それは興味深い質問ですね。,,,ready,,pre1_level3_conversation_batch01
+,I'm still figuring that out.,3,それはまだ自分の中で整理しているところです。,,,ready,,pre1_level3_conversation_batch01
+,I need a little time to think.,3,少し考える時間が必要です。,,,ready,,pre1_level3_conversation_batch01
+,That's a tough one.,3,それはなかなか難しいですね。,,,ready,,pre1_level3_conversation_batch01
+,What exactly do you mean?,3,具体的にはどういう意味ですか。,,,ready,,pre1_level3_conversation_batch01
+,Could you be a bit more specific?,3,もう少し具体的に言ってもらえますか。,,,ready,,pre1_level3_conversation_batch01
+,Can you give me an example?,3,例を挙げてもらえますか。,,,ready,,pre1_level3_conversation_batch01
+,What makes you say that?,3,そう思う理由は何ですか。,,,ready,,pre1_level3_conversation_batch01
+,Are you saying that it's unavoidable?,3,それは避けられないと言っているのですか。,,,ready,,pre1_level3_conversation_batch01
+,Let me make sure I understand.,3,ちゃんと理解できているか確認させてください。,,,ready,,pre1_level3_conversation_batch01
+,So what you're saying is this.,3,つまりあなたが言いたいのはこういうことですね。,,,ready,,pre1_level3_conversation_batch01
+,If I understand you correctly.,3,私の理解が正しければ。,,,ready,,pre1_level3_conversation_batch01
+,To put it simply.,3,簡単に言うと。,,,ready,,pre1_level3_conversation_batch01
+,To put it another way.,3,別の言い方をすると。,,,ready,,pre1_level3_conversation_batch01
+,What I mean is this.,3,私が言いたいのはこういうことです。,,,ready,,pre1_level3_conversation_batch01
+,When you put it that way.,3,そういう言い方をされると。,,,ready,,pre1_level3_conversation_batch01
+,What I'm getting at is this.,3,私が言いたいのはこういうことです。,,,ready,,pre1_level3_conversation_batch01
+,That's basically what I'm saying.,3,だいたいそういうことを言っています。,,,ready,,pre1_level3_conversation_batch01
+,Let me rephrase that.,3,言い換えさせてください。,,,ready,,pre1_level3_conversation_batch01
+,Maybe I didn't make that clear.,3,もしかすると私の言い方が分かりにくかったかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,That's not quite what I meant.,3,それは私の意図と少し違います。,,,ready,,pre1_level3_conversation_batch01
+,If you ask me.,3,私に言わせれば。,,,ready,,pre1_level3_conversation_batch01
+,From what I can tell.,3,私が見るかぎりでは。,,,ready,,pre1_level3_conversation_batch01
+,I think it's worth a try.,3,やってみる価値はあると思います。,,,ready,,pre1_level3_conversation_batch01
+,The way I see it.,3,私が思うには。,,,ready,,pre1_level3_conversation_batch01
+,I tend to think so too.,3,私もどちらかといえばそう思います。,,,ready,,pre1_level3_conversation_batch01
+,I'm inclined to agree.,3,どちらかといえば賛成です。,,,ready,,pre1_level3_conversation_batch01
+,I've come to think that lately.,3,最近はそう考えるようになりました。,,,ready,,pre1_level3_conversation_batch01
+,On the one hand that's true.,3,一方ではそれは確かです。,,,ready,,pre1_level3_conversation_batch01
+,On the other hand we should be careful.,3,その一方で注意も必要です。,,,ready,,pre1_level3_conversation_batch01
+,At the same time I understand your concern.,3,同時にあなたの懸念も分かります。,,,ready,,pre1_level3_conversation_batch01
+,"Still, we can't ignore the risks.",3,それでもリスクは無視できません。,,,ready,,pre1_level3_conversation_batch01
+,Even so I wouldn't give up yet.,3,それでも私はまだ諦めません。,,,ready,,pre1_level3_conversation_batch01
+,You're right in a way.,3,ある意味ではあなたの言う通りです。,,,ready,,pre1_level3_conversation_batch01
+,For that reason I'm hesitant.,3,そういう理由で私はためらっています。,,,ready,,pre1_level3_conversation_batch01
+,That's partly true.,3,それは一部その通りです。,,,ready,,pre1_level3_conversation_batch01
+,I can understand how you feel.,3,あなたの気持ちは理解できます。,,,ready,,pre1_level3_conversation_batch01
+,That must have been difficult.,3,それは大変だったでしょうね。,,,ready,,pre1_level3_conversation_batch01
+,That sounds a bit stressful.,3,それは少し大変そうですね。,,,ready,,pre1_level3_conversation_batch01
+,I don't blame you for feeling that way.,3,そう感じるのも無理はありません。,,,ready,,pre1_level3_conversation_batch01
+,I've felt the same way before.,3,私も前に同じように感じたことがあります。,,,ready,,pre1_level3_conversation_batch01
+,That would bother me too.,3,それは私でも気になると思います。,,,ready,,pre1_level3_conversation_batch01
+,I know what that's like.,3,そういう感じはよく分かります。,,,ready,,pre1_level3_conversation_batch01
+,That doesn't sound easy.,3,それは簡単そうには聞こえません。,,,ready,,pre1_level3_conversation_batch01
+,You're probably not the only one.,3,そう感じているのはあなただけではないと思います。,,,ready,,pre1_level3_conversation_batch01
+,It's not as simple as it sounds.,3,聞こえるほど単純ではありません。,,,ready,,pre1_level3_conversation_batch01
+,It's a little more complicated than that.,3,それはもう少し複雑です。,,,ready,,pre1_level3_conversation_batch01
+,There's more to it than that.,3,それだけではありません。,,,ready,,pre1_level3_conversation_batch01
+,That's one way to look at it.,3,それも一つの見方です。,,,ready,,pre1_level3_conversation_batch01
+,I wouldn't rule that out.,3,その可能性は否定しません。,,,ready,,pre1_level3_conversation_batch01
+,That might actually work.,3,それは意外とうまくいくかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,It's worth thinking about.,3,考えてみる価値があります。,,,ready,,pre1_level3_conversation_batch01
+,I wouldn't dismiss that idea.,3,その考えを切り捨てはしません。,,,ready,,pre1_level3_conversation_batch01
+,That could be part of the problem.,3,それが問題の一部かもしれません。,,,ready,,pre1_level3_conversation_batch01
+,That seems reasonable to me.,3,私にはそれが妥当に思えます。,,,ready,,pre1_level3_conversation_batch01
+,I'd rather not jump to conclusions.,3,早まって結論は出したくありません。,,,ready,,pre1_level3_conversation_batch01
+,We should keep an open mind.,3,先入観を持たずに考えるべきです。,,,ready,,pre1_level3_conversation_batch01
+,I think we need more information.,3,もっと情報が必要だと思います。,,,ready,,pre1_level3_conversation_batch01
+,We may be missing something important.,3,何か大事なことを見落としているかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,It's too early to tell.,3,まだ判断するには早すぎます。,,,ready,,pre1_level3_conversation_batch01
+,I wouldn't be surprised if that were true.,3,それが本当でも驚きません。,,,ready,,pre1_level3_conversation_batch01
+,That's certainly a possibility.,3,それは十分あり得ます。,,,ready,,pre1_level3_conversation_batch01
+,There's a chance we're overthinking it.,3,私たちは考えすぎている可能性があります。,,,ready,,pre1_level3_conversation_batch01
+,I wouldn't take that at face value.,3,それをそのまま鵜呑みにはしません。,,,ready,,pre1_level3_conversation_batch01
+,It's better to be cautious.,3,慎重であるに越したことはありません。,,,ready,,pre1_level3_conversation_batch01
+,I can see where you're coming from.,3,あなたの考え方は理解できます。,,,ready,,pre1_level3_conversation_batch01
+,That doesn't necessarily mean it's wrong.,3,だからといってそれが間違いだとは限りません。,,,ready,,pre1_level3_conversation_batch01
+,I'm not saying it's impossible.,3,不可能だと言っているわけではありません。,,,ready,,pre1_level3_conversation_batch01
+,We should look at the bigger picture.,3,もっと大きな視点で見るべきです。,,,ready,,pre1_level3_conversation_batch01
+,That's easier said than done.,3,言うのは簡単ですが実行は難しいです。,,,ready,,pre1_level3_conversation_batch01
+,I'm not ready to rule it out.,3,それを完全に否定するつもりはありません。,,,ready,,pre1_level3_conversation_batch01
+,That may not be the best approach.,3,それは最善のやり方ではないかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,I can see the logic behind that.,3,その考えの筋道は分かります。,,,ready,,pre1_level3_conversation_batch01
+,That sounds good in theory.,3,理屈としてはよさそうです。,,,ready,,pre1_level3_conversation_batch01
+,I'm not sure that's the main issue.,3,それが一番の問題とは限らない気がします。,,,ready,,pre1_level3_conversation_batch01
+,We need to be realistic about this.,3,この件は現実的に考える必要があります。,,,ready,,pre1_level3_conversation_batch01
+,That could lead to misunderstandings.,3,それは誤解につながるかもしれません。,,,ready,,pre1_level3_conversation_batch01
+,I'd rather focus on what we can do now.,3,今できることに集中したいです。,,,ready,,pre1_level3_conversation_batch01
+,I think that's a step in the right direction.,3,それは良い方向への一歩だと思います。,,,ready,,pre1_level3_conversation_batch01
+,Sounds about right.,3,だいたいそんな感じだと思います。,,,ready,,pre1_level3_conversation_batch02
+,That works for me.,3,それで大丈夫です。,,,ready,,pre1_level3_conversation_batch02
+,I'm not ruling it out.,3,その可能性を否定するつもりはありません。,,,ready,,pre1_level3_conversation_batch02
+,That's not a bad idea.,3,それは悪くない考えですね。,,,ready,,pre1_level3_conversation_batch02
+,I was just thinking that.,3,ちょうど私もそう思っていました。,,,ready,,pre1_level3_conversation_batch02
+,That crossed my mind too.,3,私もそれを思い浮かべていました。,,,ready,,pre1_level3_conversation_batch02
+,I don't quite see it that way.,3,私はそこまでそうは思いません。,,,ready,,pre1_level3_conversation_batch02
+,I'm not fully convinced.,3,まだ完全には納得していません。,,,ready,,pre1_level3_conversation_batch02
+,I'm on the fence about it.,3,それについてはまだ決めかねています。,,,ready,,pre1_level3_conversation_batch02
+,That's a tough call.,3,それは判断が難しいですね。,,,ready,,pre1_level3_conversation_batch02
+,It could go either way.,3,どちらに転ぶか分かりません。,,,ready,,pre1_level3_conversation_batch02
+,That's a valid concern.,3,それはもっともな懸念です。,,,ready,,pre1_level3_conversation_batch02
+,I get the point you're making.,3,あなたの言いたい点は分かります。,,,ready,,pre1_level3_conversation_batch02
+,I'm not sure I follow.,3,話を十分に追えていないかもしれません。,,,ready,,pre1_level3_conversation_batch02
+,Could you walk me through that?,3,そこを順を追って説明してもらえますか。,,,ready,,pre1_level3_conversation_batch02
+,What makes you feel that way?,3,どうしてそう感じるのですか。,,,ready,,pre1_level3_conversation_batch02
+,What brought you to that conclusion?,3,どうしてそういう結論になったのですか。,,,ready,,pre1_level3_conversation_batch02
+,I get where you're going with this.,3,あなたがこの話をどこに持っていきたいのか分かります。,,,ready,,pre1_level3_conversation_batch02
+,I wouldn't count on it.,3,それはあまり当てにしないほうがいいです。,,,ready,,pre1_level3_conversation_batch02
+,I wouldn't read too much into that.,3,それを深読みしすぎないほうがいいです。,,,ready,,pre1_level3_conversation_batch02
+,That doesn't sound like the whole story.,3,それだけが話のすべてには聞こえません。,,,ready,,pre1_level3_conversation_batch02
+,I'm not sure it works that way.,3,それがそういう仕組みかは分かりません。,,,ready,,pre1_level3_conversation_batch02
+,That might be pushing it.,3,それは少し言いすぎかもしれません。,,,ready,,pre1_level3_conversation_batch02
+,I don't know if that's fair.,3,それが公平かどうかは分かりません。,,,ready,,pre1_level3_conversation_batch02
+,I'm not against it.,3,それに反対というわけではありません。,,,ready,,pre1_level3_conversation_batch02
+,I'm all for that.,3,私はそれに大賛成です。,,,ready,,pre1_level3_conversation_batch02
+,I can go with that.,3,それでいけます。,,,ready,,pre1_level3_conversation_batch02
+,I'm not ready to commit to that.,3,それに決めるにはまだ早いです。,,,ready,,pre1_level3_conversation_batch02
+,Let's not get ahead of ourselves.,3,先走りすぎないようにしましょう。,,,ready,,pre1_level3_conversation_batch02
+,Let's see how it goes.,3,少し様子を見ましょう。,,,ready,,pre1_level3_conversation_batch02
+,Let's see where this goes.,3,この先どうなるか見てみましょう。,,,ready,,pre1_level3_conversation_batch02
+,I'm keeping an open mind.,3,先入観を持たずに考えています。,,,ready,,pre1_level3_conversation_batch02
+,That seems about right to me.,3,私にはだいたい妥当に思えます。,,,ready,,pre1_level3_conversation_batch02
+,That adds up.,3,それなら筋が通っています。,,,ready,,pre1_level3_conversation_batch02
+,I can work with that.,3,それを前提に進められます。,,,ready,,pre1_level3_conversation_batch02
+,That's more like it.,3,そういう方向ならいいですね。,,,ready,,pre1_level3_conversation_batch02
+,I'm not making excuses.,3,言い訳をしているわけではありません。,,,ready,,pre1_level3_conversation_batch02
+,I'm just being realistic.,3,ただ現実的に考えているだけです。,,,ready,,pre1_level3_conversation_batch02
+,I'm trying to be careful.,3,慎重に進めようとしているだけです。,,,ready,,pre1_level3_conversation_batch02
+,That's not what I'm getting at.,3,私が言いたいのはそういうことではありません。,,,ready,,pre1_level3_conversation_batch02
+,Let me think for a second.,3,少し考えさせてください。,,,ready,,pre1_level3_conversation_batch02
+,I'm still not convinced.,3,私はまだ納得していません。,,,ready,,pre1_level3_conversation_batch02
+,I can see that happening.,3,そうなる可能性はあると思います。,,,ready,,pre1_level3_conversation_batch02
+,I can see why that matters.,3,それが大事な理由は分かります。,,,ready,,pre1_level3_conversation_batch02
+,I'm not saying you're wrong.,3,あなたが間違っていると言いたいわけではありません。,,,ready,,pre1_level3_conversation_batch02
+,I'm trying to look at both sides.,3,両方の立場から見ようとしています。,,,ready,,pre1_level3_conversation_batch02
+,I'm not sure I'm with you there.,3,そこは少し同意しかねます。,,,ready,,pre1_level3_conversation_batch02
+,I'm not sure that's enough.,3,それで十分かは分かりません。,,,ready,,pre1_level3_conversation_batch02
+,That may be part of it.,3,それも一因かもしれません。,,,ready,,pre1_level3_conversation_batch02
+,I'm not sure what to make of that.,3,それをどう受け止めればいいのかまだ分かりません。,,,ready,,pre1_level3_conversation_batch02

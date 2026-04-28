@@ -66,6 +66,8 @@ const problems = [];
 const warnings = [];
 const seenReadyTexts = new Map();
 const allowDuplicateText = (value) => value.split('|').map((part) => part.trim()).includes('allow_duplicate_text');
+const isWordOrPhraseText = (value) => /^[A-Za-z][A-Za-z' -]*[A-Za-z]$/.test(value);
+const isSentenceText = (value) => /^[A-Za-z][A-Za-z0-9'",.?! -]*[.?!]$/.test(value);
 
 for (const row of readyRows) {
   const sourceText = getValue(row, 'sourceText');
@@ -76,15 +78,18 @@ for (const row of readyRows) {
   const exampleJa = getValue(row, 'exampleJa');
   const issues = getValue(row, 'issues');
   const notes = getValue(row, 'notes');
+  const isLevel3Sentence = level === '3';
 
   if (!text) problems.push(`ready row missing text: ${sourceText || '(blank sourceText)'}`);
   if (!['1', '2', '3'].includes(level)) problems.push(`ready row has invalid level for ${text || sourceText}`);
   if (!translation) problems.push(`ready row missing translation: ${text || sourceText}`);
-  if (!exampleEn) problems.push(`ready row missing exampleEn: ${text || sourceText}`);
-  if (text && !/^[A-Za-z][A-Za-z' -]*[A-Za-z]$/.test(text)) problems.push(`ready row has unsafe text: ${text}`);
+  if (!isLevel3Sentence && !exampleEn) problems.push(`ready row missing exampleEn: ${text || sourceText}`);
+  if (text && !(isLevel3Sentence ? isSentenceText(text) : isWordOrPhraseText(text))) {
+    problems.push(`ready row has unsafe text: ${text}`);
+  }
   if (exampleEn && !/[.!?]$/.test(exampleEn)) problems.push(`ready row example lacks end punctuation: ${text}`);
   if (issues) warnings.push(`ready row keeps source issues metadata: ${text || sourceText} -> ${issues}`);
-  if (!exampleJa) warnings.push(`ready row missing exampleJa: ${text || sourceText}`);
+  if (!isLevel3Sentence && !exampleJa) warnings.push(`ready row missing exampleJa: ${text || sourceText}`);
 
   if (text) {
     const key = text.toLowerCase();

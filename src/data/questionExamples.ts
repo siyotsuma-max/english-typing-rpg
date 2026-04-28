@@ -1123,12 +1123,14 @@ export const getQuestionExample = (
   level: LevelKey,
   question: QuestionLike
 ): string | null => {
+  if (level === 3) return null;
+
   if (question.exampleEn?.trim()) return question.exampleEn;
 
   if (difficulty === 'Eiken5') {
     if (level === 1) return getEiken5Level1FallbackExample(question.text);
     if (level === 2) return getEiken5Level2FallbackExample(question.text);
-    return question.text || null;
+    return null;
   }
 
   if (difficulty === 'Eiken4') {
@@ -1137,7 +1139,7 @@ export const getQuestionExample = (
     return null;
   }
 
-  if (difficulty !== 'EikenPre1' || level === 3) return null;
+  if (difficulty !== 'EikenPre1') return null;
 
   if (level === 1) {
     return PRE1_LEVEL1_EXAMPLES[question.text] ?? getPre1Level1FallbackExample(question.text);

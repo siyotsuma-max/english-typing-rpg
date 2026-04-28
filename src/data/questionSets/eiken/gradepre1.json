@@ -9467,6 +9467,607 @@
         "exampleEn": "With the exception of one student, everyone passed."
       }
     ],
-    "3": []
+    "3": [
+      {
+        "text": "I can see why you feel that way.",
+        "translation": "そう感じる理由は分かります。"
+      },
+      {
+        "text": "That makes a lot of sense.",
+        "translation": "それはとても筋が通っています。"
+      },
+      {
+        "text": "I see what you're getting at.",
+        "translation": "言いたいことは分かります。"
+      },
+      {
+        "text": "You may have a point there.",
+        "translation": "それは一理あるかもしれません。"
+      },
+      {
+        "text": "I agree up to a point.",
+        "translation": "ある程度は賛成です。"
+      },
+      {
+        "text": "I'm with you on that.",
+        "translation": "その点は私も同意見です。"
+      },
+      {
+        "text": "I can relate to that.",
+        "translation": "その気持ちはよく分かります。"
+      },
+      {
+        "text": "That's a fair point.",
+        "translation": "それはもっともな指摘です。"
+      },
+      {
+        "text": "I hadn't thought of it that way.",
+        "translation": "そういう見方はしていませんでした。"
+      },
+      {
+        "text": "That's a good way to put it.",
+        "translation": "うまい言い方ですね。"
+      },
+      {
+        "text": "I'm not entirely sure about that.",
+        "translation": "それについては完全には確信がありません。"
+      },
+      {
+        "text": "I'm not so sure I agree.",
+        "translation": "そこは少し意見が違う気がします。"
+      },
+      {
+        "text": "That's not always the case.",
+        "translation": "いつもそうとは限りません。"
+      },
+      {
+        "text": "I wouldn't go that far.",
+        "translation": "そこまでは言わないです。"
+      },
+      {
+        "text": "I'm not convinced that's true.",
+        "translation": "それが本当だとはまだ思えません。"
+      },
+      {
+        "text": "That may be true in some cases.",
+        "translation": "場合によってはそうかもしれません。"
+      },
+      {
+        "text": "I see it a little differently.",
+        "translation": "私は少し違う見方をしています。"
+      },
+      {
+        "text": "That depends on the situation.",
+        "translation": "それは状況次第です。"
+      },
+      {
+        "text": "It depends on how you define it.",
+        "translation": "それをどう定義するかによります。"
+      },
+      {
+        "text": "It's hard to say for sure.",
+        "translation": "はっきりとは言いにくいです。"
+      },
+      {
+        "text": "I'd have to think about that.",
+        "translation": "それは少し考える必要があります。"
+      },
+      {
+        "text": "That's an interesting question.",
+        "translation": "それは興味深い質問ですね。"
+      },
+      {
+        "text": "I'm still figuring that out.",
+        "translation": "それはまだ自分の中で整理しているところです。"
+      },
+      {
+        "text": "I need a little time to think.",
+        "translation": "少し考える時間が必要です。"
+      },
+      {
+        "text": "That's a tough one.",
+        "translation": "それはなかなか難しいですね。"
+      },
+      {
+        "text": "What exactly do you mean?",
+        "translation": "具体的にはどういう意味ですか。"
+      },
+      {
+        "text": "Could you be a bit more specific?",
+        "translation": "もう少し具体的に言ってもらえますか。"
+      },
+      {
+        "text": "Can you give me an example?",
+        "translation": "例を挙げてもらえますか。"
+      },
+      {
+        "text": "What makes you say that?",
+        "translation": "そう思う理由は何ですか。"
+      },
+      {
+        "text": "Are you saying that it's unavoidable?",
+        "translation": "それは避けられないと言っているのですか。"
+      },
+      {
+        "text": "Let me make sure I understand.",
+        "translation": "ちゃんと理解できているか確認させてください。"
+      },
+      {
+        "text": "So what you're saying is this.",
+        "translation": "つまりあなたが言いたいのはこういうことですね。"
+      },
+      {
+        "text": "If I understand you correctly.",
+        "translation": "私の理解が正しければ。"
+      },
+      {
+        "text": "To put it simply.",
+        "translation": "簡単に言うと。"
+      },
+      {
+        "text": "To put it another way.",
+        "translation": "別の言い方をすると。"
+      },
+      {
+        "text": "What I mean is this.",
+        "translation": "私が言いたいのはこういうことです。"
+      },
+      {
+        "text": "When you put it that way.",
+        "translation": "そういう言い方をされると。"
+      },
+      {
+        "text": "What I'm getting at is this.",
+        "translation": "私が言いたいのはこういうことです。"
+      },
+      {
+        "text": "That's basically what I'm saying.",
+        "translation": "だいたいそういうことを言っています。"
+      },
+      {
+        "text": "Let me rephrase that.",
+        "translation": "言い換えさせてください。"
+      },
+      {
+        "text": "Maybe I didn't make that clear.",
+        "translation": "もしかすると私の言い方が分かりにくかったかもしれません。"
+      },
+      {
+        "text": "That's not quite what I meant.",
+        "translation": "それは私の意図と少し違います。"
+      },
+      {
+        "text": "If you ask me.",
+        "translation": "私に言わせれば。"
+      },
+      {
+        "text": "From what I can tell.",
+        "translation": "私が見るかぎりでは。"
+      },
+      {
+        "text": "I think it's worth a try.",
+        "translation": "やってみる価値はあると思います。"
+      },
+      {
+        "text": "The way I see it.",
+        "translation": "私が思うには。"
+      },
+      {
+        "text": "I tend to think so too.",
+        "translation": "私もどちらかといえばそう思います。"
+      },
+      {
+        "text": "I'm inclined to agree.",
+        "translation": "どちらかといえば賛成です。"
+      },
+      {
+        "text": "I've come to think that lately.",
+        "translation": "最近はそう考えるようになりました。"
+      },
+      {
+        "text": "On the one hand that's true.",
+        "translation": "一方ではそれは確かです。"
+      },
+      {
+        "text": "On the other hand we should be careful.",
+        "translation": "その一方で注意も必要です。"
+      },
+      {
+        "text": "At the same time I understand your concern.",
+        "translation": "同時にあなたの懸念も分かります。"
+      },
+      {
+        "text": "Still, we can't ignore the risks.",
+        "translation": "それでもリスクは無視できません。"
+      },
+      {
+        "text": "Even so I wouldn't give up yet.",
+        "translation": "それでも私はまだ諦めません。"
+      },
+      {
+        "text": "You're right in a way.",
+        "translation": "ある意味ではあなたの言う通りです。"
+      },
+      {
+        "text": "For that reason I'm hesitant.",
+        "translation": "そういう理由で私はためらっています。"
+      },
+      {
+        "text": "That's partly true.",
+        "translation": "それは一部その通りです。"
+      },
+      {
+        "text": "I can understand how you feel.",
+        "translation": "あなたの気持ちは理解できます。"
+      },
+      {
+        "text": "That must have been difficult.",
+        "translation": "それは大変だったでしょうね。"
+      },
+      {
+        "text": "That sounds a bit stressful.",
+        "translation": "それは少し大変そうですね。"
+      },
+      {
+        "text": "I don't blame you for feeling that way.",
+        "translation": "そう感じるのも無理はありません。"
+      },
+      {
+        "text": "I've felt the same way before.",
+        "translation": "私も前に同じように感じたことがあります。"
+      },
+      {
+        "text": "That would bother me too.",
+        "translation": "それは私でも気になると思います。"
+      },
+      {
+        "text": "I know what that's like.",
+        "translation": "そういう感じはよく分かります。"
+      },
+      {
+        "text": "That doesn't sound easy.",
+        "translation": "それは簡単そうには聞こえません。"
+      },
+      {
+        "text": "You're probably not the only one.",
+        "translation": "そう感じているのはあなただけではないと思います。"
+      },
+      {
+        "text": "It's not as simple as it sounds.",
+        "translation": "聞こえるほど単純ではありません。"
+      },
+      {
+        "text": "It's a little more complicated than that.",
+        "translation": "それはもう少し複雑です。"
+      },
+      {
+        "text": "There's more to it than that.",
+        "translation": "それだけではありません。"
+      },
+      {
+        "text": "That's one way to look at it.",
+        "translation": "それも一つの見方です。"
+      },
+      {
+        "text": "I wouldn't rule that out.",
+        "translation": "その可能性は否定しません。"
+      },
+      {
+        "text": "That might actually work.",
+        "translation": "それは意外とうまくいくかもしれません。"
+      },
+      {
+        "text": "It's worth thinking about.",
+        "translation": "考えてみる価値があります。"
+      },
+      {
+        "text": "I wouldn't dismiss that idea.",
+        "translation": "その考えを切り捨てはしません。"
+      },
+      {
+        "text": "That could be part of the problem.",
+        "translation": "それが問題の一部かもしれません。"
+      },
+      {
+        "text": "That seems reasonable to me.",
+        "translation": "私にはそれが妥当に思えます。"
+      },
+      {
+        "text": "I'd rather not jump to conclusions.",
+        "translation": "早まって結論は出したくありません。"
+      },
+      {
+        "text": "We should keep an open mind.",
+        "translation": "先入観を持たずに考えるべきです。"
+      },
+      {
+        "text": "I think we need more information.",
+        "translation": "もっと情報が必要だと思います。"
+      },
+      {
+        "text": "We may be missing something important.",
+        "translation": "何か大事なことを見落としているかもしれません。"
+      },
+      {
+        "text": "It's too early to tell.",
+        "translation": "まだ判断するには早すぎます。"
+      },
+      {
+        "text": "I wouldn't be surprised if that were true.",
+        "translation": "それが本当でも驚きません。"
+      },
+      {
+        "text": "That's certainly a possibility.",
+        "translation": "それは十分あり得ます。"
+      },
+      {
+        "text": "There's a chance we're overthinking it.",
+        "translation": "私たちは考えすぎている可能性があります。"
+      },
+      {
+        "text": "I wouldn't take that at face value.",
+        "translation": "それをそのまま鵜呑みにはしません。"
+      },
+      {
+        "text": "It's better to be cautious.",
+        "translation": "慎重であるに越したことはありません。"
+      },
+      {
+        "text": "I can see where you're coming from.",
+        "translation": "あなたの考え方は理解できます。"
+      },
+      {
+        "text": "That doesn't necessarily mean it's wrong.",
+        "translation": "だからといってそれが間違いだとは限りません。"
+      },
+      {
+        "text": "I'm not saying it's impossible.",
+        "translation": "不可能だと言っているわけではありません。"
+      },
+      {
+        "text": "We should look at the bigger picture.",
+        "translation": "もっと大きな視点で見るべきです。"
+      },
+      {
+        "text": "That's easier said than done.",
+        "translation": "言うのは簡単ですが実行は難しいです。"
+      },
+      {
+        "text": "I'm not ready to rule it out.",
+        "translation": "それを完全に否定するつもりはありません。"
+      },
+      {
+        "text": "That may not be the best approach.",
+        "translation": "それは最善のやり方ではないかもしれません。"
+      },
+      {
+        "text": "I can see the logic behind that.",
+        "translation": "その考えの筋道は分かります。"
+      },
+      {
+        "text": "That sounds good in theory.",
+        "translation": "理屈としてはよさそうです。"
+      },
+      {
+        "text": "I'm not sure that's the main issue.",
+        "translation": "それが一番の問題とは限らない気がします。"
+      },
+      {
+        "text": "We need to be realistic about this.",
+        "translation": "この件は現実的に考える必要があります。"
+      },
+      {
+        "text": "That could lead to misunderstandings.",
+        "translation": "それは誤解につながるかもしれません。"
+      },
+      {
+        "text": "I'd rather focus on what we can do now.",
+        "translation": "今できることに集中したいです。"
+      },
+      {
+        "text": "I think that's a step in the right direction.",
+        "translation": "それは良い方向への一歩だと思います。"
+      },
+      {
+        "text": "Sounds about right.",
+        "translation": "だいたいそんな感じだと思います。"
+      },
+      {
+        "text": "That works for me.",
+        "translation": "それで大丈夫です。"
+      },
+      {
+        "text": "I'm not ruling it out.",
+        "translation": "その可能性を否定するつもりはありません。"
+      },
+      {
+        "text": "That's not a bad idea.",
+        "translation": "それは悪くない考えですね。"
+      },
+      {
+        "text": "I was just thinking that.",
+        "translation": "ちょうど私もそう思っていました。"
+      },
+      {
+        "text": "That crossed my mind too.",
+        "translation": "私もそれを思い浮かべていました。"
+      },
+      {
+        "text": "I don't quite see it that way.",
+        "translation": "私はそこまでそうは思いません。"
+      },
+      {
+        "text": "I'm not fully convinced.",
+        "translation": "まだ完全には納得していません。"
+      },
+      {
+        "text": "I'm on the fence about it.",
+        "translation": "それについてはまだ決めかねています。"
+      },
+      {
+        "text": "That's a tough call.",
+        "translation": "それは判断が難しいですね。"
+      },
+      {
+        "text": "It could go either way.",
+        "translation": "どちらに転ぶか分かりません。"
+      },
+      {
+        "text": "That's a valid concern.",
+        "translation": "それはもっともな懸念です。"
+      },
+      {
+        "text": "I get the point you're making.",
+        "translation": "あなたの言いたい点は分かります。"
+      },
+      {
+        "text": "I'm not sure I follow.",
+        "translation": "話を十分に追えていないかもしれません。"
+      },
+      {
+        "text": "Could you walk me through that?",
+        "translation": "そこを順を追って説明してもらえますか。"
+      },
+      {
+        "text": "What makes you feel that way?",
+        "translation": "どうしてそう感じるのですか。"
+      },
+      {
+        "text": "What brought you to that conclusion?",
+        "translation": "どうしてそういう結論になったのですか。"
+      },
+      {
+        "text": "I get where you're going with this.",
+        "translation": "あなたがこの話をどこに持っていきたいのか分かります。"
+      },
+      {
+        "text": "I wouldn't count on it.",
+        "translation": "それはあまり当てにしないほうがいいです。"
+      },
+      {
+        "text": "I wouldn't read too much into that.",
+        "translation": "それを深読みしすぎないほうがいいです。"
+      },
+      {
+        "text": "That doesn't sound like the whole story.",
+        "translation": "それだけが話のすべてには聞こえません。"
+      },
+      {
+        "text": "I'm not sure it works that way.",
+        "translation": "それがそういう仕組みかは分かりません。"
+      },
+      {
+        "text": "That might be pushing it.",
+        "translation": "それは少し言いすぎかもしれません。"
+      },
+      {
+        "text": "I don't know if that's fair.",
+        "translation": "それが公平かどうかは分かりません。"
+      },
+      {
+        "text": "I'm not against it.",
+        "translation": "それに反対というわけではありません。"
+      },
+      {
+        "text": "I'm all for that.",
+        "translation": "私はそれに大賛成です。"
+      },
+      {
+        "text": "I can go with that.",
+        "translation": "それでいけます。"
+      },
+      {
+        "text": "I'm not ready to commit to that.",
+        "translation": "それに決めるにはまだ早いです。"
+      },
+      {
+        "text": "Let's not get ahead of ourselves.",
+        "translation": "先走りすぎないようにしましょう。"
+      },
+      {
+        "text": "Let's see how it goes.",
+        "translation": "少し様子を見ましょう。"
+      },
+      {
+        "text": "Let's see where this goes.",
+        "translation": "この先どうなるか見てみましょう。"
+      },
+      {
+        "text": "I'm keeping an open mind.",
+        "translation": "先入観を持たずに考えています。"
+      },
+      {
+        "text": "That seems about right to me.",
+        "translation": "私にはだいたい妥当に思えます。"
+      },
+      {
+        "text": "That adds up.",
+        "translation": "それなら筋が通っています。"
+      },
+      {
+        "text": "I can work with that.",
+        "translation": "それを前提に進められます。"
+      },
+      {
+        "text": "That's more like it.",
+        "translation": "そういう方向ならいいですね。"
+      },
+      {
+        "text": "I'm not making excuses.",
+        "translation": "言い訳をしているわけではありません。"
+      },
+      {
+        "text": "I'm just being realistic.",
+        "translation": "ただ現実的に考えているだけです。"
+      },
+      {
+        "text": "I'm trying to be careful.",
+        "translation": "慎重に進めようとしているだけです。"
+      },
+      {
+        "text": "That's not what I'm getting at.",
+        "translation": "私が言いたいのはそういうことではありません。"
+      },
+      {
+        "text": "Let me think for a second.",
+        "translation": "少し考えさせてください。"
+      },
+      {
+        "text": "I'm still not convinced.",
+        "translation": "私はまだ納得していません。"
+      },
+      {
+        "text": "I can see that happening.",
+        "translation": "そうなる可能性はあると思います。"
+      },
+      {
+        "text": "I can see why that matters.",
+        "translation": "それが大事な理由は分かります。"
+      },
+      {
+        "text": "I'm not saying you're wrong.",
+        "translation": "あなたが間違っていると言いたいわけではありません。"
+      },
+      {
+        "text": "I'm trying to look at both sides.",
+        "translation": "両方の立場から見ようとしています。"
+      },
+      {
+        "text": "I'm not sure I'm with you there.",
+        "translation": "そこは少し同意しかねます。"
+      },
+      {
+        "text": "I'm not sure that's enough.",
+        "translation": "それで十分かは分かりません。"
+      },
+      {
+        "text": "That may be part of it.",
+        "translation": "それも一因かもしれません。"
+      },
+      {
+        "text": "I'm not sure what to make of that.",
+        "translation": "それをどう受け止めればいいのかまだ分かりません。"
+      }
+    ]
   }
 }
