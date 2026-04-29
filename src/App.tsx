@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Volume2, Sword, Shield, Trophy, Home, SkipForward, Zap, ArrowRight, RotateCcw, BookOpen, Star, Lock, Flame, Skull, ClipboardList, Crown, Target, Medal, Keyboard, AlertCircle, Brain, CheckCircle2, FastForward, LayoutGrid, LogOut, Square } from 'lucide-react';
 import { QUESTIONS } from './data/questions';
 import { getQuestionExample } from './data/questionExamples';
+import HelpScreen from './HelpScreen';
 
 // --- Types & Interfaces ---
 
@@ -170,7 +171,7 @@ type ResolvedSpeechConfig = {
 };
 
 interface GameState {
-  screen: 'title' | 'settings' | 'monster-book' | 'question-list' | 'score-view' | 'rank-list' | 'level-select' | 'mode-select' | 'battle' | 'result';
+  screen: 'title' | 'settings' | 'help' | 'monster-book' | 'question-list' | 'score-view' | 'rank-list' | 'level-select' | 'mode-select' | 'battle' | 'result';
   selectedDifficulty: Difficulty;
   selectedLevel: Level;
   mode: Mode;
@@ -5220,6 +5221,12 @@ export default function App() {
     );
   }
 
+  if (gameState.screen === 'help') {
+    return (
+      <HelpScreen onBack={() => setGameState(prev => ({ ...prev, screen: 'title' }))} />
+    );
+  }
+
   if (gameState.screen === 'title') {
     const allMonsterIds = Object.values(MONSTERS).flatMap(lvl => [...lvl.guide, ...lvl.challenge]).map(m => m.id);
     const uniqueDefeatedIds = new Set(gameState.defeatedMonsterIds.map(key => extractMonsterId(key)));
@@ -5350,7 +5357,7 @@ export default function App() {
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'score-view' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Records</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'question-list' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Word List</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'settings' }))} variant="outline" className="px-2 border-slate-600 text-slate-300"><Volume2 size={16} /> ゲーム設定</GameButton>
-                        <GameButton onClick={() => setShowHelp(true)} variant="outline" className="px-2 border-slate-600 text-slate-300"><AlertCircle size={16} /> ヘルプ</GameButton>
+                        <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'help' }))} variant="outline" className="px-2 border-slate-600 text-slate-300"><AlertCircle size={16} /> ヘルプ</GameButton>
                     </div>
                     <div className="mt-4 flex flex-wrap justify-center gap-3">
                         <GameButton onClick={openProgressTransferSettings} variant="outline" className="border-cyan-500/50 text-cyan-100 hover:border-cyan-300 hover:bg-cyan-900/20">
