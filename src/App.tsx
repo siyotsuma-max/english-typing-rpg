@@ -13,6 +13,7 @@ type InputMode = 'voice-text' | 'text-only' | 'voice-only';
 type BattleResult = 'win' | 'lose' | 'draw' | null;
 type SpeechVoiceMode = 'random' | 'us_female' | 'us_male' | 'uk_female' | 'uk_male';
 type BossStage = 0 | 1 | 2 | 3 | 4;
+type BattleHistoryItem = { damage: number; speed: number };
 
 // Monster Types for Visuals
 type MonsterType = 'slime' | 'beast' | 'wing' | 'ghost' | 'robot' | 'boss' | 'object';
@@ -186,7 +187,7 @@ interface GameState {
   currentQuestion: Question;
   userInput: string;
   startTime: number | null;
-  history: { damage: number; speed: number }[];
+  history: BattleHistoryItem[];
   questionCount: number; 
   maxQuestions: number;  
   battleResult: BattleResult;
@@ -229,9 +230,17 @@ const DIFFICULTY_HP_MULTIPLIERS: Record<Difficulty, number> = {
   EikenPre1: 1.35,
 };
 
-const getGuideTargetCount = (_difficulty: Difficulty, _level: Level) => GUIDE_TARGET_COUNT;
+const getGuideTargetCount = (difficulty: Difficulty, level: Level) => {
+  void difficulty;
+  void level;
+  return GUIDE_TARGET_COUNT;
+};
 
-const getListeningTargetCount = (_difficulty: Difficulty, _level: Level) => LISTENING_TRAINING_TARGET_COUNT;
+const getListeningTargetCount = (difficulty: Difficulty, level: Level) => {
+  void difficulty;
+  void level;
+  return LISTENING_TRAINING_TARGET_COUNT;
+};
 
 const getBattleDamageMultiplier = (mode: Mode, inputMode: InputMode) => {
   if (mode === 'guide') return GUIDE_DAMAGE_MULTIPLIER;
@@ -399,14 +408,6 @@ const countDefeatedMonstersForBook = (
   )).length
 );
 
-const getComboLabel = (combo: number) => {
-  if (combo >= 10) return 'Legendary';
-  if (combo >= 7) return 'Blazing';
-  if (combo >= 5) return 'Hot Streak';
-  if (combo >= 3) return 'Combo';
-  return '';
-};
-
 const getBattleQuestionPresentation = (questionText: string) => {
   const questionLength = questionText.length;
 
@@ -435,11 +436,6 @@ const RANKS: RankData[] = [
 ];
 
 // --- Helpers ---
-
-const getRankData = (defeatedCount: number): RankData => {
-    const sortedRanks = [...RANKS].reverse();
-    return sortedRanks.find(r => defeatedCount >= r.threshold) || RANKS[0];
-};
 
 const isEditableEventTarget = (target: EventTarget | null) => {
   if (!(target instanceof HTMLElement)) return false;
@@ -726,7 +722,10 @@ const DIFFICULTY_BUTTON_VARIANTS: Record<Difficulty, 'primary' | 'secondary' | '
   Eiken4: 'secondary',
   EikenPre1: 'warning',
 };
-const getAvailableLevels = (_difficulty: Difficulty): Level[] => LEVELS;
+const getAvailableLevels = (difficulty: Difficulty): Level[] => {
+  void difficulty;
+  return LEVELS;
+};
 const getSafeLevelForDifficulty = (difficulty: Difficulty, level: Level): Level => (
   getAvailableLevels(difficulty).includes(level) ? level : getAvailableLevels(difficulty)[0]
 );
@@ -1061,9 +1060,10 @@ class SoundEngine {
 
   constructor() {
     try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContext = window.AudioContext || (window as Window & typeof globalThis & { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext;
+      if (!AudioContext) return;
       this.ctx = new AudioContext();
-    } catch (e) {
+    } catch {
       console.error("Web Audio API not supported");
     }
   }
@@ -2004,10 +2004,18 @@ const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
 };
 
 // --- Components ---
-const GameButton = ({ onClick, children, className = "", variant = "primary", disabled = false, size = "md", autoFocus = false, type = "button" }: any) => {
+type GameButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'outline' | 'ghost';
+type GameButtonSize = 'sm' | 'md' | 'lg';
+
+type GameButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: GameButtonVariant;
+  size?: GameButtonSize;
+};
+
+const GameButton = ({ onClick, children, className = "", variant = "primary", disabled = false, size = "md", autoFocus = false, type = "button" }: GameButtonProps) => {
   const baseStyle = "relative font-bold transition-all transform active:scale-95 flex items-center justify-center gap-2 overflow-hidden border-2 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300";
-  const sizes = { sm: "px-4 py-2 text-sm", md: "px-6 py-3", lg: "px-10 py-4 text-xl" };
-  const variants = {
+  const sizes: Record<GameButtonSize, string> = { sm: "px-4 py-2 text-sm", md: "px-6 py-3", lg: "px-10 py-4 text-xl" };
+  const variants: Record<GameButtonVariant, string> = {
     primary: "bg-blue-600 border-blue-400 text-white shadow-blue-900/50 hover:bg-blue-500 hover:shadow-blue-500/50 hover:border-blue-300",
     secondary: "bg-purple-600 border-purple-400 text-white shadow-purple-900/50 hover:bg-purple-500 hover:shadow-purple-500/50 hover:border-purple-300",
     danger: "bg-red-600 border-red-400 text-white shadow-red-900/50 hover:bg-red-500 hover:shadow-red-500/50 hover:border-red-300",
@@ -2026,7 +2034,7 @@ const GameButton = ({ onClick, children, className = "", variant = "primary", di
   }, [autoFocus]);
 
   return (
-    <button ref={btnRef} type={type} onClick={onClick} disabled={disabled} className={`${baseStyle} ${sizes[size as keyof typeof sizes]} ${variants[variant as keyof typeof variants]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
+    <button ref={btnRef} type={type} onClick={onClick} disabled={disabled} className={`${baseStyle} ${sizes[size]} ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>
       <span className="relative z-10">{children}</span>
       <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
     </button>
@@ -2633,11 +2641,11 @@ export default function App() {
     });
   };
 
-  const persistManualQuestionStatuses = (nextStatuses: Record<string, ManualQuestionStatus>) => {
+  const persistManualQuestionStatuses = useCallback((nextStatuses: Record<string, ManualQuestionStatus>) => {
     localStorage.setItem(STORAGE_KEYS.manualQuestionStatuses, JSON.stringify(nextStatuses));
-  };
+  }, []);
 
-  const updateManualQuestionStatus = (
+  const updateManualQuestionStatus = useCallback((
     difficulty: Difficulty,
     level: Level,
     question: Question,
@@ -2656,7 +2664,41 @@ export default function App() {
       persistManualQuestionStatuses(nextStatuses);
       return nextStatuses;
     });
-  };
+  }, [persistManualQuestionStatuses]);
+
+  const speakWithSettings = useCallback((text: string) => {
+      const speechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
+      speakText(text, {
+          voice: speechConfig.voice,
+          lang: speechConfig.lang,
+          rate: speechRatePercent / 100,
+      });
+  }, [speechRatePercent, speechVoiceMode, speechVoices]);
+
+  const clearAutoPlayTimeout = useCallback(() => {
+    if (autoPlayTimeoutRef.current !== null) {
+      window.clearTimeout(autoPlayTimeoutRef.current);
+      autoPlayTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearSpeechPreviewTimeout = useCallback(() => {
+    if (speechPreviewTimeoutRef.current !== null) {
+      window.clearTimeout(speechPreviewTimeoutRef.current);
+      speechPreviewTimeoutRef.current = null;
+    }
+  }, []);
+
+  const stopAutoPlay = useCallback((statusText: string = '停止しました') => {
+    autoPlayRunIdRef.current += 1;
+    clearAutoPlayTimeout();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsAutoPlaying(false);
+    setAutoPlayNowPlaying(null);
+    setAutoPlayStatusText(statusText);
+  }, [clearAutoPlayTimeout]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.speechVoiceMode, speechVoiceMode);
@@ -2750,14 +2792,14 @@ export default function App() {
       }
       soundEngine.stopBattleMusicPreview();
     };
-  }, []);
+  }, [clearAutoPlayTimeout]);
 
   useEffect(() => {
     if (gameState.screen === 'settings' || gameState.screen === 'question-list') return;
     clearSpeechPreviewTimeout();
     stopAutoPlay('停止しました');
     soundEngine.stopBattleMusicPreview();
-  }, [gameState.screen]);
+  }, [clearSpeechPreviewTimeout, gameState.screen, stopAutoPlay]);
 
   useEffect(() => {
     if (gameState.screen !== 'settings') return;
@@ -2779,10 +2821,12 @@ export default function App() {
     if (!isAutoPlaying) return;
     stopAutoPlay('一覧条件の変更に合わせて停止しました');
   }, [
+    isAutoPlaying,
     gameState.screen,
     gameState.selectedDifficulty,
     gameState.selectedLevel,
     questionListFilter,
+    stopAutoPlay,
     weakListSort,
   ]);
 
@@ -2854,75 +2898,10 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [showHelp, showResetConfirm]);
   
-  // Keyboard support for replaying question audio
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-        if (isEditableEventTarget(e.target)) return;
-
-        if (gameState.screen === 'battle') {
-            const isRightCtrlKey =
-                e.code === 'ControlRight' ||
-                (e.key === 'Control' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
-
-            if (isRightCtrlKey && !e.repeat) {
-                e.preventDefault();
-                speakCurrentQuestion();
-            }
-        } else if (gameState.screen === 'result') {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                // Find primary action button and click it
-                if (gameState.battleResult === 'win') {
-                    const isNextAvailable = gameState.currentMonsterIndex < gameState.totalMonstersInStage - 1;
-                    if (isNextAvailable) {
-                         // Next Monster
-                         initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex + 1, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.score, gameState.totalKeystrokes);
-                    } else {
-                         // Back to Mode Select (Complete)
-                         setGameState(prev => ({ ...prev, screen: 'mode-select' }));
-                    }
-                } else {
-                    // Retry
-                    initBattle(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.battleStartScore, gameState.battleStartKeystrokes);
-                }
-            }
-        }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState]);
-
-  const speakWithSettings = (text: string) => {
-      const speechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
-      speakText(text, {
-          voice: speechConfig.voice,
-          lang: speechConfig.lang,
-          rate: speechRatePercent / 100,
-      });
-  };
-
   const getJapaneseSpeechVoice = () => (
     allSpeechVoices.find(voice => normalizeVoiceLang(voice.lang).startsWith('ja'))
     ?? null
   );
-
-  const clearAutoPlayTimeout = () => {
-    if (autoPlayTimeoutRef.current !== null) {
-      window.clearTimeout(autoPlayTimeoutRef.current);
-      autoPlayTimeoutRef.current = null;
-    }
-  };
-
-  const stopAutoPlay = (statusText: string = '停止しました') => {
-    autoPlayRunIdRef.current += 1;
-    clearAutoPlayTimeout();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    setIsAutoPlaying(false);
-    setAutoPlayNowPlaying(null);
-    setAutoPlayStatusText(statusText);
-  };
 
   const updateSelectedQuestionKeysForScope = (
     difficulty: Difficulty,
@@ -3261,13 +3240,6 @@ export default function App() {
     progressImportInputRef.current?.click();
   };
 
-  const clearSpeechPreviewTimeout = () => {
-    if (speechPreviewTimeoutRef.current !== null) {
-      window.clearTimeout(speechPreviewTimeoutRef.current);
-      speechPreviewTimeoutRef.current = null;
-    }
-  };
-
   const playSpeechPreview = (voiceMode: SpeechVoiceMode, ratePercent: number) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     clearSpeechPreviewTimeout();
@@ -3310,11 +3282,11 @@ export default function App() {
     scheduleSpeechPreview(speechVoiceMode, nextRatePercent);
   };
 
-  const speakCurrentQuestion = () => {
+  const speakCurrentQuestion = useCallback(() => {
       if (!gameState.currentQuestion.text) return;
       speakWithSettings(gameState.currentQuestion.text);
       setTimeout(() => inputRef.current?.focus(), 10);
-  };
+  }, [gameState.currentQuestion.text, speakWithSettings]);
 
   const saveDefeatedMonster = (monsterId: string) => {
     setGameState(prev => {
@@ -3454,7 +3426,7 @@ export default function App() {
     setProgressTransferStatus('現在のプレイヤーの学習データをリセットしました。');
   };
 
-  const handleGameEnd = (result: BattleResult, finalScore: number, history: any[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], playWinSound: boolean = true) => {
+  const handleGameEnd = (result: BattleResult, finalScore: number, history: BattleHistoryItem[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], playWinSound: boolean = true) => {
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
       const key = `${diff}_${level}_${mode}`;
@@ -3610,6 +3582,46 @@ export default function App() {
       bossStage,
     }));
   };
+  const initBattleRef = useRef(initBattle);
+  initBattleRef.current = initBattle;
+
+  // Keyboard support for replaying question audio
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (isEditableEventTarget(e.target)) return;
+
+        if (gameState.screen === 'battle') {
+            const isRightCtrlKey =
+                e.code === 'ControlRight' ||
+                (e.key === 'Control' && e.location === KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
+
+            if (isRightCtrlKey && !e.repeat) {
+                e.preventDefault();
+                speakCurrentQuestion();
+            }
+        } else if (gameState.screen === 'result') {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Find primary action button and click it
+                if (gameState.battleResult === 'win') {
+                    const isNextAvailable = gameState.currentMonsterIndex < gameState.totalMonstersInStage - 1;
+                    if (isNextAvailable) {
+                         // Next Monster
+                         initBattleRef.current(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex + 1, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.score, gameState.totalKeystrokes);
+                    } else {
+                         // Back to Mode Select (Complete)
+                         setGameState(prev => ({ ...prev, screen: 'mode-select' }));
+                    }
+                } else {
+                    // Retry
+                    initBattleRef.current(gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, gameState.inputMode, gameState.currentMonsterIndex, gameState.challengeModeIndices, gameState.currentMonsterList, gameState.totalMonstersInStage, gameState.battleStartScore, gameState.battleStartKeystrokes);
+                }
+            }
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, speakCurrentQuestion]);
 
   const shuffleIndices = (length: number) => {
     const indices = Array.from({ length }, (_, index) => index);
@@ -3785,8 +3797,8 @@ export default function App() {
     incrementDailyQuestionCount();
     decrementReviewQueueTimers();
 
-    let nextHp = skipped ? gameState.monsterHp : Math.max(0, gameState.monsterHp - damage);
-    let isMonsterDefeated = !skipped && nextHp <= 0;
+    const nextHp = skipped ? gameState.monsterHp : Math.max(0, gameState.monsterHp - damage);
+    const isMonsterDefeated = !skipped && nextHp <= 0;
     const currentScore = gameState.score + damage;
     const nextKeystrokes = gameState.totalKeystrokes + addedChars;
     const newHistory = [...gameState.history, { damage, speed }];
@@ -3807,7 +3819,7 @@ export default function App() {
       );
     }
 
-    let newMissedQs = [...gameState.currentBattleMissedQuestions];
+    const newMissedQs = [...gameState.currentBattleMissedQuestions];
     if (gameState.missCount > 0 && !newMissedQs.some(q => q.text === gameState.currentQuestion.text)) { newMissedQs.push(gameState.currentQuestion); }
     if (gameState.mode !== 'weakness' && gameState.missCount > 0) {
       scheduleQuestionReview(gameState.currentQuestion, activeReviewEntry?.missCount ?? 0);
@@ -3957,10 +3969,10 @@ export default function App() {
 
   useEffect(() => {
     if (gameState.screen === 'battle' && gameState.inputMode !== 'text-only' && gameState.monsterHp > 0) speakWithSettings(gameState.currentQuestion.text);
-  }, [gameState.currentQuestion, gameState.screen, gameState.inputMode, gameState.monsterHp, speechVoices, speechVoiceMode, speechRatePercent]);
+  }, [gameState.currentQuestion, gameState.screen, gameState.inputMode, gameState.monsterHp, speakWithSettings]);
 
   // --- Screens ---
-  const ScreenContainer = ({ children, className = "" }: any) => (
+  const ScreenContainer = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
     <div className={`min-h-screen font-sans text-slate-100 flex flex-col relative ${className}`}>
       <div className="fixed inset-0 z-0 bg-slate-900">
          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
@@ -3970,7 +3982,7 @@ export default function App() {
     </div>
   );
 
-  const Box = ({ children, className = "", title }: any) => (
+  const Box = ({ children, className = "", title }: { children: React.ReactNode; className?: string; title?: React.ReactNode }) => (
     <div className={`bg-slate-800/90 border-2 border-slate-600 rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm ${className}`}>
       {title && (<div className="bg-slate-700/80 px-4 py-2 border-b border-slate-600 font-bold text-slate-200 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-400"></div>{title}</div>)}
       <div className="p-6">{children}</div>
@@ -3980,7 +3992,9 @@ export default function App() {
   const selectedSpeechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
   const supportedSpeechModes = getSupportedSpeechModes(speechVoices);
   const selectedSpeechLocale = normalizeVoiceLang(selectedSpeechConfig.lang);
-  const currentScopedQuestions = QUESTIONS[gameState.selectedDifficulty]?.[gameState.selectedLevel] ?? [];
+  const currentScopedQuestions = useMemo(() => (
+    QUESTIONS[gameState.selectedDifficulty]?.[gameState.selectedLevel] ?? []
+  ), [gameState.selectedDifficulty, gameState.selectedLevel]);
   const currentQuestionExamples = useMemo(() => (
     new Map(
       currentScopedQuestions.map(question => {
@@ -4009,7 +4023,7 @@ export default function App() {
       question,
       current => ({ ...current, manualOverrideLevel: current.manualOverrideLevel === level ? null : level })
     );
-  }, [gameState.selectedDifficulty, gameState.selectedLevel]);
+  }, [gameState.selectedDifficulty, gameState.selectedLevel, updateManualQuestionStatus]);
 
   const handleToggleExcludedQuestion = useCallback((question: Question) => {
     updateManualQuestionStatus(
@@ -4018,7 +4032,7 @@ export default function App() {
       question,
       current => ({ ...current, excluded: !current.excluded })
     );
-  }, [gameState.selectedDifficulty, gameState.selectedLevel]);
+  }, [gameState.selectedDifficulty, gameState.selectedLevel, updateManualQuestionStatus]);
 
   const startAutoPlaySequence = (
     entries: Array<{
@@ -5232,7 +5246,6 @@ export default function App() {
     const uniqueDefeatedIds = new Set(gameState.defeatedMonsterIds.map(key => extractMonsterId(key)));
     const totalDefeated = [...uniqueDefeatedIds].filter(id => allMonsterIds.includes(id)).length;
     const totalMonsters = allMonsterIds.length;
-    const rank = getRankData(totalDefeated);
     const selectedQuestions = QUESTIONS[gameState.selectedDifficulty]?.[gameState.selectedLevel] ?? [];
     const selectedWeakTexts = new Set(weakQuestions.map(q => q.text));
     const weakCount = selectedQuestions.filter(question => (
@@ -5286,7 +5299,6 @@ export default function App() {
                      <div className="flex items-center gap-2 bg-slate-800/80 px-6 py-3 rounded-full text-emerald-300 shadow-md border border-emerald-500/40"><Target size={20} className="text-emerald-400" /><span className="font-bold text-sm">今日の問題数 <span className="text-white font-mono text-xl mx-1">{todayQuestionCount}</span> 問</span></div>
                      <div className="flex items-center gap-2 bg-slate-800/80 px-5 py-3 rounded-full text-amber-300 shadow-md border border-amber-500/40"><RotateCcw size={18} className="text-amber-400" /><span className="font-bold text-sm">復習待ち <span className="text-white font-mono text-lg mx-1">{reviewQueueCount}</span> 件</span></div>
                      <div className="flex items-center gap-2 bg-slate-800/80 px-6 py-3 rounded-full text-blue-300 shadow-md border border-slate-600"><Keyboard size={20} className="text-blue-400" /><span className="font-bold text-sm">最高入力: <span className="text-white font-mono text-xl mx-1">{maxKeystrokes}</span></span></div>
-                     <div className="text-sm font-bold bg-black/50 px-6 py-3 rounded-full border border-slate-600 flex items-center gap-2"><Medal size={20} className={rank.color} /><span className={rank.color}>{rank.title}</span></div>
                 </div>
                 <div className="w-full space-y-4 max-w-4xl">
                     <div className="rounded-2xl border border-violet-400/25 bg-slate-950/65 px-4 py-3 shadow-[0_10px_24px_rgba(76,29,149,0.18)] backdrop-blur-sm">
@@ -5351,9 +5363,8 @@ export default function App() {
                     >
                       <ClipboardList size={18} /> 学習データ保存／読み込み
                     </GameButton>
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-4">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
                          <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'monster-book' }))} variant="outline" className="px-2"><BookOpen size={20} /> 図鑑</GameButton>
-                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'rank-list' }))} variant="outline" className="px-2 text-yellow-300 border-yellow-700/50 hover:border-yellow-400"><Crown size={20} /> 称号</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'score-view' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Records</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'question-list' }))} variant="outline" className="px-2 border-slate-600 text-slate-300">Word List</GameButton>
                         <GameButton onClick={() => setGameState(prev => ({ ...prev, screen: 'settings' }))} variant="outline" className="px-2 border-slate-600 text-slate-300"><Volume2 size={16} /> ゲーム設定</GameButton>
@@ -5598,7 +5609,6 @@ export default function App() {
     const bossIntroLabel = getBossIntroLabel(gameState.bossStage);
     const shouldShowNextBattleAlert = nextBossStage > gameState.bossStage && !isFinalMonster;
     const monsterEmotion = gameState.monsterHp <= 0 ? 'win' : flash ? 'damage' : 'normal';
-    const comboLabel = getComboLabel(gameState.combo);
     const questionPresentation = getBattleQuestionPresentation(gameState.currentQuestion.text);
     const monsterDialogue = getBattleBubbleDialogue(currentMonster, {
       isDefeated: gameState.monsterHp <= 0,
@@ -5635,12 +5645,6 @@ export default function App() {
                <Home size={16} /> EXIT
              </GameButton>
              <div className="flex gap-4">
-               <div className="bg-black/50 border border-slate-600 px-3 py-1 rounded-full text-slate-300 text-xs font-mono flex items-center gap-2"><Trophy size={14} className="text-yellow-500"/> SCORE: {gameState.score}</div>
-               {gameState.combo >= 2 && (
-                 <div className="bg-yellow-900/50 border border-yellow-500/50 px-3 py-1 rounded-full text-yellow-200 text-xs font-black tracking-wide">
-                   {gameState.combo} COMBO
-                 </div>
-               )}
                <div className="bg-red-900/50 border border-red-500/50 px-3 py-1 rounded-full text-red-200 text-xs font-bold">あと {questionsLeft}問</div>
                {gameState.mode === 'weakness' && (
                  <div className="bg-orange-900/50 border border-orange-500/50 px-3 py-1 rounded-full text-orange-200 text-xs font-bold">
@@ -5655,12 +5659,6 @@ export default function App() {
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-400/50 bg-gradient-to-r from-red-500/20 to-orange-500/20 px-4 py-1.5 text-sm font-black tracking-[0.18em] text-red-100 shadow-[0_0_20px_rgba(248,113,113,0.22)]">
                     <Skull size={16} className="text-red-300" />
                     {nextBattleAlertLabel}
-                  </div>
-                )}
-                {gameState.combo >= 3 && (
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-yellow-400/50 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 px-4 py-1.5 text-sm font-black uppercase tracking-[0.2em] text-yellow-200 shadow-[0_0_20px_rgba(250,204,21,0.2)]">
-                    <Flame size={16} className="text-yellow-300" />
-                    {comboLabel} x{gameState.combo}
                   </div>
                 )}
                 <div className={`transition-all duration-300 ${flash ? 'scale-110' : ''} mb-2`}><div className="inline-block bg-white text-slate-900 px-4 py-1.5 rounded-xl shadow-lg border-2 border-slate-200 font-bold relative text-xs">{monsterDialogue}<div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b-2 border-r-2 border-slate-200"></div></div></div>
