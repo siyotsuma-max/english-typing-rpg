@@ -877,6 +877,20 @@ const getSupportedSpeechModes = (voices: SpeechSynthesisVoice[]) => (
   NON_RANDOM_SPEECH_VOICE_MODES.filter(mode => isExactSpeechModeSupported(voices, mode))
 );
 
+const getBalancedRandomSpeechMode = (voices: SpeechSynthesisVoice[]): Exclude<SpeechVoiceMode, 'random'> => {
+  const exactModes = getSupportedSpeechModes(voices);
+  const usModes = exactModes.filter(mode => mode.startsWith('us_'));
+  const ukModes = exactModes.filter(mode => mode.startsWith('uk_'));
+  const availableLocaleGroups = [usModes, ukModes].filter(group => group.length > 0);
+
+  if (availableLocaleGroups.length === 0) {
+    return 'us_female';
+  }
+
+  const localeGroup = availableLocaleGroups[Math.floor(Math.random() * availableLocaleGroups.length)];
+  return localeGroup[Math.floor(Math.random() * localeGroup.length)] ?? 'us_female';
+};
+
 const isSpeechModeSelectable = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode) => (
   mode === 'random'
   || isExactSpeechModeSupported(voices, mode)
@@ -997,9 +1011,8 @@ const getGenderFallbackVoice = (voices: SpeechSynthesisVoice[], mode: Exclude<Sp
 };
 
 const resolveSpeechConfig = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode): ResolvedSpeechConfig => {
-  const supportedModes = getSupportedSpeechModes(voices);
   const resolvedMode: Exclude<SpeechVoiceMode, 'random'> = mode === 'random'
-    ? supportedModes[Math.floor(Math.random() * supportedModes.length)] ?? 'us_female'
+    ? getBalancedRandomSpeechMode(voices)
     : mode;
 
   const lang = getSpeechLocale(resolvedMode);
