@@ -2020,6 +2020,8 @@ type GameButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: GameButtonSize;
 };
 
+const PLAYER_NAME_MAX_LENGTH = 30;
+
 const GameButton = ({ onClick, children, className = "", variant = "primary", disabled = false, size = "md", autoFocus = false, type = "button" }: GameButtonProps) => {
   const baseStyle = "relative font-bold transition-all transform active:scale-95 flex items-center justify-center gap-2 overflow-hidden border-2 rounded-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300";
   const sizes: Record<GameButtonSize, string> = { sm: "px-4 py-2 text-sm", md: "px-6 py-3", lg: "px-10 py-4 text-xl" };
@@ -2048,6 +2050,23 @@ const GameButton = ({ onClick, children, className = "", variant = "primary", di
     </button>
   );
 };
+
+const ScreenContainer = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`min-h-screen font-sans text-slate-100 flex flex-col relative ${className}`}>
+    <div className="fixed inset-0 z-0 bg-slate-900">
+       <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
+       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-slate-900/80"></div>
+    </div>
+    <div className="relative z-10 flex-1 flex flex-col items-center w-full overflow-y-auto">{children}</div>
+  </div>
+);
+
+const Box = ({ children, className = "", title }: { children: React.ReactNode; className?: string; title?: React.ReactNode }) => (
+  <div className={`bg-slate-800/90 border-2 border-slate-600 rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm ${className}`}>
+    {title && (<div className="bg-slate-700/80 px-4 py-2 border-b border-slate-600 font-bold text-slate-200 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-400"></div>{title}</div>)}
+    <div className="p-6">{children}</div>
+  </div>
+);
 
 type QuestionListRowProps = {
   question: Question;
@@ -2213,6 +2232,7 @@ export default function App() {
   const [playerProfiles, setPlayerProfiles] = useState<PlayerProfile[]>([]);
   const [activePlayerId, setActivePlayerId] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [playerNameDrafts, setPlayerNameDrafts] = useState<Record<string, string>>({});
   const [settingsFocusSection, setSettingsFocusSection] = useState<'progress-transfer' | 'player-profiles' | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [autoPlayStatusText, setAutoPlayStatusText] = useState('待機中');
@@ -3048,12 +3068,50 @@ export default function App() {
   };
 
   const handleNewPlayerNameChange = (value: string) => {
-    setNewPlayerName(value);
-    window.requestAnimationFrame(() => {
-      if (document.activeElement !== newPlayerNameInputRef.current) {
-        newPlayerNameInputRef.current?.focus({ preventScroll: true });
-      }
+    setNewPlayerName(value.slice(0, PLAYER_NAME_MAX_LENGTH));
+  };
+
+  const handlePlayerNameDraftChange = (profileId: string, value: string) => {
+    setPlayerNameDrafts(prev => ({
+      ...prev,
+      [profileId]: value.slice(0, PLAYER_NAME_MAX_LENGTH),
+    }));
+  };
+
+  const renamePlayerProfile = (profileId: string) => {
+    const profile = playerProfiles.find(item => item.id === profileId);
+    if (!profile) return;
+
+    const trimmedName = (playerNameDrafts[profileId] ?? profile.name).trim();
+    if (!trimmedName) {
+      setProgressTransferStatus('プレイヤー名を入力してください。');
+      return;
+    }
+
+    if (trimmedName === profile.name) {
+      setPlayerNameDrafts(prev => {
+        const { [profileId]: removed, ...rest } = prev;
+        void removed;
+        return rest;
+      });
+      return;
+    }
+
+    setPlayerProfiles(prev => {
+      const nextProfiles = prev.map(item => (
+        item.id === profileId
+          ? { ...item, name: trimmedName, updatedAt: Date.now() }
+          : item
+      ));
+      persistPlayerProfiles(nextProfiles, activePlayerId);
+      return nextProfiles;
     });
+    setPlayerNameDrafts(prev => {
+      const { [profileId]: removed, ...rest } = prev;
+      void removed;
+      return rest;
+    });
+    setProgressTransferStatus(`プレイヤー名を変更しました: ${trimmedName}`);
   };
 
   const deletePlayerProfile = (profileId: string) => {
@@ -3071,6 +3129,11 @@ export default function App() {
     persistPlayerProfiles(remainingProfiles, nextActiveProfile.id);
     writeProfileDataToWorkingSet(nextActiveProfile.data);
     applyProfileDataToState(nextActiveProfile.data);
+    setPlayerNameDrafts(prev => {
+      const { [profileId]: removed, ...rest } = prev;
+      void removed;
+      return rest;
+    });
     setProgressTransferStatus(`プレイヤーを削除しました。現在のプレイヤー: ${nextActiveProfile.name}`);
   };
 
@@ -3596,8 +3659,6 @@ export default function App() {
   // Keyboard support for replaying question audio
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (isEditableEventTarget(e.target)) return;
-
         if (gameState.screen === 'battle') {
             const isRightCtrlKey =
                 e.code === 'ControlRight' ||
@@ -3607,7 +3668,12 @@ export default function App() {
                 e.preventDefault();
                 speakCurrentQuestion();
             }
-        } else if (gameState.screen === 'result') {
+            return;
+        }
+
+        if (isEditableEventTarget(e.target)) return;
+
+        if (gameState.screen === 'result') {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 // Find primary action button and click it
@@ -3980,23 +4046,6 @@ export default function App() {
   }, [gameState.currentQuestion, gameState.screen, gameState.inputMode, gameState.monsterHp, speakWithSettings]);
 
   // --- Screens ---
-  const ScreenContainer = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div className={`min-h-screen font-sans text-slate-100 flex flex-col relative ${className}`}>
-      <div className="fixed inset-0 z-0 bg-slate-900">
-         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-slate-900/80"></div>
-      </div>
-      <div className="relative z-10 flex-1 flex flex-col items-center w-full overflow-y-auto">{children}</div>
-    </div>
-  );
-
-  const Box = ({ children, className = "", title }: { children: React.ReactNode; className?: string; title?: React.ReactNode }) => (
-    <div className={`bg-slate-800/90 border-2 border-slate-600 rounded-xl shadow-2xl overflow-hidden backdrop-blur-sm ${className}`}>
-      {title && (<div className="bg-slate-700/80 px-4 py-2 border-b border-slate-600 font-bold text-slate-200 flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-400"></div>{title}</div>)}
-      <div className="p-6">{children}</div>
-    </div>
-  );
-
   const selectedSpeechConfig = resolveSpeechConfig(speechVoices, speechVoiceMode);
   const supportedSpeechModes = getSupportedSpeechModes(speechVoices);
   const selectedSpeechLocale = normalizeVoiceLang(selectedSpeechConfig.lang);
@@ -5152,6 +5201,7 @@ export default function App() {
                   ref={newPlayerNameInputRef}
                   type="text"
                   value={newPlayerName}
+                  maxLength={PLAYER_NAME_MAX_LENGTH}
                   onChange={(e) => handleNewPlayerNameChange(e.target.value)}
                   onKeyDown={(e) => {
                     e.stopPropagation();
@@ -5175,16 +5225,35 @@ export default function App() {
               <div className="space-y-2">
                 {playerProfiles.map((profile) => {
                   const isActive = profile.id === activePlayerId;
+                  const draftName = playerNameDrafts[profile.id] ?? profile.name;
+                  const canSaveName = draftName.trim().length > 0 && draftName.trim() !== profile.name;
                   return (
                     <div key={profile.id} className={`flex flex-col gap-3 rounded-xl border px-3 py-3 md:flex-row md:items-center md:justify-between ${isActive ? 'border-violet-400/40 bg-violet-500/10' : 'border-slate-700 bg-slate-950/70'}`}>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-white">{profile.name}</span>
+                          <input
+                            type="text"
+                            value={draftName}
+                            maxLength={PLAYER_NAME_MAX_LENGTH}
+                            onChange={(e) => handlePlayerNameDraftChange(profile.id, e.target.value)}
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                                e.preventDefault();
+                                renamePlayerProfile(profile.id);
+                              }
+                            }}
+                            aria-label="プレイヤー名"
+                            className="w-full max-w-xs rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm font-bold text-white placeholder:text-slate-500 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-400/30"
+                          />
                           {isActive && <span className="rounded-full border border-violet-300/40 bg-violet-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-100">Active</span>}
                         </div>
                         <div className="mt-1 text-xs text-slate-400">更新: {profile.updatedAt ? new Date(profile.updatedAt).toLocaleString('ja-JP') : '未使用'}</div>
                       </div>
                       <div className="flex flex-wrap gap-2">
+                        <GameButton onClick={() => renamePlayerProfile(profile.id)} size="sm" variant="outline" className="border-violet-500/40 text-violet-100 hover:bg-violet-900/20" disabled={!canSaveName}>
+                          保存
+                        </GameButton>
                         <GameButton onClick={() => activatePlayerProfile(profile.id)} size="sm" variant="outline" className="border-cyan-500/40 text-cyan-200 hover:bg-cyan-900/20" disabled={isActive}>
                           切り替える
                         </GameButton>
