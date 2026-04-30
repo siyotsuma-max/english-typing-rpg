@@ -408,6 +408,14 @@ const countDefeatedMonstersForBook = (
   )).length
 );
 
+const getComboLabel = (combo: number) => {
+  if (combo >= 10) return 'Legendary';
+  if (combo >= 7) return 'Blazing';
+  if (combo >= 5) return 'Hot Streak';
+  if (combo >= 3) return 'Combo';
+  return '';
+};
+
 const getBattleQuestionPresentation = (questionText: string) => {
   const questionLength = questionText.length;
 
@@ -5609,6 +5617,7 @@ export default function App() {
     const bossIntroLabel = getBossIntroLabel(gameState.bossStage);
     const shouldShowNextBattleAlert = nextBossStage > gameState.bossStage && !isFinalMonster;
     const monsterEmotion = gameState.monsterHp <= 0 ? 'win' : flash ? 'damage' : 'normal';
+    const comboLabel = getComboLabel(gameState.combo);
     const questionPresentation = getBattleQuestionPresentation(gameState.currentQuestion.text);
     const monsterDialogue = getBattleBubbleDialogue(currentMonster, {
       isDefeated: gameState.monsterHp <= 0,
@@ -5659,6 +5668,12 @@ export default function App() {
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-red-400/50 bg-gradient-to-r from-red-500/20 to-orange-500/20 px-4 py-1.5 text-sm font-black tracking-[0.18em] text-red-100 shadow-[0_0_20px_rgba(248,113,113,0.22)]">
                     <Skull size={16} className="text-red-300" />
                     {nextBattleAlertLabel}
+                  </div>
+                )}
+                {gameState.combo >= 3 && (
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-yellow-400/50 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 px-4 py-1.5 text-sm font-black uppercase tracking-[0.2em] text-yellow-200 shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+                    <Flame size={16} className="text-yellow-300" />
+                    {comboLabel} x{gameState.combo}
                   </div>
                 )}
                 <div className={`transition-all duration-300 ${flash ? 'scale-110' : ''} mb-2`}><div className="inline-block bg-white text-slate-900 px-4 py-1.5 rounded-xl shadow-lg border-2 border-slate-200 font-bold relative text-xs">{monsterDialogue}<div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-b-2 border-r-2 border-slate-200"></div></div></div>
