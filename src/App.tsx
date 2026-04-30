@@ -877,6 +877,12 @@ const getSupportedSpeechModes = (voices: SpeechSynthesisVoice[]) => (
   NON_RANDOM_SPEECH_VOICE_MODES.filter(mode => isExactSpeechModeSupported(voices, mode))
 );
 
+const isSpeechModeSelectable = (voices: SpeechSynthesisVoice[], mode: SpeechVoiceMode) => (
+  mode === 'random'
+  || isExactSpeechModeSupported(voices, mode)
+  || resolveSpeechConfig(voices, mode).resolution !== 'unresolved'
+);
+
 const matchesRequestedGender = (voice: SpeechSynthesisVoice, mode: Exclude<SpeechVoiceMode, 'random'>) => {
   const isFemaleMode = mode.endsWith('female');
 
@@ -2759,7 +2765,7 @@ export default function App() {
   useEffect(() => {
     if (speechVoiceMode === 'random') return;
     if (speechVoices.length === 0) return;
-    if (isExactSpeechModeSupported(speechVoices, speechVoiceMode)) return;
+    if (isSpeechModeSelectable(speechVoices, speechVoiceMode)) return;
     setSpeechVoiceMode(isExactSpeechModeSupported(speechVoices, 'us_female') ? 'us_female' : 'random');
   }, [speechVoices, speechVoiceMode]);
 
@@ -3367,7 +3373,7 @@ export default function App() {
   };
 
   const handleSpeechVoiceSelect = (voiceMode: SpeechVoiceMode) => {
-    if (voiceMode !== 'random' && !isExactSpeechModeSupported(speechVoices, voiceMode)) {
+    if (!isSpeechModeSelectable(speechVoices, voiceMode)) {
       return;
     }
     setSpeechVoiceMode(voiceMode);
@@ -5155,7 +5161,8 @@ export default function App() {
               <p className="text-slate-400 text-xs">American Accent / British Accent を聞き比べながら選べます。</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {SPEECH_VOICE_OPTIONS.map((option) => {
-                  const isSupported = option.id === 'random' || supportedSpeechModes.includes(option.id as Exclude<SpeechVoiceMode, 'random'>);
+                  const exactSupported = option.id === 'random' || supportedSpeechModes.includes(option.id as Exclude<SpeechVoiceMode, 'random'>);
+                  const isSupported = isSpeechModeSelectable(speechVoices, option.id);
                   const isSelected = speechVoiceMode === option.id;
 
                   return (
@@ -5168,6 +5175,7 @@ export default function App() {
                       <div className="flex items-center justify-between gap-3">
                         <div className="font-bold">{SPEECH_VOICE_COPY[option.id].label}</div>
                         {!isSupported && <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300">未対応</span>}
+                        {isSupported && !exactSupported && <span className="rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cyan-200">代替</span>}
                       </div>
                       <div className={`text-xs mt-1 ${isSupported && isSelected ? 'text-blue-100' : 'text-slate-400'}`}>{SPEECH_VOICE_COPY[option.id].description}</div>
                     </button>
