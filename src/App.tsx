@@ -1055,6 +1055,7 @@ class SoundEngine {
   private ambienceGain: GainNode | null = null;
   private battleMusic: HTMLAudioElement | null = null;
   private battleMusicElements = new Set<HTMLAudioElement>();
+  private disposedBattleMusicElements = new WeakSet<HTMLAudioElement>();
   private effectAudioElements = new Set<HTMLAudioElement>();
   private currentBattleMusicSrc = '';
   private battleMusicRequestId = 0;
@@ -1223,7 +1224,7 @@ class SoundEngine {
   startBattleMusic(src: string, volume: number = 0.18) {
     this.stopBattleMusicPreview();
 
-    if (this.currentBattleMusicSrc === src && this.battleMusic) {
+    if (this.currentBattleMusicSrc === src && this.battleMusic && this.battleMusicElements.size === 1) {
       this.battleMusic.volume = volume;
       void this.battleMusic.play().catch((error) => {
         console.error('Battle music replay failed:', src, error);
@@ -1241,11 +1242,13 @@ class SoundEngine {
     audio.src = src;
     this.battleMusicElements.add(audio);
     audio.onerror = () => {
+      if (this.disposedBattleMusicElements.has(audio)) return;
       console.error('Battle music failed to load:', src, audio.error);
     };
     audio.oncanplaythrough = () => {
-      if (this.battleMusic !== audio || this.battleMusicRequestId !== requestId) return;
+      if (this.disposedBattleMusicElements.has(audio) || this.battleMusic !== audio || this.battleMusicRequestId !== requestId) return;
       void audio.play().catch((error) => {
+        if (this.disposedBattleMusicElements.has(audio) || this.battleMusic !== audio || this.battleMusicRequestId !== requestId) return;
         console.error('Battle music play after load failed:', src, error);
       });
     };
@@ -1253,14 +1256,16 @@ class SoundEngine {
     this.currentBattleMusicSrc = src;
     audio.load();
     void audio.play().catch((error) => {
-      if (this.battleMusic !== audio || this.battleMusicRequestId !== requestId) return;
+      if (this.disposedBattleMusicElements.has(audio) || this.battleMusic !== audio || this.battleMusicRequestId !== requestId) return;
       console.error('Battle music initial play failed:', src, error);
     });
   }
 
   private disposeBattleMusicElement(audio: HTMLAudioElement) {
+    this.disposedBattleMusicElements.add(audio);
     audio.oncanplaythrough = null;
     audio.onerror = null;
+    audio.loop = false;
     audio.pause();
     audio.currentTime = 0;
     audio.removeAttribute('src');
@@ -1271,7 +1276,7 @@ class SoundEngine {
   stopBattleMusic() {
     this.battleMusicRequestId += 1;
     if (this.battleMusicElements.size > 0) {
-      this.battleMusicElements.forEach(audio => this.disposeBattleMusicElement(audio));
+      Array.from(this.battleMusicElements).forEach(audio => this.disposeBattleMusicElement(audio));
     }
     this.battleMusic = null;
     this.currentBattleMusicSrc = '';
@@ -1660,13 +1665,24 @@ const isProgressExportPayload = (value: unknown): value is ProgressExportPayload
 };
 
 const MONSTER_VISUALS: Partial<Record<string, MonsterVisualStyle>> = {
+  m1_1: { primary: 'halo', secondary: 'orbital', accentColor: '#FDE68A', eyeColor: '#0F172A' },
+  m1_2: { primary: 'mimic', secondary: 'runes', accentColor: '#86EFAC', eyeColor: '#DCFCE7' },
+  m1_3: { primary: 'flare', secondary: 'halo', accentColor: '#FACC15', eyeColor: '#FEF3C7' },
+  m1_4: { primary: 'horns', secondary: 'spikes', accentColor: '#FDBA74', eyeColor: '#7C2D12' },
   m1_5: { primary: 'halo', accentColor: '#FFD1F3' },
+  m1_6: { primary: 'crystal', secondary: 'orbital', accentColor: '#BFDBFE', eyeColor: '#E0F2FE' },
+  m1_7: { primary: 'mask', secondary: 'runes', accentColor: '#D1D5DB', eyeColor: '#F8FAFC' },
+  m1_8: { primary: 'crown', secondary: 'cape', accentColor: '#F59E0B', eyeColor: '#FEF3C7' },
   m1_9: { primary: 'mimic', secondary: 'runes', accentColor: '#FCD34D' },
   m1_10: { primary: 'crown', secondary: 'sigil', accentColor: '#FBBF24', eyeColor: '#FFE066', silhouette: 'wyvern' },
   c1_1: { primary: 'runes', accentColor: '#A78BFA', eyeColor: '#C4B5FD' },
   c1_2: { primary: 'horns', secondary: 'spikes', accentColor: '#FCA5A5' },
+  c1_3: { primary: 'halo', secondary: 'flare', accentColor: '#67E8F9', eyeColor: '#ECFEFF' },
   c1_4: { primary: 'mask', secondary: 'halo', accentColor: '#E9D5FF' },
   c1_5: { primary: 'spikes', secondary: 'orbital', accentColor: '#94A3B8', eyeColor: '#7DD3FC' },
+  c1_6: { primary: 'crystal', secondary: 'runes', accentColor: '#D6D3D1', eyeColor: '#FEF3C7' },
+  c1_8: { primary: 'horns', secondary: 'flare', accentColor: '#FCA5A5', eyeColor: '#FEE2E2' },
+  c1_9: { primary: 'mask', secondary: 'orbital', accentColor: '#A78BFA', eyeColor: '#DDD6FE' },
   c1_10: { primary: 'crystal', secondary: 'runes', accentColor: '#FCA5A5' },
   c1_7: { primary: 'flare', secondary: 'sigil', accentColor: '#F59E0B', eyeColor: '#FDE68A', silhouette: 'overlord' },
   c2_3: { primary: 'halo', secondary: 'crystal', accentColor: '#FDE047' },
@@ -1924,27 +1940,27 @@ const MonsterAvatar = ({ type, color, emotion = 'normal', size = 150, visualStyl
 const MONSTERS: Record<Level, { guide: Monster[], challenge: Monster[] }> = {
   1: {
     guide: [
-      { id: 'm1_1', name: 'ねぼすけスライム', type: 'slime', color: '#87CEEB', baseHp: 150, dialogueStart: "あと5分だけ...", dialogueDefeat: "わー！遅刻するー！", theme: "Sleepy" },
-      { id: 'm1_2', name: 'ちらかしゴブリン', type: 'beast', color: '#90EE90', baseHp: 180, dialogueStart: "片付けなんてやだ！", dialogueDefeat: "ピカピカにします...", theme: "Messy" },
-      { id: 'm1_3', name: 'おしゃべりバード', type: 'wing', color: '#FFD700', baseHp: 200, dialogueStart: "授業中もおしゃべり！", dialogueDefeat: "静かにします...", theme: "Noisy" },
-      { id: 'm1_4', name: 'つまみぐいオーク', type: 'beast', color: '#DEB887', baseHp: 220, dialogueStart: "お菓子もっとくれ！", dialogueDefeat: "お腹いっぱい...", theme: "Gluttony" },
-      { id: 'm1_5', name: 'らくがき妖精', type: 'ghost', color: '#FF69B4', baseHp: 250, dialogueStart: "教科書に落書きだ！", dialogueDefeat: "消しゴムで消して〜", theme: "Art" },
-      { id: 'm1_6', name: 'まいごの消しゴム', type: 'object', color: '#F0F8FF', baseHp: 280, dialogueStart: "どこいった～？", dialogueDefeat: "筆箱に戻るよ...", theme: "Lost" },
-      { id: 'm1_7', name: 'そうじのホコリ', type: 'slime', color: '#D3D3D3', baseHp: 300, dialogueStart: "掃除サボっちゃえ！", dialogueDefeat: "吸い込まれる〜", theme: "Dust" },
-      { id: 'm1_8', name: '給食大好きオーガ', type: 'beast', color: '#FFA500', baseHp: 350, dialogueStart: "おかわり全部よこせ！", dialogueDefeat: "みんなで食べよう...", theme: "Lunch" },
-      { id: 'm1_9', name: 'としょかんミミック', type: 'object', color: '#8B4513', baseHp: 400, dialogueStart: "本を読むな〜！", dialogueDefeat: "読書って楽しいね...", theme: "Book" },
-      { id: 'm1_10', name: 'ゲーム中毒ドラゴン', type: 'boss', color: '#FF4500', baseHp: 500, dialogueStart: "宿題よりゲームだ！", dialogueDefeat: "勉強もします...", theme: "Addiction" },
+      { id: 'm1_1', name: '朝ねぼうベルクロック', type: 'object', color: '#60A5FA', baseHp: 150, dialogueStart: "リンリン！ あと5分だけ止めておくよ！", dialogueDefeat: "起きる時間をちゃんと鳴らします...", theme: "Timekeeper" },
+      { id: 'm1_2', name: 'ちらかしノートミミック', type: 'object', color: '#22C55E', baseHp: 180, dialogueStart: "ページもプリントも全部ぐちゃぐちゃだ！", dialogueDefeat: "名前を書いて、きれいに閉じます...", theme: "MessyBook" },
+      { id: 'm1_3', name: 'おしゃべりラッパバード', type: 'wing', color: '#FACC15', baseHp: 200, dialogueStart: "パパパー！ 授業中でも鳴らしちゃうぞ！", dialogueDefeat: "小さな声で合図します...", theme: "NoiseMaker" },
+      { id: 'm1_4', name: 'つまみぐいスナックオーク', type: 'beast', color: '#F97316', baseHp: 220, dialogueStart: "そのおやつ、ひとくちだけ...全部くれ！", dialogueDefeat: "手を洗って、順番を待ちます...", theme: "SnackBandit" },
+      { id: 'm1_5', name: 'らくがきスターゴースト', type: 'ghost', color: '#EC4899', baseHp: 250, dialogueStart: "ノートのすみっこを星だらけにしてやる！", dialogueDefeat: "キャンバスに描くことにします...", theme: "DoodleStar" },
+      { id: 'm1_6', name: 'まいごの消しゴムナイト', type: 'object', color: '#DBEAFE', baseHp: 280, dialogueStart: "筆箱の国へ帰る道を忘れた！", dialogueDefeat: "机の右上で待機します...", theme: "LostKnight" },
+      { id: 'm1_7', name: 'そうじサボりダストマスク', type: 'ghost', color: '#94A3B8', baseHp: 300, dialogueStart: "ほこりの雲で見えなくしてやる！", dialogueDefeat: "すみっこまで集められました...", theme: "DustMask" },
+      { id: 'm1_8', name: '給食おかわりキング', type: 'beast', color: '#F59E0B', baseHp: 350, dialogueStart: "カレーの大鍋はぜんぶ王さまのものだ！", dialogueDefeat: "みんなで分けるほうがおいしい...", theme: "LunchKing" },
+      { id: 'm1_9', name: 'としょかん禁書ミミック', type: 'object', color: '#7C3AED', baseHp: 400, dialogueStart: "しおりを閉じ込めて、物語を止めてやる！", dialogueDefeat: "静かにページを開きます...", theme: "ForbiddenBook" },
+      { id: 'm1_10', name: 'ゲーム沼ドラゴン', type: 'boss', color: '#EF4444', baseHp: 500, dialogueStart: "宿題よりラスボス周回だ！ 今日は寝かせないぞ！", dialogueDefeat: "時間を決めて遊びます...", theme: "GameAbyss" },
     ],
     challenge: [
-      { id: 'c1_1', name: '暗黒スライム', type: 'slime', color: '#4B0082', baseHp: 420, dialogueStart: "すべてを飲み込む...", dialogueDefeat: "光が...眩しい...", theme: "Darkness" },
-      { id: 'c1_2', name: '炎の番犬', type: 'beast', color: '#DC143C', baseHp: 580, dialogueStart: "通しはせんぞ！", dialogueDefeat: "見事だ...", theme: "Fire" },
-      { id: 'c1_3', name: 'ストームウイング', type: 'wing', color: '#008080', baseHp: 740, dialogueStart: "風より速く！", dialogueDefeat: "追いつかれたか...", theme: "Wind" },
-      { id: 'c1_4', name: 'カースド・ゴースト', type: 'ghost', color: '#800080', baseHp: 900, dialogueStart: "呪ってやる...", dialogueDefeat: "成仏します...", theme: "Curse" },
-      { id: 'c1_5', name: '鉄壁のガーディアン', type: 'robot', color: '#708090', baseHp: 1040, dialogueStart: "排除シマス。", dialogueDefeat: "システムダウン...", theme: "Steel" },
-      { id: 'c1_6', name: 'ギガント・ゴーレム', type: 'object', color: '#8B4513', baseHp: 1200, dialogueStart: "通さん...", dialogueDefeat: "崩れる...", theme: "Earth" },
-      { id: 'c1_8', name: 'ブラッドファング', type: 'beast', color: '#8B0000', baseHp: 1260, dialogueStart: "血の匂いがするな...", dialogueDefeat: "牙が...届かない...", theme: "Fang" },
-      { id: 'c1_9', name: '奈落のレイス', type: 'ghost', color: '#6A5ACD', baseHp: 1310, dialogueStart: "底まで引きずり込む...", dialogueDefeat: "闇が...薄れていく...", theme: "Abyssal" },
-      { id: 'c1_10', name: '獄炎バリスタ', type: 'object', color: '#B22222', baseHp: 1340, dialogueStart: "焼き払う準備はできた", dialogueDefeat: "砲身が...冷えていく...", theme: "Inferno" },
+      { id: 'c1_1', name: '影ぬいインクコア', type: 'slime', color: '#4C1D95', baseHp: 420, dialogueStart: "黒いインクで答えを塗りつぶしてやる...", dialogueDefeat: "文字が...はっきり見える...", theme: "DarkInk" },
+      { id: 'c1_2', name: '炎門のケルベロス', type: 'beast', color: '#DC2626', baseHp: 580, dialogueStart: "三つの火花で集中を散らしてやる！", dialogueDefeat: "門を開けよう...見事だ...", theme: "FireGate" },
+      { id: 'c1_3', name: '嵐譜のウイングメイジ', type: 'wing', color: '#0891B2', baseHp: 740, dialogueStart: "風の楽譜でキーを乱す！", dialogueDefeat: "リズムを読まれたか...", theme: "StormScore" },
+      { id: 'c1_4', name: '呪面ファントム', type: 'ghost', color: '#7E22CE', baseHp: 900, dialogueStart: "その迷い、仮面に閉じ込めてやる...", dialogueDefeat: "仮面が割れる...成仏します...", theme: "CursedMask" },
+      { id: 'c1_5', name: '鉄壁プロトガード', type: 'robot', color: '#64748B', baseHp: 1040, dialogueStart: "入力パターン解析開始。突破不能デス。", dialogueDefeat: "解析不能...システムダウン...", theme: "SteelProtocol" },
+      { id: 'c1_6', name: '地鳴りルーンゴーレム', type: 'object', color: '#A16207', baseHp: 1200, dialogueStart: "古い石文字で道をふさいでやる...", dialogueDefeat: "刻まれたルーンがほどける...", theme: "EarthRune" },
+      { id: 'c1_8', name: '紅牙ブラッドファング', type: 'beast', color: '#991B1B', baseHp: 1260, dialogueStart: "一文字の迷いも逃さない...", dialogueDefeat: "牙が...届かなかった...", theme: "CrimsonFang" },
+      { id: 'c1_9', name: '奈落ランタンレイス', type: 'ghost', color: '#6D28D9', baseHp: 1310, dialogueStart: "底なしの灯りで目を惑わせよう...", dialogueDefeat: "灯りが...静かに消える...", theme: "AbyssLantern" },
+      { id: 'c1_10', name: '獄炎バリスタ・アイ', type: 'object', color: '#B91C1C', baseHp: 1340, dialogueStart: "照準固定。焼き払う準備はできた。", dialogueDefeat: "砲身が...冷えていく...", theme: "InfernoEye" },
       { id: 'c1_7', name: '魔王ドラゴニス', type: 'boss', color: '#2F4F4F', baseHp: 1380, dialogueStart: "我に挑む愚か者よ", dialogueDefeat: "貴様こそ勇者だ...", theme: "Boss" },
       { id: 'c1_11', name: '裏魔竜ヴォイド', type: 'boss', color: '#4C1D95', baseHp: 1380, dialogueStart: "まだ終わりではない。ここからが真の試練だ。", dialogueDefeat: "やるな...だが次で終わると思うな。", theme: "HiddenVoid" },
       { id: 'c1_12', name: '深淵王ネメシス', type: 'boss', color: '#1D4ED8', baseHp: 1400, dialogueStart: "その集中力、どこまで続くか見せてみろ。", dialogueDefeat: "くっ...さらに上を用意していたのだが。", theme: "HiddenAbyss" },
@@ -2266,6 +2282,7 @@ export default function App() {
   const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
   const recentReviewAppearanceRef = useRef<boolean[]>([]);
   const shownBossIntroKeyRef = useRef<string | null>(null);
+  const pendingBattleEndTimeoutRef = useRef<number | null>(null);
   const profilesReadyRef = useRef(false);
   const profileHydratingRef = useRef(false);
 
@@ -2728,6 +2745,13 @@ export default function App() {
     setAutoPlayStatusText(statusText);
   }, [clearAutoPlayTimeout]);
 
+  const clearPendingBattleEndTimeout = useCallback(() => {
+    if (pendingBattleEndTimeoutRef.current !== null) {
+      window.clearTimeout(pendingBattleEndTimeoutRef.current);
+      pendingBattleEndTimeoutRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.speechVoiceMode, speechVoiceMode);
   }, [speechVoiceMode]);
@@ -2902,17 +2926,19 @@ export default function App() {
 
   useEffect(() => {
     if (gameState.screen !== 'battle') {
+      clearPendingBattleEndTimeout();
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
     }
-  }, [gameState.screen]);
+  }, [clearPendingBattleEndTimeout, gameState.screen]);
 
   useEffect(() => {
     return () => {
+      clearPendingBattleEndTimeout();
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
     };
-  }, []);
+  }, [clearPendingBattleEndTimeout]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -3498,6 +3524,7 @@ export default function App() {
   };
 
   const handleGameEnd = (result: BattleResult, finalScore: number, history: BattleHistoryItem[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], playWinSound: boolean = true) => {
+      clearPendingBattleEndTimeout();
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
       const key = `${diff}_${level}_${mode}`;
@@ -3608,6 +3635,7 @@ export default function App() {
   };
 
   const initBattle = (diff: Difficulty, level: Level, mode: Mode, inputMode: InputMode, stepIndex: number, indices: number[], monsterList: Monster[], totalMonsters: number, currentScore: number, currentKeystrokes: number) => {
+    clearPendingBattleEndTimeout();
     setLastSolvedQuestion(null);
     recentReviewAppearanceRef.current = [];
     const safeIndices = indices.length > 0 ? indices : [0];
@@ -3956,8 +3984,11 @@ export default function App() {
       }
 
       const isLastMonster = gameState.currentMonsterIndex >= gameState.totalMonstersInStage - 1;
+      soundEngine.stopBattleAmbience();
+      soundEngine.stopBattleMusic();
 
-      setTimeout(() => {
+      pendingBattleEndTimeoutRef.current = window.setTimeout(() => {
+          pendingBattleEndTimeoutRef.current = null;
           if (isLastMonster) soundEngine.playStageClear(); 
           handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs, !isLastMonster);
       }, 800); 
@@ -5817,18 +5848,18 @@ export default function App() {
                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300">
                          Previous
                        </span>
-                       <span className="font-mono text-sm font-bold text-white md:text-base">{lastSolvedQuestion.text}</span>
+                       <span className="font-mono text-lg font-bold text-white md:text-xl">{lastSolvedQuestion.text}</span>
                        <div className="flex flex-col">
-                         <span className="text-xs font-bold text-emerald-100 md:text-sm">{lastSolvedQuestion.translation}</span>
+                         <span className="text-base font-bold text-emerald-100 md:text-lg">{lastSolvedQuestion.translation}</span>
                          {lastSolvedQuestion.basicMeaning && (
-                           <span className="text-[10px] font-medium text-slate-400 md:text-[11px]">Basic: {lastSolvedQuestion.basicMeaning}</span>
+                           <span className="text-xs font-medium text-slate-400 md:text-sm">Basic: {lastSolvedQuestion.basicMeaning}</span>
                          )}
                        </div>
                        {previousQuestionExample && (
                          <>
                            <span className="hidden text-slate-500 md:inline">|</span>
                            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Example</span>
-                           <span className="text-xs text-slate-200 md:text-sm">{previousQuestionExample}</span>
+                           <span className="text-base text-slate-200 md:text-lg">{previousQuestionExample}</span>
                          </>
                        )}
                      </div>
@@ -5898,7 +5929,7 @@ export default function App() {
                   {defeatedMonster && (
                     <div className="mt-4 rounded-xl border border-yellow-500/40 bg-gradient-to-b from-yellow-900/30 to-slate-900/40 p-4">
                       <div className="flex flex-col items-center gap-2">
-                        <MonsterAvatar type={defeatedMonster.type} color={defeatedMonster.color} emotion="win" size={110} />
+                        <MonsterAvatar type={defeatedMonster.type} color={defeatedMonster.color} emotion="win" size={110} visualStyle={getMonsterVisualStyle(defeatedMonster)} />
                         <p className="text-xs font-bold uppercase tracking-[0.2em] text-yellow-300">Defeated Monster</p>
                         <p className="text-xl font-black text-white">{defeatedMonster.name}</p>
                       </div>
