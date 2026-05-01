@@ -5444,7 +5444,7 @@ export default function App() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <GameButton onClick={() => renamePlayerProfile(profile.id)} size="sm" variant="outline" className="border-violet-500/40 text-violet-100 hover:bg-violet-900/20" disabled={!canSaveName}>
-                          保存
+                          名前を保存
                         </GameButton>
                         <GameButton onClick={() => activatePlayerProfile(profile.id)} size="sm" variant="outline" className="border-cyan-500/40 text-cyan-200 hover:bg-cyan-900/20" disabled={isActive}>
                           切り替える
