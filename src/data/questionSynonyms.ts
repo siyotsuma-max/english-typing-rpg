@@ -2,11 +2,25 @@ import type { DifficultyKey, LevelKey, Question } from './questions';
 
 type QuestionLike = Pick<Question, 'text' | 'synonyms'>;
 
+const EMPTY_SYNONYMS: string[] = [];
+const questionSynonymCache = new Map<string, string[]>();
+
 const limitSynonyms = (items: string[]) => (
   [...new Set(items.map(item => item.trim()).filter(Boolean))]
     .filter(item => item.length <= 24)
     .slice(0, 3)
 );
+
+const getSynonymCacheKey = (
+  difficulty: DifficultyKey,
+  level: LevelKey,
+  question: QuestionLike,
+) => [
+  difficulty,
+  level,
+  question.text,
+  question.synonyms?.join('\u0001') ?? '',
+].join('\u0000');
 
 const EIKEN5_CORE_HINTS: Record<string, string[]> = {
   bus: ['vehicle'],
@@ -2447,26 +2461,38 @@ export const getQuestionSynonyms = (
   level: LevelKey,
   question: QuestionLike,
 ): string[] => {
+  const cacheKey = getSynonymCacheKey(difficulty, level, question);
+  const cached = questionSynonymCache.get(cacheKey);
+  if (cached) return cached;
+
+  let result = EMPTY_SYNONYMS;
+
   if (question.synonyms && question.synonyms.length > 0) {
-    return limitSynonyms(question.synonyms);
+    result = limitSynonyms(question.synonyms);
+    questionSynonymCache.set(cacheKey, result);
+    return result;
   }
 
   if (difficulty === 'Eiken5') {
     const curatedRelated = EIKEN5_RELATED[question.text];
     if (curatedRelated) {
-      return limitSynonyms(curatedRelated);
+      result = limitSynonyms(curatedRelated);
+      questionSynonymCache.set(cacheKey, result);
+      return result;
     }
   }
 
   if (difficulty === 'Eiken4' && level !== 3) {
     const curatedRelated = EIKEN4_RELATED[question.text];
     if (curatedRelated) {
-      return limitSynonyms(curatedRelated);
+      result = limitSynonyms(curatedRelated);
+      questionSynonymCache.set(cacheKey, result);
+      return result;
     }
   }
 
   if (difficulty === 'EikenPre1' && level === 1) {
-    return limitSynonyms(
+    result = limitSynonyms(
       PRE1_LEVEL1_SYNONYMS[question.text]
       ?? PRE1_CORE_HINTS[question.text]
       ?? PRE1_QUALITY_HINTS[question.text]
@@ -2474,14 +2500,19 @@ export const getQuestionSynonyms = (
       ?? PRE1_CATEGORY_HINTS[question.text]
       ?? derivePre1Hint(question.text, level)
     ).slice(0, 2);
+    questionSynonymCache.set(cacheKey, result);
+    return result;
   }
 
   if (difficulty === 'EikenPre1' && level === 2) {
-    return limitSynonyms(
+    result = limitSynonyms(
       PRE1_LEVEL2_HINTS[question.text]
       ?? derivePre1Hint(question.text, level)
     ).slice(0, 2);
+    questionSynonymCache.set(cacheKey, result);
+    return result;
   }
 
-  return [];
+  questionSynonymCache.set(cacheKey, result);
+  return result;
 };

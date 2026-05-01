@@ -106,6 +106,8 @@ type AutoPlaySettings = {
   playText: boolean;
   playTranslation: boolean;
   playExample: boolean;
+  repeat: boolean;
+  shuffle: boolean;
   playbackRatePercent: number;
   itemGapSeconds: number;
   questionGapSeconds: number;
@@ -1420,6 +1422,8 @@ const getDefaultAutoPlaySettings = (): AutoPlaySettings => ({
   playText: true,
   playTranslation: true,
   playExample: true,
+  repeat: false,
+  shuffle: false,
   playbackRatePercent: 100,
   itemGapSeconds: 0.5,
   questionGapSeconds: 1.5,
@@ -1428,15 +1432,28 @@ const getDefaultAutoPlaySettings = (): AutoPlaySettings => ({
 const AUTO_PLAY_RATE_OPTIONS = [75, 100, 125, 150, 175, 200] as const;
 const MIN_AUTO_PLAY_ITEM_GAP_SECONDS = 0.2;
 const MIN_AUTO_PLAY_QUESTION_GAP_SECONDS = 0.5;
+const DEFAULT_QUESTION_LIST_RENDER_LIMIT = 260;
+const COMPACT_QUESTION_LIST_RENDER_LIMIT = 160;
 
-const getDefaultManualQuestionStatus = (): ManualQuestionStatus => ({
+const DEFAULT_MANUAL_QUESTION_STATUS: ManualQuestionStatus = {
   practiceLevel: 1,
   battleLevel: 1,
   manualOverrideLevel: null,
   excluded: false,
   updatedAt: 0,
   learningLevel: 1,
-});
+};
+
+const getDefaultManualQuestionStatus = (): ManualQuestionStatus => DEFAULT_MANUAL_QUESTION_STATUS;
+
+const shuffleQuestions = (questions: Question[]) => {
+  const shuffled = [...questions];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+};
 
 const normalizeManualQuestionStatuses = (statuses: Record<string, ManualQuestionStatus> | unknown) => (
   Object.fromEntries(
@@ -1515,6 +1532,8 @@ const normalizeAutoPlaySettings = (value: unknown): AutoPlaySettings => {
     playText: typeof typedValue.playText === 'boolean' ? typedValue.playText : defaults.playText,
     playTranslation: typeof typedValue.playTranslation === 'boolean' ? typedValue.playTranslation : defaults.playTranslation,
     playExample: typeof typedValue.playExample === 'boolean' ? typedValue.playExample : defaults.playExample,
+    repeat: typeof typedValue.repeat === 'boolean' ? typedValue.repeat : defaults.repeat,
+    shuffle: typeof typedValue.shuffle === 'boolean' ? typedValue.shuffle : defaults.shuffle,
     playbackRatePercent: Number.isFinite(typedValue.playbackRatePercent) ? Math.min(250, Math.max(50, Number(typedValue.playbackRatePercent))) : defaults.playbackRatePercent,
     itemGapSeconds: Number.isFinite(typedValue.itemGapSeconds) ? Math.min(10, Math.max(0, Number(typedValue.itemGapSeconds))) : defaults.itemGapSeconds,
     questionGapSeconds: Number.isFinite(typedValue.questionGapSeconds) ? Math.min(15, Math.max(0, Number(typedValue.questionGapSeconds))) : defaults.questionGapSeconds,
@@ -2300,6 +2319,7 @@ export default function App() {
   const [scoreViewDiff, setScoreViewDiff] = useState<Difficulty>('Eiken5');
   const [questionListFilter, setQuestionListFilter] = useState<'all' | 'weak'>('all');
   const [weakListSort, setWeakListSort] = useState<'recent' | 'frequent'>('recent');
+  const [questionListRenderLimit, setQuestionListRenderLimit] = useState(DEFAULT_QUESTION_LIST_RENDER_LIMIT);
   const [wordListToolsOpen, setWordListToolsOpen] = useState(false);
   const [weakReviewPanelOpen, setWeakReviewPanelOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -2315,6 +2335,7 @@ export default function App() {
   const speechPreviewTimeoutRef = useRef<number | null>(null);
   const autoPlayTimeoutRef = useRef<number | null>(null);
   const autoPlayRunIdRef = useRef(0);
+  const autoPlayListCriteriaRef = useRef('');
   const questionPoolRef = useRef<Record<string, QuestionPoolState>>({});
   const reviewQueueRef = useRef<ReviewQueueEntry[]>([]);
   const activeReviewEntryRef = useRef<ReviewQueueEntry | null>(null);
@@ -2907,6 +2928,17 @@ export default function App() {
   }, [gameState.screen, settingsFocusSection]);
 
   useEffect(() => {
+    const nextCriteria = [
+      gameState.screen,
+      gameState.selectedDifficulty,
+      gameState.selectedLevel,
+      questionListFilter,
+      weakListSort,
+    ].join('|');
+    const previousCriteria = autoPlayListCriteriaRef.current;
+    autoPlayListCriteriaRef.current = nextCriteria;
+    if (!previousCriteria || previousCriteria === nextCriteria) return;
+
     if (gameState.screen !== 'question-list') return;
     if (!isAutoPlaying) return;
     stopAutoPlay('一覧条件の変更に合わせて停止しました');
@@ -2917,6 +2949,17 @@ export default function App() {
     gameState.selectedLevel,
     questionListFilter,
     stopAutoPlay,
+    weakListSort,
+  ]);
+
+  useEffect(() => {
+    if (gameState.screen !== 'question-list') return;
+    setQuestionListRenderLimit(DEFAULT_QUESTION_LIST_RENDER_LIMIT);
+  }, [
+    gameState.screen,
+    gameState.selectedDifficulty,
+    gameState.selectedLevel,
+    questionListFilter,
     weakListSort,
   ]);
 
@@ -3561,7 +3604,7 @@ export default function App() {
     setProgressTransferStatus('現在のプレイヤーの学習データをリセットしました。');
   };
 
-  const handleGameEnd = (result: BattleResult, finalScore: number, history: BattleHistoryItem[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], playWinSound: boolean = true) => {
+  const handleGameEnd = (result: BattleResult, finalScore: number, history: BattleHistoryItem[], diff: Difficulty, level: Level, mode: Mode, finalKeystrokes: number, missedQs: Question[], finalBattleLog?: BattleLogItem[], playWinSound: boolean = true) => {
       clearPendingBattleEndTimeout();
       soundEngine.stopBattleAmbience();
       soundEngine.stopBattleMusic();
@@ -3590,7 +3633,19 @@ export default function App() {
           else soundEngine.playFail();
       }
       saveWeakQuestions(missedQs);
-      setGameState(prev => ({ ...prev, screen: 'result', battleResult: result, score: finalScore, history: history, isNewRecord: isNewRecord, missCount: 0, hintLength: 0 }));
+      setGameState(prev => ({
+        ...prev,
+        screen: 'result',
+        battleResult: result,
+        score: finalScore,
+        history: history,
+        isNewRecord: isNewRecord,
+        missCount: 0,
+        hintLength: 0,
+        totalKeystrokes: finalKeystrokes,
+        currentBattleMissedQuestions: missedQs,
+        battleLog: finalBattleLog ?? prev.battleLog,
+      }));
   };
 
   const openWeakReviewHub = () => {
@@ -3999,13 +4054,13 @@ export default function App() {
       ?? (gameState.mode === 'weakness' ? remainingWeakQuestions : []);
 
     if (hadSessionReview && gameState.missCount === 0 && remainingSessionQuestions && remainingSessionQuestions.length === 0) {
-      handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs);
+      handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs, newBattleLog);
       setGameState(prev => ({ ...prev, monsterHp: 0, score: currentScore, history: newHistory, totalKeystrokes: nextKeystrokes, currentBattleMissedQuestions: newMissedQs, battleLog: newBattleLog }));
       return;
     }
 
     if (gameState.mode === 'weakness' && gameState.missCount === 0 && activeRemainingQuestions.length === 0) {
-      handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs);
+      handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs, newBattleLog);
       setGameState(prev => ({ ...prev, monsterHp: 0, score: currentScore, history: newHistory, totalKeystrokes: nextKeystrokes, currentBattleMissedQuestions: newMissedQs, battleLog: newBattleLog }));
       return;
     }
@@ -4028,7 +4083,7 @@ export default function App() {
       pendingBattleEndTimeoutRef.current = window.setTimeout(() => {
           pendingBattleEndTimeoutRef.current = null;
           if (isLastMonster) soundEngine.playStageClear(); 
-          handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs, !isLastMonster);
+          handleGameEnd('win', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs, newBattleLog, !isLastMonster);
       }, 800); 
 
       setGameState(prev => ({ ...prev, monsterHp: 0, score: currentScore, history: newHistory, totalKeystrokes: nextKeystrokes, currentBattleMissedQuestions: newMissedQs, battleLog: newBattleLog }));
@@ -4036,7 +4091,7 @@ export default function App() {
     }
 
     if (gameState.questionCount >= gameState.maxQuestions) {
-       handleGameEnd('draw', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs);
+       handleGameEnd('draw', currentScore, newHistory, gameState.selectedDifficulty, gameState.selectedLevel, gameState.mode, nextKeystrokes, newMissedQs, newBattleLog);
        return;
     }
 
@@ -4188,6 +4243,11 @@ export default function App() {
       if (autoPlayRunIdRef.current !== runId) return;
 
       if (index >= entries.length) {
+        if (autoPlaySettings.repeat) {
+          setAutoPlayStatusText('リピート再生を続けています');
+          playAt(0);
+          return;
+        }
         setIsAutoPlaying(false);
         setAutoPlayNowPlaying(null);
         setAutoPlayStatusText('再生が完了しました');
@@ -4386,12 +4446,16 @@ export default function App() {
     const weakQuestionsInView = questions.filter(q => weakQuestionTexts.has(q.text) && !isQuestionExcluded(gameState.selectedDifficulty, gameState.selectedLevel, q));
     const selectedQuestionKeys = selectedQuestionKeysByScope[selectionScopeKey] ?? [];
     const selectedQuestionKeySet = new Set(selectedQuestionKeys);
-    const selectedQuestionsInView = playableQuestions.filter(q => selectedQuestionKeySet.has(getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q)));
+    const selectedQuestionsInView = wordListToolsOpen
+      ? playableQuestions.filter(q => selectedQuestionKeySet.has(getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q)))
+      : [];
     const savedSelectionListsInScope = savedSelectionLists
       .filter(list => list.difficulty === gameState.selectedDifficulty && list.level === gameState.selectedLevel)
       .sort((a, b) => b.updatedAt - a.updatedAt);
     const weakCountInView = weakQuestionsInView.length;
-    const manualReviewQuestions = playableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) < 3);
+    const manualReviewQuestions = wordListToolsOpen
+      ? playableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) < 3)
+      : [];
     const manualStudyCount = learningSummary.learningCount;
     const manualCautionCount = learningSummary.cautionCount;
     const sortedWeakQuestions = [...weakQuestionsInView].sort((a, b) => {
@@ -4415,18 +4479,22 @@ export default function App() {
       .sort((a, b) => ((weakQuestionStats[b.text]?.missCount ?? 0) - (weakQuestionStats[a.text]?.missCount ?? 0)) || ((weakQuestionStats[b.text]?.lastMissedAt ?? 0) - (weakQuestionStats[a.text]?.lastMissedAt ?? 0)))
       .slice(0, 10);
     const reviewTargetQuestions = questionListFilter === 'weak' ? visibleQuestions : weakQuestionsInView;
-    const autoPlayTargetQuestions = autoPlaySettings.source === 'all'
-      ? visiblePlayableQuestions
-      : autoPlaySettings.source === 'weak'
-        ? weakQuestionsInView
-        : selectedQuestionsInView;
-    const autoPlayJapaneseVoice = getJapaneseSpeechVoice();
-    const autoPlayPlayableQuestionCount = autoPlayTargetQuestions.filter(q => {
-      if (autoPlaySettings.playText || autoPlaySettings.playTranslation) return true;
-      const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
-      return !!currentQuestionExamples.get(questionKey);
-    }).length;
-    const learningLevelSelectionOptions: Array<{ level: LearningLevel; label: string; questions: Question[]; className: string }> = [
+    const autoPlayTargetQuestions = wordListToolsOpen
+      ? autoPlaySettings.source === 'all'
+        ? visiblePlayableQuestions
+        : autoPlaySettings.source === 'weak'
+          ? weakQuestionsInView
+          : selectedQuestionsInView
+      : [];
+    const autoPlayJapaneseVoice = wordListToolsOpen ? getJapaneseSpeechVoice() : null;
+    const autoPlayPlayableQuestionCount = wordListToolsOpen
+      ? autoPlayTargetQuestions.filter(q => {
+        if (autoPlaySettings.playText || autoPlaySettings.playTranslation) return true;
+        const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
+        return !!currentQuestionExamples.get(questionKey);
+      }).length
+      : 0;
+    const learningLevelSelectionOptions: Array<{ level: LearningLevel; label: string; questions: Question[]; className: string }> = wordListToolsOpen ? [
       {
         level: 1,
         label: '学習中',
@@ -4445,8 +4513,8 @@ export default function App() {
         questions: visiblePlayableQuestions.filter(q => getEffectiveLearningLevel(getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)) === 3),
         className: 'border-violet-500/40 text-violet-200 hover:bg-violet-900/20',
       },
-    ];
-    const manualReviewSamples = manualReviewQuestions.slice(0, 5).map(q => q.text).join(' / ');
+    ] : [];
+    const manualReviewSamples = wordListToolsOpen ? manualReviewQuestions.slice(0, 5).map(q => q.text).join(' / ') : '';
 
     const startReviewFromList = (mode: Mode, inputMode: InputMode) => {
       if (reviewTargetQuestions.length === 0) return;
@@ -4476,7 +4544,12 @@ export default function App() {
         return;
       }
 
-      const entries = autoPlayTargetQuestions.flatMap((question, questionIndex) => {
+      const getEnglishAutoPlaySpeechConfig = () => resolveSpeechConfig(speechVoices, speechVoiceMode);
+      const playbackQuestions = autoPlaySettings.shuffle
+        ? shuffleQuestions(autoPlayTargetQuestions)
+        : autoPlayTargetQuestions;
+
+      const entries = playbackQuestions.flatMap((question, questionIndex) => {
         const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, question);
         const example = currentQuestionExamples.get(questionKey);
         const nextEntries: Array<{
@@ -4501,11 +4574,12 @@ export default function App() {
         };
 
         if (autoPlaySettings.playText) {
+          const speechConfig = getEnglishAutoPlaySpeechConfig();
           pushEntry({
             label: `単語: ${question.text}`,
             text: question.text,
-            lang: selectedSpeechConfig.lang,
-            voice: selectedSpeechConfig.voice,
+            lang: speechConfig.lang,
+            voice: speechConfig.voice,
             nowPlaying: {
               questionText: question.text,
               translation: question.translation,
@@ -4533,11 +4607,12 @@ export default function App() {
         }
 
         if (autoPlaySettings.playExample && example) {
+          const speechConfig = getEnglishAutoPlaySpeechConfig();
           pushEntry({
             label: `例文: ${question.text}`,
             text: example,
-            lang: selectedSpeechConfig.lang,
-            voice: selectedSpeechConfig.voice,
+            lang: speechConfig.lang,
+            voice: speechConfig.voice,
             nowPlaying: {
               questionText: question.text,
               translation: question.translation,
@@ -4549,7 +4624,7 @@ export default function App() {
         }
 
         if (nextEntries.length > 0) {
-          nextEntries[nextEntries.length - 1].gapAfterSeconds = questionIndex < autoPlayTargetQuestions.length - 1
+          nextEntries[nextEntries.length - 1].gapAfterSeconds = questionIndex < playbackQuestions.length - 1
             ? autoPlaySettings.questionGapSeconds
             : 0;
         }
@@ -4560,7 +4635,14 @@ export default function App() {
       startAutoPlaySequence(entries);
     };
 
-    const questionRows = visibleQuestions.map((q, idx) => {
+    const activeQuestionListRenderLimit = (isAutoPlaying || wordListToolsOpen)
+      ? COMPACT_QUESTION_LIST_RENDER_LIMIT
+      : questionListRenderLimit;
+    const shouldLimitQuestionList = visibleQuestions.length > activeQuestionListRenderLimit;
+    const renderedQuestions = shouldLimitQuestionList
+      ? visibleQuestions.slice(0, activeQuestionListRenderLimit)
+      : visibleQuestions;
+    const questionRows = renderedQuestions.map((q, idx) => {
       const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
       const synonyms = ['Eiken5', 'Eiken4', 'EikenPre1'].includes(gameState.selectedDifficulty) && gameState.selectedLevel !== 3
         ? getQuestionSynonyms(gameState.selectedDifficulty, gameState.selectedLevel, q)
@@ -4795,6 +4877,24 @@ export default function App() {
                     ))}
                   </div>
                   <p className="mt-4 text-sm font-bold text-cyan-200">3. 間隔</p>
+                  <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200">
+                    <span className="font-bold text-cyan-100">{'リピート再生'}</span>
+                    <input
+                      type="checkbox"
+                      checked={autoPlaySettings.repeat}
+                      onChange={(e) => updateAutoPlaySetting('repeat', e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-500 bg-slate-900 text-cyan-400"
+                    />
+                  </label>
+                  <label className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-200">
+                    <span className="font-bold text-cyan-100">{'シャッフル再生'}</span>
+                    <input
+                      type="checkbox"
+                      checked={autoPlaySettings.shuffle}
+                      onChange={(e) => updateAutoPlaySetting('shuffle', e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-500 bg-slate-900 text-cyan-400"
+                    />
+                  </label>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <label className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-3 text-sm text-slate-200">
                       <span className="block text-xs font-bold uppercase tracking-wide text-slate-400">用語・和訳・例文の間隔</span>
@@ -5074,7 +5174,23 @@ export default function App() {
                        <p className="mt-2 text-sm text-slate-400">通常の一覧に戻して、全問題を確認できます。</p>
                        <GameButton onClick={() => setQuestionListFilter('all')} variant="outline" size="sm" className="mt-4">すべて表示に戻す</GameButton>
                      </div>
-                   ) : <div className="grid gap-2 pb-4">{questionRows /* visibleQuestions.map((q, idx) => {
+                   ) : <>
+                     {shouldLimitQuestionList && (
+                       <div className="mb-3 rounded-lg border border-cyan-500/30 bg-cyan-950/30 px-4 py-3 text-sm text-cyan-100">
+                         {wordListToolsOpen || isAutoPlaying
+                           ? '動作を軽くするため、選択・自動再生ツールの使用中と連続再生中は一覧を先頭160件だけ表示しています。全件を確認したい場合は、ツールを閉じてから「さらに表示」を押してください。'
+                           : `表示負荷を抑えるため、まず先頭${renderedQuestions.length}件を表示しています。`}
+                         {!wordListToolsOpen && !isAutoPlaying && (
+                           <button
+                             onClick={() => setQuestionListRenderLimit(prev => prev + 260)}
+                             className="ml-3 rounded-md border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-100 hover:bg-cyan-500/20"
+                           >
+                             {'さらに表示'}
+                           </button>
+                         )}
+                       </div>
+                     )}
+                     <div className="grid gap-2 pb-4">{questionRows /* visibleQuestions.map((q, idx) => {
                      const isWeakQuestion = weakQuestionTexts.has(q.text);
                      const stats = weakQuestionStats[q.text];
                      const manualStatus = getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q);
@@ -5155,7 +5271,8 @@ export default function App() {
                          )}
                        </div>
                      );
-                   }) */}</div>}</div>
+                   }) */}</div>
+                   </>}</div>
                </Box>
            </div>
         </div>
