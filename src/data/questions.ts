@@ -8,6 +8,7 @@ export type Question = {
   basicMeaning?: string;
   exampleEn?: string;
   exampleJa?: string;
+  synonyms?: string[];
 };
 
 export type DifficultyKey = 'Eiken5' | 'Eiken4' | 'EikenPre1';

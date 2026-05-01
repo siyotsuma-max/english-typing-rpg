@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Volume2, Sword, Shield, Trophy, Home, SkipForward, Zap, ArrowRight, RotateCcw, BookOpen, Star, Lock, Flame, Skull, ClipboardList, Crown, Target, Medal, Keyboard, AlertCircle, Brain, CheckCircle2, FastForward, LayoutGrid, LogOut, Square } from 'lucide-react';
 import { QUESTIONS } from './data/questions';
 import { getQuestionExample } from './data/questionExamples';
+import { getQuestionSynonyms } from './data/questionSynonyms';
 import HelpScreen from './HelpScreen';
 
 // --- Types & Interfaces ---
@@ -58,6 +59,7 @@ interface Question {
   basicMeaning?: string;
   exampleEn?: string;
   exampleJa?: string;
+  synonyms?: string[];
 }
 
 interface BattleLogItem {
@@ -1598,6 +1600,16 @@ const normalizeQuestionArray = (value: unknown): Question[] => (
       if (typeof typedItem.exampleJa === 'string' && typedItem.exampleJa.trim()) {
         nextQuestion.exampleJa = typedItem.exampleJa.trim();
       }
+      if (Array.isArray(typedItem.synonyms)) {
+        const synonyms = typedItem.synonyms
+          .filter((synonym): synonym is string => typeof synonym === 'string')
+          .map(synonym => synonym.trim())
+          .filter(Boolean)
+          .slice(0, 3);
+        if (synonyms.length > 0) {
+          nextQuestion.synonyms = synonyms;
+        }
+      }
 
       return [nextQuestion];
     })
@@ -2113,6 +2125,7 @@ type QuestionListRowProps = {
   manualStatus: ManualQuestionStatus;
   isSelectedForAutoPlay: boolean;
   example?: string | null;
+  synonyms: string[];
   onSpeak: (text: string) => void;
   onToggleSelected: (question: Question) => void;
   onUpdateManualLevel: (question: Question, level: LearningLevel) => void;
@@ -2129,6 +2142,7 @@ const QuestionListRow = React.memo(function QuestionListRow({
   manualStatus,
   isSelectedForAutoPlay,
   example,
+  synonyms,
   onSpeak,
   onToggleSelected,
   onUpdateManualLevel,
@@ -2208,6 +2222,11 @@ const QuestionListRow = React.memo(function QuestionListRow({
         <div className="mt-3 ml-[6.75rem] rounded-lg border border-slate-700/80 bg-slate-950/70 px-3 py-2">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">Example</p>
           <p className="mt-1 text-xs md:text-sm text-slate-200">{example}</p>
+        </div>
+      )}
+      {synonyms.length > 0 && (
+        <div className="mt-2 ml-[6.75rem] text-xs font-semibold text-cyan-100/90">
+          <span className="text-cyan-300">類義/関連:</span> {synonyms.join(' / ')}
         </div>
       )}
     </div>
@@ -4543,6 +4562,9 @@ export default function App() {
 
     const questionRows = visibleQuestions.map((q, idx) => {
       const questionKey = getQuestionStatusKey(gameState.selectedDifficulty, gameState.selectedLevel, q);
+      const synonyms = ['Eiken5', 'Eiken4', 'EikenPre1'].includes(gameState.selectedDifficulty) && gameState.selectedLevel !== 3
+        ? getQuestionSynonyms(gameState.selectedDifficulty, gameState.selectedLevel, q)
+        : [];
       return (
         <QuestionListRow
           key={questionKey}
@@ -4555,6 +4577,7 @@ export default function App() {
           manualStatus={getManualQuestionStatus(gameState.selectedDifficulty, gameState.selectedLevel, q)}
           isSelectedForAutoPlay={selectedQuestionKeySet.has(questionKey)}
           example={currentQuestionExamples.get(questionKey)}
+          synonyms={synonyms}
           onSpeak={speakWithSettings}
           onToggleSelected={handleToggleSelectedQuestion}
           onUpdateManualLevel={handleUpdateManualLevel}
@@ -5728,6 +5751,9 @@ export default function App() {
     const previousQuestionExample = lastSolvedQuestion
       ? getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, lastSolvedQuestion)
       : null;
+    const previousQuestionSynonyms = lastSolvedQuestion && !(['Eiken5', 'Eiken4', 'EikenPre1'].includes(gameState.selectedDifficulty) && gameState.selectedLevel === 3)
+      ? getQuestionSynonyms(gameState.selectedDifficulty, gameState.selectedLevel, lastSolvedQuestion)
+      : [];
     const showPreviousStudyCard = !!lastSolvedQuestion;
     const showGuide = gameState.mode === 'guide'; 
     const questionsLeft = gameState.maxQuestions - gameState.questionCount + 1;
@@ -5876,6 +5902,13 @@ export default function App() {
                            <span className="text-xs font-medium text-slate-400 md:text-sm">Basic: {lastSolvedQuestion.basicMeaning}</span>
                          )}
                        </div>
+                       {previousQuestionSynonyms.length > 0 && (
+                         <>
+                           <span className="hidden text-slate-500 md:inline">|</span>
+                           <span className="text-[10px] font-bold tracking-[0.16em] text-cyan-300">類義/関連</span>
+                           <span className="text-sm font-semibold text-cyan-50 md:text-base">{previousQuestionSynonyms.join(' / ')}</span>
+                         </>
+                       )}
                        {previousQuestionExample && (
                          <>
                            <span className="hidden text-slate-500 md:inline">|</span>
@@ -6073,6 +6106,9 @@ export default function App() {
              <div className="space-y-1">
                  {gameState.battleLog.map((log, idx) => {
                      const example = getQuestionExample(gameState.selectedDifficulty, gameState.selectedLevel, log.question);
+                     const resultQuestionSynonyms = ['Eiken5', 'Eiken4', 'EikenPre1'].includes(gameState.selectedDifficulty) && gameState.selectedLevel !== 3
+                       ? getQuestionSynonyms(gameState.selectedDifficulty, gameState.selectedLevel, log.question)
+                       : [];
                      return (
                        <div key={idx} className="rounded bg-slate-800 p-2 text-xs border border-slate-700">
                          <div className="flex items-center justify-between gap-3">
@@ -6082,7 +6118,12 @@ export default function App() {
                                </button>
                                <div className="min-w-0 flex-1">
                                    <span className="block font-mono text-blue-200 font-bold break-all">{log.question.text}</span>
-                                   <span className="block text-slate-500">{log.question.translation}</span>
+                                   <span className="block text-slate-300">{log.question.translation}</span>
+                                   {resultQuestionSynonyms.length > 0 && (
+                                     <span className="mt-0.5 block truncate text-[10px] font-semibold text-cyan-300/90">
+                                       類義/関連: <span className="text-cyan-100/90">{resultQuestionSynonyms.join(' / ')}</span>
+                                     </span>
+                                   )}
                                </div>
                            </div>
                            <div className="flex items-center flex-shrink-0">
